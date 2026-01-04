@@ -29,6 +29,8 @@ jobs:
       id: sign_app
       continue-on-error: true
       uses: ilharp/sign-android-release@nightly
+      env:
+        ANDROID_SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
       with:
         releaseDir: app/build/outputs/apk
         signingKey: ${{ secrets.SIGNING_KEY }}
