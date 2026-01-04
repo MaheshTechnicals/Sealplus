@@ -14,9 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **Platform & Build Tools**
   * Updated Android Gradle Plugin to 8.13.2 (latest stable, Dec 2025)
   * Updated Gradle to 8.13 (officially required for AGP 8.13)
-  * Updated Kotlin to 2.3.0 (latest stable, Dec 2025) with K2 compiler improvements
+  * Updated Kotlin to 2.0.21 (stable) with K2 compiler
   * Migrated from deprecated kotlinOptions to modern compilerOptions
-  * Updated KSP to 2.3.0-1.0.29 for latest annotation processing
+  * Updated KSP to 2.0.21-1.0.28 for stable annotation processing
   * Target/Compile SDK 35 (AGP 8.13 fully supports API 36)
 
 * **Core Dependencies**

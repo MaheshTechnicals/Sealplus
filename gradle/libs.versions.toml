@@ -20,7 +20,7 @@ coil = "2.7.0"
 
 junit4 = "4.13.2"
 
-kotlin = "2.3.0"
+kotlin = "2.0.21"
 
 coroutines = "1.10.1"
 datetime = "0.6.1"
@@ -28,7 +28,7 @@ serialization = "1.8.0"
 okhttp = "5.0.0-alpha.14"
 
 room = "2.8.4"
-ksp = "2.3.0-1.0.29"
+ksp = "2.0.21-1.0.28"
 
 youtubedlAndroid = "0.17.3"
 
