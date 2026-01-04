@@ -88,6 +88,7 @@ const val CELLULAR_DOWNLOAD = "cellular_download"
 const val RATE_LIMIT = "rate_limit"
 const val MAX_RATE = "max_rate"
 private const val HIGH_CONTRAST = "high_contrast"
+private const val GRADIENT_DARK_MODE = "gradient_dark_mode"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -379,6 +380,7 @@ object PreferenceUtil {
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
+        val isGradientDarkModeEnabled: Boolean = false,
     )
 
     fun getMaxDownloadRate(): String = MAX_RATE.getString()
@@ -395,6 +397,7 @@ object PreferenceUtil {
                     kv.decodeBool(DYNAMIC_COLOR, DynamicColors.isDynamicColorAvailable()),
                 seedColor = kv.decodeInt(THEME_COLOR, DEFAULT_SEED_COLOR),
                 paletteStyleIndex = kv.decodeInt(PALETTE_STYLE, 0),
+                isGradientDarkModeEnabled = kv.decodeBool(GRADIENT_DARK_MODE, false),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -435,6 +438,15 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun switchGradientDarkMode(
+        enabled: Boolean = !mutableAppSettingsStateFlow.value.isGradientDarkModeEnabled
+    ) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(isGradientDarkModeEnabled = enabled) }
+            kv.encode(GRADIENT_DARK_MODE, enabled)
         }
     }
 

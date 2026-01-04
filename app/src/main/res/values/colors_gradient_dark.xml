@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Gradient Dark Theme Colors -->
+    
+    <!-- Deep Charcoal and Obsidian Backgrounds -->
+    <color name="gradient_dark_background">#0A0A0F</color>
+    <color name="gradient_dark_surface">#14141F</color>
+    <color name="gradient_dark_surface_variant">#1A1A2E</color>
+    <color name="gradient_dark_surface_container">#1E1E2F</color>
+    <color name="gradient_dark_surface_container_low">#16162A</color>
+    <color name="gradient_dark_surface_container_high">#25253A</color>
+    
+    <!-- Vibrant Gradient Colors - Deep Blues and Purples -->
+    <color name="gradient_primary_start">#5B47E5</color>
+    <color name="gradient_primary_end">#8B5CF6</color>
+    <color name="gradient_secondary_start">#3B82F6</color>
+    <color name="gradient_secondary_end">#6366F1</color>
+    <color name="gradient_accent_start">#A855F7</color>
+    <color name="gradient_accent_end">#EC4899</color>
+    
+    <!-- Glassmorphism Colors -->
+    <color name="glass_white_border">#1AFFFFFF</color>
+    <color name="glass_surface">#0DFFFFFF</color>
+    <color name="glass_surface_variant">#1AFFFFFF</color>
+    
+    <!-- Text Colors -->
+    <color name="gradient_dark_on_background">#FAFAFA</color>
+    <color name="gradient_dark_on_surface">#F5F5F5</color>
+    <color name="gradient_dark_on_primary">#FFFFFF</color>
+    
+    <!-- Additional Accent Colors -->
+    <color name="gradient_cyan">#22D3EE</color>
+    <color name="gradient_purple_bright">#C084FC</color>
+    <color name="gradient_blue_bright">#60A5FA</color>
+</resources>

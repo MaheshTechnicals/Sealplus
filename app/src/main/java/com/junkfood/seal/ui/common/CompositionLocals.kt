@@ -26,6 +26,7 @@ val LocalSeedColor = compositionLocalOf { DEFAULT_SEED_COLOR }
 val LocalWindowWidthState = staticCompositionLocalOf { WindowWidthSizeClass.Compact }
 val LocalDynamicColorSwitch = compositionLocalOf { false }
 val LocalPaletteStyleIndex = compositionLocalOf { 0 }
+val LocalGradientDarkMode = compositionLocalOf { false }
 val LocalFixedColorRoles = staticCompositionLocalOf {
     FixedColorRoles.fromColorSchemes(
         lightColors = lightColorScheme(),
@@ -52,6 +53,7 @@ fun SettingsProvider(windowWidthSizeClass: WindowWidthSizeClass, content: @Compo
             LocalTonalPalettes provides tonalPalettes,
             LocalWindowWidthState provides windowWidthSizeClass,
             LocalDynamicColorSwitch provides isDynamicColorEnabled,
+            LocalGradientDarkMode provides isGradientDarkModeEnabled,
             content = content,
         )
     }

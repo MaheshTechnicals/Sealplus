@@ -213,6 +213,15 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     },
                     onClick = { onNavigateTo(Route.DARK_THEME) },
                 )
+                if (isDarkTheme) {
+                    PreferenceSwitch(
+                        title = "Gradient Dark",
+                        description = "Premium dark mode with vibrant gradients and glassmorphism effects",
+                        icon = Icons.Outlined.DarkMode,
+                        isChecked = com.junkfood.seal.ui.common.LocalGradientDarkMode.current,
+                        onClick = { PreferenceUtil.switchGradientDarkMode() },
+                    )
+                }
                 PreferenceItem(
                     title = stringResource(R.string.language),
                     icon = Icons.Outlined.Language,

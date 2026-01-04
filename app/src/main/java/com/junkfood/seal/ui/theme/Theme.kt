@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextDirection
 import com.google.android.material.color.MaterialColors
 import com.junkfood.seal.ui.common.LocalFixedColorRoles
+import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.kyant.monet.LocalTonalPalettes
 import com.kyant.monet.dynamicColorScheme
 
@@ -37,6 +38,7 @@ fun Color.harmonizeWithPrimary(): Color =
 fun SealTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     isHighContrastModeEnabled: Boolean = false,
+    isGradientDarkEnabled: Boolean = LocalGradientDarkMode.current,
     content: @Composable () -> Unit,
 ) {
     val view = LocalView.current
@@ -59,8 +61,36 @@ fun SealTheme(
 
     val colorScheme =
         dynamicColorScheme(!darkTheme).run {
-            if (isHighContrastModeEnabled && darkTheme)
-                copy(
+            when {
+                // Gradient Dark mode overrides all other themes
+                isGradientDarkEnabled && darkTheme -> copy(
+                    primary = GradientDarkColors.GradientPrimaryEnd,
+                    onPrimary = GradientDarkColors.OnPrimary,
+                    primaryContainer = GradientDarkColors.GradientPrimaryStart,
+                    onPrimaryContainer = GradientDarkColors.OnPrimary,
+                    secondary = GradientDarkColors.GradientSecondaryEnd,
+                    onSecondary = GradientDarkColors.OnPrimary,
+                    secondaryContainer = GradientDarkColors.GradientSecondaryStart,
+                    onSecondaryContainer = GradientDarkColors.OnPrimary,
+                    tertiary = GradientDarkColors.GradientAccentEnd,
+                    onTertiary = GradientDarkColors.OnPrimary,
+                    tertiaryContainer = GradientDarkColors.GradientAccentStart,
+                    onTertiaryContainer = GradientDarkColors.OnPrimary,
+                    background = GradientDarkColors.Background,
+                    onBackground = GradientDarkColors.OnBackground,
+                    surface = GradientDarkColors.Surface,
+                    onSurface = GradientDarkColors.OnSurface,
+                    surfaceVariant = GradientDarkColors.SurfaceVariant,
+                    onSurfaceVariant = GradientDarkColors.OnSurface,
+                    surfaceContainer = GradientDarkColors.SurfaceContainer,
+                    surfaceContainerLow = GradientDarkColors.SurfaceContainerLow,
+                    surfaceContainerHigh = GradientDarkColors.SurfaceContainerHigh,
+                    surfaceContainerLowest = GradientDarkColors.Background,
+                    surfaceContainerHighest = GradientDarkColors.SurfaceContainerHigh,
+                    outline = GradientDarkColors.GlassWhiteBorder,
+                    outlineVariant = GradientDarkColors.GlassSurface,
+                )
+                isHighContrastModeEnabled && darkTheme -> copy(
                     surface = Color.Black,
                     background = Color.Black,
                     surfaceContainerLowest = Color.Black,
@@ -69,7 +99,8 @@ fun SealTheme(
                     surfaceContainerHigh = surfaceContainerLow,
                     surfaceContainerHighest = surfaceContainer,
                 )
-            else this
+                else -> this
+            }
         }
 
     val textStyle =
