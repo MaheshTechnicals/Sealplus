@@ -18,6 +18,7 @@ import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
 import com.junkfood.seal.util.NotificationUtil
 import com.junkfood.seal.util.PlaylistEntry
+import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.PreferenceUtil.getString
 import com.junkfood.seal.util.VideoInfo

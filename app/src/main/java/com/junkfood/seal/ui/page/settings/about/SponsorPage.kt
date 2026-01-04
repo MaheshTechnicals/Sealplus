@@ -72,6 +72,7 @@ import com.junkfood.seal.ui.component.SponsorItem
 import com.junkfood.seal.ui.component.gitHubAvatar
 import com.junkfood.seal.ui.component.gitHubProfile
 import com.junkfood.seal.ui.theme.SealTheme
+import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.SHOW_SPONSOR_MSG
 import com.junkfood.seal.util.SocialAccount

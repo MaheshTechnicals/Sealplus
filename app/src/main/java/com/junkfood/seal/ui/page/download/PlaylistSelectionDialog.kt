@@ -37,6 +37,7 @@ fun PlaylistSelectionDialog(
     onDismissRequest: () -> Unit = {},
     onConfirm: (IntRange) -> Unit = {},
 ) {
+    val context = LocalContext.current
     val playlistCount = playlistInfo.entries?.size ?: 0
     var from by remember { mutableStateOf(1.toString()) }
     var to by remember { mutableStateOf(playlistCount.toString()) }

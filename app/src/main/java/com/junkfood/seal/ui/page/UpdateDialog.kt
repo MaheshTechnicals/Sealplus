@@ -29,7 +29,6 @@ import com.junkfood.seal.R
 import com.junkfood.seal.util.UpdateUtil
 import com.junkfood.seal.util.makeToast
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update

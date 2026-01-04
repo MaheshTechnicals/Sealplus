@@ -325,6 +325,7 @@ fun CookieGeneratorDialog(
     onDismissRequest: () -> Unit,
 ) {
 
+    val context = LocalContext.current
     val state by cookiesViewModel.stateFlow.collectAsStateWithLifecycle()
     val profile = state.editingCookieProfile
     val url = profile.url

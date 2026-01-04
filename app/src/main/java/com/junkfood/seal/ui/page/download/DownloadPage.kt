@@ -75,6 +75,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -98,6 +99,7 @@ import com.junkfood.seal.ui.common.HapticFeedback.longPressHapticFeedback
 import com.junkfood.seal.ui.common.HapticFeedback.slightHapticFeedback
 import com.junkfood.seal.ui.common.LocalWindowWidthState
 import com.junkfood.seal.ui.component.ClearButton
+import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.ui.component.NavigationBarSpacer
 import com.junkfood.seal.ui.component.OutlinedButtonWithIcon
 import com.junkfood.seal.ui.component.VideoCard
@@ -138,6 +140,7 @@ fun DownloadPage(
 ) {
 
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val downloaderState by Downloader.downloaderState.collectAsStateWithLifecycle()
     val taskState by Downloader.taskState.collectAsStateWithLifecycle()
     val viewState by homePageViewModel.viewStateFlow.collectAsStateWithLifecycle()
