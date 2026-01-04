@@ -38,23 +38,74 @@ jobs:
         keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-    - name: Upload Signed Artifact
-      if: steps.sign_app.outcome == 'success'
-      uses: actions/upload-artifact@v4
-      with:
-        name: signed-apks
-        path: app/build/outputs/apk/**/*-signed.apk
-        if-no-files-found: error
-        retention-days: 20
+    - name: Get version name
+      id: version
+      run: |
+        VERSION=$(grep -oP 'versionName = "\K[^"]+' buildSrc/src/main/kotlin/Version.kt | head -1 || echo "$(grep -oP 'versionMajor = \K\d+' buildSrc/src/main/kotlin/Version.kt).$(grep -oP 'versionMinor = \K\d+' buildSrc/src/main/kotlin/Version.kt).$(grep -oP 'versionPatch = \K\d+' buildSrc/src/main/kotlin/Version.kt)")
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION}"
 
-    - name: Upload Unsigned Artifact
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.VERSION }}
+        release_name: Seal Plus v${{ steps.version.outputs.VERSION }}
+        body: |
+          ## Seal Plus v${{ steps.version.outputs.VERSION }}
+          
+          ### 📦 Installation
+          Download the appropriate APK for your device:
+          - **Universal APK**: Works on all devices (recommended)
+          - **arm64-v8a**: For 64-bit ARM devices (most modern phones)
+          - **armeabi-v7a**: For 32-bit ARM devices
+          - **x86_64**: For 64-bit x86 devices
+          - **x86**: For 32-bit x86 devices
+          
+          ### 🌐 Features
+          - Video/audio downloader with yt-dlp support
+          - Material Design 3 UI
+          - 50+ language translations
+          - Custom command templates
+          - Format selection and quality options
+          
+          Built on: ${{ github.event.head_commit.timestamp }}
+          Commit: ${{ github.sha }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Signed APKs to Release
+      if: steps.sign_app.outcome == 'success'
+      run: |
+        for file in app/build/outputs/apk/**/*-signed.apk; do
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            echo "Uploading $filename"
+            gh release upload v${{ steps.version.outputs.VERSION }} "$file" --clobber
+          fi
+        done
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Unsigned APKs to Release
       if: steps.sign_app.outcome != 'success'
+      run: |
+        for file in app/build/outputs/apk/fdroid/release/*.apk app/build/outputs/apk/generic/release/*.apk app/build/outputs/apk/githubPreview/release/*.apk; do
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            echo "Uploading $filename"
+            gh release upload v${{ steps.version.outputs.VERSION }} "$file" --clobber
+          fi
+        done
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Artifacts (Backup)
       uses: actions/upload-artifact@v4
       with:
-        name: unsigned-apks
-        path: |
-          app/build/outputs/apk/fdroid/release/*.apk
-          app/build/outputs/apk/generic/release/*.apk
-          app/build/outputs/apk/githubPreview/release/*.apk
+        name: apk-files
+        path: app/build/outputs/apk/**/*.apk
         if-no-files-found: error
         retention-days: 20
