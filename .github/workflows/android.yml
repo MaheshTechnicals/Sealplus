@@ -27,7 +27,7 @@ jobs:
 
     - name: Sign app APK
       id: sign_app
-      if: ${{ secrets.SIGNING_KEY != '' }}
+      continue-on-error: true
       uses: ilharp/sign-android-release@nightly
       with:
         releaseDir: app/build/outputs/apk/release
@@ -37,7 +37,7 @@ jobs:
         keyPassword: ${{ secrets.KEY_PASSWORD }}
 
     - name: Upload Signed Artifact
-      if: ${{ secrets.SIGNING_KEY != '' }}
+      if: steps.sign_app.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: signed-apks
@@ -46,7 +46,7 @@ jobs:
         retention-days: 20
 
     - name: Upload Unsigned Artifact
-      if: ${{ secrets.SIGNING_KEY == '' }}
+      if: steps.sign_app.outcome != 'success'
       uses: actions/upload-artifact@v4
       with:
         name: unsigned-apks
