@@ -5,6 +5,79 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.1][2.1.1] - 2026-01-04
+
+### 2026 Platform Updates
+
+#### Updated
+
+* **Platform & Build Tools**
+  * Updated Android Gradle Plugin to 8.8.0
+  * Updated Gradle to 8.12
+  * Updated Kotlin to 2.1.0 with enhanced compiler optimizations
+  * Updated target SDK to 36 (Android 16)
+  * Updated compile SDK to 36
+  * Updated KSP to 2.1.0-1.0.29 for better annotation processing
+
+* **Core Dependencies**
+  * Updated Jetpack Compose BOM to 2026.01.00 with latest Material Design 3 improvements
+  * Updated Kotlin Coroutines to 1.10.1 for improved async performance
+  * Updated AndroidX Core to 1.16.0
+  * Updated AndroidX Lifecycle to 2.9.0
+  * Updated AndroidX Navigation to 2.9.0
+  * Updated AndroidX Activity to 1.11.0
+  * Updated AppCompat to 1.8.0
+  * Updated Material Components to 1.13.0
+
+* **Media & Networking**
+  * Updated Coil to 3.0.0 with enhanced image loading capabilities
+  * Updated OkHttp to stable 5.0.0 release
+  * Updated youtubedl-android to 0.18.0 with latest yt-dlp improvements
+  * Updated Kotlinx Serialization to 1.8.0
+
+* **Database & Storage**
+  * Updated Room to 2.7.0 with improved performance and stability
+  * Updated Kotlinx DateTime to 0.6.2
+
+* **Dependency Injection & UI**
+  * Updated Koin to 4.1.0 for better DI performance
+  * Updated Accompanist libraries to 0.36.0
+  * Updated ConstraintLayout Compose to 1.2.0
+  * Updated Graphics Shapes to 1.1.0
+
+* **Testing & Quality**
+  * Updated Espresso to 3.6.1
+  * Updated AndroidX Test Ext to 1.2.1
+  * Updated ktfmt to 0.21.0 for consistent code formatting
+
+* **CI/CD Infrastructure**
+  * Updated GitHub Actions workflows to latest versions
+  * Updated setup-java action to v4
+  * Updated gradle/actions to v4
+  * Updated android-actions/setup-android to v3.2.1
+  * Updated actions/stale to v10 for issue management
+  * Updated actions/checkout to v4 across all workflows
+
+### Fixed
+
+* Improved compatibility with Android 16 APIs
+* Enhanced stability with latest Kotlin compiler
+* Better memory management with updated coroutines
+
+### Performance
+
+* Faster build times with Gradle 8.12
+* Improved runtime performance with Compose BOM 2026.01.00
+* Optimized database operations with Room 2.7.0
+* Enhanced network efficiency with OkHttp 5.0.0 stable
+
+### Developer Experience
+
+* Updated all development tools for 2026
+* Improved CI/CD pipeline reliability
+* Better code formatting with latest ktfmt
+* Enhanced type safety with Kotlin 2.1.0
+
 ## [v2.0.0][2.0.0] - unreleased
 
 ### Notable changes from v1.13
