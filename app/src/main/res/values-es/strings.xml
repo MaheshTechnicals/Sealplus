@@ -291,7 +291,7 @@
     <string name="switch_to_github_builds">cambiando a las compilaciones de GitHub</string>
     <string name="okay">De acuerdo</string>
     <string name="got_it">Entendido</string>
-    <string name="auto_update_disabled_msg">La actualización automática no está disponible para %1$s builds. Si no tienes %1$s instalado en tu dispositivo, o te gustaría tener una vista previa de las próximas novedades de Seal, considera %2$s.</string>
+    <string name="auto_update_disabled_msg">La actualización automática no está disponible para %1$s builds. Si no tienes %1$s instalado en tu dispositivo, o te gustaría tener una vista previa de las próximas novedades de Seal Plus, considera %2$s.</string>
     <string name="feature_unavailable">Característica no disponible</string>
     <string name="no_custom_command_tasks">No hay tareas de comando personalizadas</string>
     <string name="msg_from_developer">Mensaje del desarrollador</string>

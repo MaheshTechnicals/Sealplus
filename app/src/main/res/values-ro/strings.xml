@@ -199,7 +199,7 @@
     <string name="show_logs">Arată jurnal</string>
     <string name="logs">Jurnal</string>
     <string name="abs_hint">Majoritatea platformelor de streaming video oferă audio și video separat, puteți selecta și îmbina un format numai audio cu un format numai video într-un singur videoclip.</string>
-    <string name="auto_update_disabled_msg">Actualizarea automată nu este disponibilă pentru versiunile %1$s. Dacă nu aveți %1$s instalat pe dispozitiv sau doriți să previzualizați funcțiile noi viitoare în Seal, vă rugăm să luați în considerare %2$s.</string>
+    <string name="auto_update_disabled_msg">Actualizarea automată nu este disponibilă pentru versiunile %1$s. Dacă nu aveți %1$s instalat pe dispozitiv sau doriți să previzualizați funcțiile noi viitoare în Seal Plus, vă rugăm să luați în considerare %2$s.</string>
     <string name="switch_to_github_builds">trecerea la versiunile GitHub</string>
     <string name="okay">Ok</string>
     <string name="got_it">Am înţeles</string>

@@ -128,7 +128,7 @@
     <string name="playlist_indicator_text">Dina-download ang playlist (%1$d/%2$d)…</string>
     <string name="from">Mula sa</string>
     <string name="permission_issue">Isyu sa pahintulot sa storage</string>
-    <string name="service_title">Nag da-download ang Seal…</string>
+    <string name="service_title">Nag da-download ang Seal Plus…</string>
     <string name="battery_configuration">Pagsasaayos ng baterya</string>
     <string name="prefix">Ang prefix</string>
     <string name="restart">I-restart</string>
@@ -260,7 +260,7 @@
     <string name="temporary_directory_desc">Mag-imbak ng mga pansamantalang file sa internal directory</string>
     <string name="sponsor">Isponsor</string>
     <string name="clear_all_cookies_desc">Tanggalin ang lahat ng cookies na nakaimbak sa app para sa kabutihan?</string>
-    <string name="auto_update_disabled_msg">Hindi available ang auto-update para sa %1$s na mga build. Kung wala kang %1$s na naka-install sa iyong device, o gusto mong i-preview ang paparating na mga bagong feature sa Seal, mangyaring isaalang-alang ang %2$s.</string>
+    <string name="auto_update_disabled_msg">Hindi available ang auto-update para sa %1$s na mga build. Kung wala kang %1$s na naka-install sa iyong device, o gusto mong i-preview ang paparating na mga bagong feature sa Seal Plus, mangyaring isaalang-alang ang %2$s.</string>
     <string name="switch_to_github_builds">Lumipat sa mga build ng GitHub</string>
     <string name="enable_auto_update">Paganahin ang automatic update</string>
     <string name="auto_update">Automatic ang update</string>
@@ -282,7 +282,7 @@
     <string name="sponsors">Mga sponsor</string>
     <string name="clip_video_desc">Gumawa ng mga video clip sa pahina ng pagpili ng format</string>
     <string name="add">Idagdag</string>
-    <string name="sponsor_msg">Ang Seal ay palaging libre at open source para sa lahat. Kung gusto mo ito, mangyaring isaalang-alang ang pag-sponsor sa akin sa GitHub!</string>
+    <string name="sponsor_msg">Ang Seal Plus ay palaging libre at open source para sa lahat. Kung gusto mo ito, mangyaring isaalang-alang ang pag-sponsor sa akin sa GitHub!</string>
     <string name="subtitle_desc">Mga wika, mag-embed ng mga subtitle, at auto captions</string>
     <string name="stable_channel">Matibay</string>
     <string name="update_channel">I-update ang channel</string>

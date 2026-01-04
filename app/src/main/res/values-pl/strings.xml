@@ -242,7 +242,7 @@
     <string name="enable_experimental_feature">Włączyć funkcje eksperymentalne\?</string>
     <string name="feature_unavailable">Funkcja niedostępna</string>
     <string name="clip_video_dialog_msg">Pobieranie przy użyciu tej funkcji będzie delegowane do FFmpeg w celu pobrania wybranych fragmentów wideo, ta funkcja jest nadal w fazie eksperymentalnej, a przycinanie nie będzie całkowicie dokładne, nie wszystkie formaty obsługują tę funkcję i możesz doświadczać wolniejszych prędkości pobierania.</string>
-    <string name="auto_update_disabled_msg">Automatyczna aktualizacja nie jest dostępna dla %1$s kompilacji. Jeżeli nie masz %1$s zainstalowanej na telefonie lub chciałbyś zobaczyć nadchodzące nowe funkcje w Seal, rozważ %2$s.</string>
+    <string name="auto_update_disabled_msg">Automatyczna aktualizacja nie jest dostępna dla %1$s kompilacji. Jeżeli nie masz %1$s zainstalowanej na telefonie lub chciałbyś zobaczyć nadchodzące nowe funkcje w Seal Plus, rozważ %2$s.</string>
     <string name="no_custom_command_tasks">Brak niestandardowych rozkazów poleceń</string>
     <string name="export_to_clipboard">Eksportuj do schowka</string>
     <string name="update">Aktualizacja</string>

@@ -23,7 +23,7 @@ import okhttp3.internal.closeQuietly
 const val AUDIO_REGEX = "(mp3|aac|opus|m4a)$"
 const val THUMBNAIL_REGEX = "\\.(jpg|png)$"
 const val SUBTITLE_REGEX = "\\.(lrc|vtt|srt|ass|json3|srv.|ttml)$"
-private const val PRIVATE_DIRECTORY_SUFFIX = ".Seal"
+private const val PRIVATE_DIRECTORY_SUFFIX = ".SealPlus"
 
 object FileUtil {
     fun openFileFromResult(downloadResult: Result<List<String>>) {

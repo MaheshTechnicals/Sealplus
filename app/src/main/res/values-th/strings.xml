@@ -240,7 +240,7 @@
     <string name="convert_audio_format_desc">การเข้ารหัสไฟล์เสียงอีกครั้งจะทำให้ไฟล์เสียงสูญเสียคุณภาพและขนาดไฟล์จะเพิ่มมากขึ้น</string>
     <string name="advanced_settings">ขั้นสูง</string>
     <string name="delete_info_msg">ต้องการลบ \"%1$s\" ออกจากประวัติการดาวน์โหลดของคุณอย่างถาวร?</string>
-    <string name="auto_update_disabled_msg">ออโต้อัปเดทไม่สามารถใช้ได้สำหรับ %1$s นี้ ถ้าคุณไม่ได้ติดตั้ง %1$s บนอุปกรณ์ของคุณหรือต้องการดูฟีเจอร์ใหม่ที่กำลังจะมาใน Seal โปรดพิจารณา %2$s</string>
+    <string name="auto_update_disabled_msg">ออโต้อัปเดทไม่สามารถใช้ได้สำหรับ %1$s นี้ ถ้าคุณไม่ได้ติดตั้ง %1$s บนอุปกรณ์ของคุณหรือต้องการดูฟีเจอร์ใหม่ที่กำลังจะมาใน Seal Plus โปรดพิจารณา %2$s</string>
     <string name="embed_subtitles_mkv_msg">สำหรับการฝังซับไทเทิลฝังแยก วิดีโอจะถูกรีมักซ์เข้ากับคอนเทนเนอร์ mkv คุณสามารถใช้ VLC Media Player หรือแอปพลิเคชั่นอื่น ๆ ที่รองรับเพื่อเล่นวีดีโอที่มีซับไทเทิลฝังแยก</string>
     <string name="settings_before_download_desc">กำหนดตัวเลือกก่อนการดาวน์โหลด</string>
     <string name="version">เวอร์ชั่น</string>

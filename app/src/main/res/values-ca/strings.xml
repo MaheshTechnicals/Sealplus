@@ -318,7 +318,7 @@
     <string name="allow_always">Permet sempre</string>
     <string name="dont_allow">No permetis</string>
     <string name="copy_and_exit">Copia i surt</string>
-    <string name="sponsor_msg">El Seal serà sempre lliure i de codi obert per a tothom. Si us agrada, considereu patrocinar-me a GitHub!</string>
+    <string name="sponsor_msg">El Seal Plus serà sempre lliure i de codi obert per a tothom. Si us agrada, considereu patrocinar-me a GitHub!</string>
     <string name="audio_format">Format d\'àudio</string>
     <string name="enable_experimental_feature">Voleu habilitar la funcionalitat experimental?</string>
     <string name="clip_video_desc">Fes els videoclips a la pàgina de selecció de format</string>

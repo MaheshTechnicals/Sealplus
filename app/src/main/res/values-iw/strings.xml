@@ -145,7 +145,7 @@
     <string name="show_logs">הצג יומן</string>
     <string name="logs">לוג</string>
     <string name="edit_shortcuts_desc">ערוך את הקיצורים המותאמים אישית שניתן להשתמש בהם כדי ליצור תבניות פקודות.</string>
-    <string name="sponsor_msg">Seal יהיה תמיד קוד פתוח ובחינם לכולם. אם אתה אוהב את זה, בבקשה שקול לתת לי חסות ב-GitHub!</string>
+    <string name="sponsor_msg">Seal Plus יהיה תמיד קוד פתוח ובחינם לכולם. אם אתה אוהב את זה, בבקשה שקול לתת לי חסות ב-GitHub!</string>
     <string name="clear_all_cookies_desc">האם למחוק לצמיתות את כל העוגיות המאוחסנות באפליקציה?</string>
     <string name="clip_video_desc">צור קטעי וידאו בדף בחירת הפורמט</string>
     <string name="proxy">פרוקסי</string>
@@ -300,7 +300,7 @@
     <string name="aria2_desc">השתמש ב-aria2c בתור מוריד חיצוני</string>
     <string name="start_execute">התחל הרצת פקודה</string>
     <string name="download_range_desc">ציין את טווח הסרטונים להורדה מהפלייליסט \"%3$s\" (מ-%1$d עד %2$d).</string>
-    <string name="service_title">Seal מוריד…</string>
+    <string name="service_title">Seal Plus מוריד…</string>
     <string name="download_with_cellular">הורדה באמצעות חיבור סלולרי</string>
     <string name="export_to_file">ייצוא לקובץ</string>
     <string name="sponsorblock_desc">הסר או סמן קטעים בסרטונים באמצעות SponsorBlock API</string>
@@ -354,7 +354,7 @@
     <string name="prefer_quality_desc">העדף פורמט AV1, VP9 או H.265 לצפייה באפליקציות תואמות</string>
     <string name="multiselect_item_count">%1$d סרטונים, %2$d קובצי שמע</string>
     <string name="embed_subtitles_mkv_msg">כדי להטמיע כתוביות רכות, סרטונים יבוצעו מחדש לתוך מיכל mkv. אתה יכול להשתמש ב-VLC Media Player או באפליקציות תואמות אחרות כדי לצפות בסרטונים עם כתוביות רכות.</string>
-    <string name="auto_update_disabled_msg">עדכון אוטומטי אינו זמין עבור בניית %1$s. אם אין לך %1$s מותקן במכשיר שלך, או אם תרצה לקבל תצוגה מקדימה של תכונות חדשות של Seal, שקול להשתמש ב-%2$s.</string>
+    <string name="auto_update_disabled_msg">עדכון אוטומטי אינו זמין עבור בניית %1$s. אם אין לך %1$s מותקן במכשיר שלך, או אם תרצה לקבל תצוגה מקדימה של תכונות חדשות של Seal Plus, שקול להשתמש ב-%2$s.</string>
     <string name="ua_header">כותרת User-Agent</string>
     <string name="dynamic_color_desc">החל צבעים מהטפט על ערכת הנושא של האפליקציה</string>
     <string name="custom_command_enabled_hint">חלק מהאפשרויות אינן זמינות בעת שימוש בפקודה מותאמת אישית</string>

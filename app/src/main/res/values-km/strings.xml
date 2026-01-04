@@ -134,7 +134,7 @@
     <string name="check_for_updates">ពិនិត្យបច្ចុប្បន្នភាព</string>
     <string name="battery_configuration">ការកំណត់រចនាសម្ព័ន្ធថ្ម</string>
     <string name="battery_configuration_desc">ពុំអើពើបង្កើនប្រសិទ្ធភាពថ្ម សម្រាប់កម្មវិធីនេះដើម្បីដោនឡូដនៅផ្ទៃខាងក្រោយ</string>
-    <string name="service_title">Seal គឺកំពុងតែដោនឡូដ…</string>
+    <string name="service_title">Seal Plus គឺកំពុងតែដោនឡូដ…</string>
     <string name="unknown_error">កំហុសមិនស្គាល់</string>
     <string name="translate">បកប្រែ</string>
     <string name="translate_desc">ជួយបកប្រែកម្មវិធីនេះលើ Hosted Weblate</string>

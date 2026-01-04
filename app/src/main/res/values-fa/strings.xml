@@ -97,7 +97,7 @@
     <string name="subdirectory_desc">فایل‌ها را در پوشه‌هایی با نام حیطه مربوطه ذخیره کنید</string>
     <string name="permission_issue">مشکل در مجوز ذخیره سازی</string>
     <string name="permission_issue_desc">دایرکتوری های خارج از Download/ و Documents/ پشتیبانی نمی شوند</string>
-    <string name="service_title">Seal در حال دانلود است…</string>
+    <string name="service_title">Seal Plus در حال دانلود است…</string>
     <string name="best_quality">بهترین کیفیت (پیش فرض)</string>
     <string name="settings_before_download">قبل از دانلود پیکربندی کنید</string>
     <string name="settings_before_download_desc">تنظیمات برگزیده را قبل از دانلود پیکربندی کنید</string>
@@ -281,7 +281,7 @@
     <string name="sponsor_msg2">بسیار از شما متشکرم!</string>
     <string name="audio_format">فرمت صوتی</string>
     <string name="no_downloaded_media">رسانه دانلود شده ای وجود ندارد</string>
-    <string name="auto_update_disabled_msg">به‌روزرسانی خودکار برای ساخت‌های %1$s در دسترس نیست. اگر %1$s را روی دستگاه خود نصب نکرده‌اید، یا می‌خواهید ویژگی‌های جدید آینده را در Seal پیش‌نمایش کنید، لطفاً %2$s را در نظر بگیرید.</string>
+    <string name="auto_update_disabled_msg">به‌روزرسانی خودکار برای ساخت‌های %1$s در دسترس نیست. اگر %1$s را روی دستگاه خود نصب نکرده‌اید، یا می‌خواهید ویژگی‌های جدید آینده را در Seal Plus پیش‌نمایش کنید، لطفاً %2$s را در نظر بگیرید.</string>
     <string name="clip_video_dialog_msg">دانلودهایی که از این ویژگی استفاده می کنند به FFmpeg واگذار می شود تا بخش های انتخابی ویدیو را دانلود کند، این ویژگی همچنان آزمایشی است و برش کاملاً دقیق نخواهد بود، همه فرمت ها از این ویژگی پشتیبانی نمی کنند و ممکن است سرعت دانلود پایین تری را تجربه کنید.</string>
     <string name="msg_from_developer">پیام از طرف توسعه دهنده</string>
     <string name="switch_to_github_builds">تغییر به نسخه گیتهاب</string>
@@ -292,7 +292,7 @@
     <string name="no_custom_command_tasks">بدون وظایف دستوری سفارشی</string>
     <string name="sponsor">حامی مالی</string>
     <string name="sponsor_desc">با حمایت مالی در GitHub از این برنامه حمایت کنید</string>
-    <string name="sponsor_msg">Seal همیشه رایگان و منبع باز برای همه خواهد بود. اگر دوست دارید، لطفاً در GitHub از من حمایت کنید!</string>
+    <string name="sponsor_msg">Seal Plus همیشه رایگان و منبع باز برای همه خواهد بود. اگر دوست دارید، لطفاً در GitHub از من حمایت کنید!</string>
     <string name="feedback">بازخورد</string>
     <string name="sponsors">حامیان</string>
     <string name="temporary_directory_desc">دخیره فایل های موقت را در دایرکتوری داخلی</string>

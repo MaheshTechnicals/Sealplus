@@ -101,7 +101,7 @@
     <string name="permission_issue">Problem mit der Speicherberechtigung</string>
     <string name="battery_configuration">Akkukonfiguration</string>
     <string name="battery_configuration_desc">Akku-Optimierung für diese App ignorieren, um im Hintergrund herunterzuladen</string>
-    <string name="service_title">Seal lädt herunter …</string>
+    <string name="service_title">Seal Plus lädt herunter …</string>
     <string name="channel_description">Benachrichtigung über heruntergeladene Dateien und den Fortschritt</string>
     <string name="additional_settings">Zusätzliche Einstellungen</string>
     <string name="playlist_indicator_text">Herunterladen der Wiedergabeliste (%1$d/%2$d)…</string>
@@ -279,7 +279,7 @@
     <string name="temporary_directory_desc">Temporäre Dateien im internen Ordner speichern</string>
     <string name="sponsor">Sponsor</string>
     <string name="sponsor_desc">Unterstütze diese App durch Sponsoring auf GitHub</string>
-    <string name="sponsor_msg">Seal wird immer frei und kostenlos für alle sein. Wenn du es magst, bitte denke bitte darüber nach, mich auf GitHub zu sponsern!</string>
+    <string name="sponsor_msg">Seal Plus wird immer frei und kostenlos für alle sein. Wenn du es magst, bitte denke bitte darüber nach, mich auf GitHub zu sponsern!</string>
     <string name="feedback">Rückmeldung</string>
     <string name="sponsors">Sponsoren</string>
     <string name="no_downloaded_media">Keine heruntergeladenen Medien</string>

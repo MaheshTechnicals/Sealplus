@@ -110,7 +110,7 @@
     <string name="permission_issue">Problème de permission de stockage</string>
     <string name="permission_issue_desc">Les répertoires autres que Download/ et Documents/ ne sont pas pris en charge</string>
     <string name="battery_configuration_desc">Ignorer l\'optimisation de la batterie pour les téléchargements en arrière-plan</string>
-    <string name="service_title">Seal est en cours de téléchargement…</string>
+    <string name="service_title">Seal Plus est en cours de téléchargement…</string>
     <string name="unknown_error">Erreur inconnue</string>
     <string name="video_url">Lien vidéo</string>
     <string name="download_finish_notification">Téléchargement terminé. Appuyez pour ouvrir.</string>
@@ -284,7 +284,7 @@
     <string name="clear_all_cookies_desc">Supprimer définitivement tous les cookies stockés dans l\'application ?</string>
     <string name="sponsor">Sponsor</string>
     <string name="sponsor_desc">Soutenez cette application en la parrainant sur GitHub</string>
-    <string name="sponsor_msg">Seal sera toujours libre et gratuit pour tout le monde. Si vous l\'aimez, pensez à me parrainer sur GitHub !</string>
+    <string name="sponsor_msg">Seal Plus sera toujours libre et gratuit pour tout le monde. Si vous l\'aimez, pensez à me parrainer sur GitHub !</string>
     <string name="feedback">Remarques</string>
     <string name="sponsors">Sponsors</string>
     <string name="temporary_directory_desc">Stocker les fichiers temporaires dans le répertoire interne</string>
@@ -292,7 +292,7 @@
     <string name="got_it">Compris</string>
     <string name="feature_unavailable">Fonctionnalité non disponible</string>
     <string name="no_custom_command_tasks">Aucune tâche de commande personnalisée</string>
-    <string name="auto_update_disabled_msg">La mise à jour automatique n\'est pas disponible pour les versions %1$s. Si vous n\'avez pas installé %1$s sur votre appareil, ou si vous souhaitez avoir un aperçu des nouvelles fonctionnalités de Seal, veuillez consulter %2$s.</string>
+    <string name="auto_update_disabled_msg">La mise à jour automatique n\'est pas disponible pour les versions %1$s. Si vous n\'avez pas installé %1$s sur votre appareil, ou si vous souhaitez avoir un aperçu des nouvelles fonctionnalités de Seal Plus, veuillez consulter %2$s.</string>
     <string name="switch_to_github_builds">passer aux moutures GitHub</string>
     <string name="msg_from_developer">Message du développeur</string>
     <string name="sponsor_msg2">Merci beaucoup !</string>

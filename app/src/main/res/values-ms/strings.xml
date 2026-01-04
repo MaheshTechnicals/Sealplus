@@ -273,7 +273,7 @@
     <string name="beta_features">Beta</string>
     <string name="enable_experimental_feature">Membenarkan ciri percubaan\?</string>
     <string name="clip_video_desc">Buat klip video dalam muka surat pilihan format</string>
-    <string name="auto_update_disabled_msg">Kemas kini automatik tidak ada untuk binaan %1$s. Jika anda tiada %1$s dipasang pada peranti anda, atau anda ingin pratonton ciri baharu yang akan datang dalam Seal, sila pertimbangkan %2$s.</string>
+    <string name="auto_update_disabled_msg">Kemas kini automatik tidak ada untuk binaan %1$s. Jika anda tiada %1$s dipasang pada peranti anda, atau anda ingin pratonton ciri baharu yang akan datang dalam Seal Plus, sila pertimbangkan %2$s.</string>
     <string name="switch_to_github_builds">bertukar kepada binaan GitHub</string>
     <string name="okay">Baik</string>
     <string name="got_it">Faham</string>

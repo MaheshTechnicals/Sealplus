@@ -145,7 +145,7 @@
     <string name="battery_configuration">Configuração da bateria</string>
     <string name="from">Iniciar</string>
     <string name="battery_configuration_desc">Ignorar a otimização da bateria para que esta aplicação faça descarga em segundo plano</string>
-    <string name="service_title">O Seal está a descarregar…</string>
+    <string name="service_title">O Seal Plus está a descarregar…</string>
     <string name="unknown_error">Erro desconhecido</string>
     <string name="translate">Traduzir</string>
     <string name="prefix">Prefixo</string>
@@ -270,7 +270,7 @@
     <string name="update_channel">Canal de atualização</string>
     <string name="apply">Aplicar</string>
     <string name="unlimited">Ilimitado</string>
-    <string name="sponsor_msg">O Seal será sempre gratuito e de código aberto para todos. Se gostar, por favor considere patrocinar-me no GitHub!</string>
+    <string name="sponsor_msg">O Seal Plus será sempre gratuito e de código aberto para todos. Se gostar, por favor considere patrocinar-me no GitHub!</string>
     <string name="lowest_bitrate">Taxa de bits mais baixa</string>
     <string name="audio_quality">Qualidade do áudio</string>
     <string name="audio_quality_desc">Limitar a taxa de bits de áudio quando estão presentes várias qualidades</string>
@@ -292,7 +292,7 @@
     <string name="feature_unavailable">Funcionalidade não disponível</string>
     <string name="rename">Renomear</string>
     <string name="minute">minuto</string>
-    <string name="auto_update_disabled_msg">A atualização automática não está disponível para %1$s compilações. Se não tiver %1$s instalado no seu dispositivo, ou se pretender pré-visualizar as novas funcionalidades do Seal, considere %2$s.</string>
+    <string name="auto_update_disabled_msg">A atualização automática não está disponível para %1$s compilações. Se não tiver %1$s instalado no seu dispositivo, ou se pretender pré-visualizar as novas funcionalidades do Seal Plus, considere %2$s.</string>
     <string name="second">segundo</string>
     <string name="got_it">Entendi</string>
     <string name="clear_all_cookies">Limpar todos os cookies</string>

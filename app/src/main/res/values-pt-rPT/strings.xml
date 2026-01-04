@@ -153,7 +153,7 @@
     <string name="release">Versão mais recente</string>
     <string name="download_desc">Em seguida, clique em \"Descarregar\" depois de ajustar as definições.</string>
     <string name="audio_directory">Pasta áudio</string>
-    <string name="sponsor_msg">O Seal será sempre gratuito e de código aberto para todos. Se gostar, por favor considere patrocinar-me no GitHub!</string>
+    <string name="sponsor_msg">O Seal Plus será sempre gratuito e de código aberto para todos. Se gostar, por favor considere patrocinar-me no GitHub!</string>
     <string name="crop_artwork">Cortar arte</string>
     <string name="subtitle_sponsorblock">As legendas podem ser desfasadas no tempo ao remover segmentos SponsorBlock.</string>
     <string name="start">Iniciar</string>
@@ -167,7 +167,7 @@
     <string name="enable_experimental_feature">Ativar a funcionalidade experimental?</string>
     <string name="running_tasks">Tarefas em curso</string>
     <string name="general_settings">Geral</string>
-    <string name="service_title">O Seal está a descarregar…</string>
+    <string name="service_title">O Seal Plus está a descarregar…</string>
     <string name="ua_header">Cabeçalho de requisição User-Agent</string>
     <string name="show_logs">Mostrar registo</string>
     <string name="print_details_desc">Imprimir mensagens detalhadas durante o descarregamento</string>
@@ -295,7 +295,7 @@
     <string name="feature_unavailable">Funcionalidade não disponível</string>
     <string name="temporary_directory_desc">Armazenar ficheiros temporários no diretório interno</string>
     <string name="system_settings">Definições do sistema</string>
-    <string name="auto_update_disabled_msg">A atualização automática não está disponível para %1$s compilações. Se não tiver %1$s instalado no seu dispositivo, ou se pretender pré-visualizar as novas funcionalidades do Seal, considere %2$s.</string>
+    <string name="auto_update_disabled_msg">A atualização automática não está disponível para %1$s compilações. Se não tiver %1$s instalado no seu dispositivo, ou se pretender pré-visualizar as novas funcionalidades do Seal Plus, considere %2$s.</string>
     <string name="cookies_usage_msg">O descarregamento de alguns sites requer informações de autenticação da conta. Clique em \"Gerar novos cookies\", introduza o URL do sítio Web e, em seguida, inicie sessão com a sua conta na página do browser; a aplicação irá gerá-los para si.</string>
     <string name="proxy_desc">Utilizar proxy para ligações à Internet</string>
     <string name="generate_new_cookies">Gerar novos cookies</string>

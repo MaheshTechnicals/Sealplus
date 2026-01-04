@@ -235,7 +235,7 @@
     <string name="update_channel">채널 업데이트</string>
     <string name="auto_update">자동 업데이트</string>
     <string name="enable_auto_update">자동 업데이트 사용</string>
-    <string name="sponsor_msg">Seal은 항상 무료이며 모든 사람을 위한 오픈 소스입니다. 마음에 드신다면 GitHub에서 저를 후원해 주세요!</string>
+    <string name="sponsor_msg">Seal Plus은 항상 무료이며 모든 사람을 위한 오픈 소스입니다. 마음에 드신다면 GitHub에서 저를 후원해 주세요!</string>
     <string name="msg_from_developer">개발자 메시지</string>
     <string name="sponsor_msg2">매우 감사합니다!</string>
     <string name="switch_to_github_builds">GitHub 빌드로 전환</string>
@@ -281,7 +281,7 @@
     <string name="update_channel_desc">새로운 기능과 변경 사항을 미리 보기위해 시험판 빌드를 설치합니다.
 \n
 \n이러한 버전에는 약간의 불안정성이 있을 수 있으므로, 향후 앱을 개선하는 데 도움이 되도록 문제가 발생하면 주저하지 말고 피드백을 보내주세요.</string>
-    <string name="auto_update_disabled_msg">%1$s 빌드에는 자동 업데이트를 사용할 수 없습니다. 장치에 %1$s이(가) 설치되어 있지 않거나 Seal의 향후 새 기능을 미리 보려면 %2$s를 고려하세요.</string>
+    <string name="auto_update_disabled_msg">%1$s 빌드에는 자동 업데이트를 사용할 수 없습니다. 장치에 %1$s이(가) 설치되어 있지 않거나 Seal Plus의 향후 새 기능을 미리 보려면 %2$s를 고려하세요.</string>
     <string name="no_custom_command_tasks">사용자 지정 명령 작업 없음</string>
     <string name="title">제목</string>
     <string name="download_video_desc">URL에서 동영상 다운로드</string>
