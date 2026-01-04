@@ -51,8 +51,8 @@ jobs:
       with:
         name: unsigned-apks
         path: |
-          app/build/outputs/apk/fdroidRelease/*.apk
-          app/build/outputs/apk/genericRelease/*.apk
-          app/build/outputs/apk/githubPreviewRelease/*.apk
+          app/build/outputs/apk/fdroid/release/*.apk
+          app/build/outputs/apk/generic/release/*.apk
+          app/build/outputs/apk/githubPreview/release/*.apk
         if-no-files-found: error
         retention-days: 20
