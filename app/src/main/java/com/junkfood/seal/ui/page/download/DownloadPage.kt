@@ -106,7 +106,7 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialog
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.page.downloadv2.configure.FormatPage
-import com.junkfood.seal.ui.theme.PreviewThemeLight
+import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.CELLULAR_DOWNLOAD
 import com.junkfood.seal.util.CONFIGURE
@@ -118,7 +118,6 @@ import com.junkfood.seal.util.NOTIFICATION
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.matchUrlFromClipboard
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -154,7 +153,7 @@ fun DownloadPage(
                 isGranted: Boolean ->
                 showNotificationDialog = false
                 if (!isGranted) {
-                    ToastUtil.makeToast(R.string.permission_denied)
+                    context.makeToast(R.string.permission_denied)
                 }
             }
         } else null
@@ -181,7 +180,7 @@ fun DownloadPage(
             if (b) {
                 checkNetworkOrDownload()
             } else {
-                ToastUtil.makeToast(R.string.permission_denied)
+                context.makeToast(R.string.permission_denied)
             }
         }
 
@@ -534,7 +533,7 @@ fun DownloadPageImpl(
                                     "\nURL: ${errorState.url}\n${errorState.report}"
                             )
                         )
-                        ToastUtil.makeToast(R.string.error_copied)
+                        context.makeToast(R.string.error_copied)
                     }
                 }
                 content()
@@ -777,7 +776,7 @@ fun FABs(
 @Composable
 @Preview
 fun DownloadPagePreview() {
-    PreviewThemeLight {
+    SealTheme(darkTheme = false) {
         Column() {
             DownloadPageImpl(
                 downloaderState = Downloader.State.DownloadingVideo,

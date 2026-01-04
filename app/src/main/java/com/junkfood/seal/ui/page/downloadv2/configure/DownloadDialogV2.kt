@@ -139,7 +139,6 @@ import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.TEMPLATE_ID
 import com.junkfood.seal.util.THUMBNAIL
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.USE_CUSTOM_AUDIO_PRESET
 import com.junkfood.seal.util.VIDEO_FORMAT
 import com.junkfood.seal.util.VIDEO_QUALITY
@@ -314,7 +313,7 @@ private fun ErrorPage(modifier: Modifier = Modifier, state: Error, onActionPost:
         )
 
         Row(modifier = Modifier) {
-            FilledTonalButton(onClick = { onActionPost(state.action) }) { Text("Retry") }
+            FilledTonalButton(onClick = { onActionPost(state.action) }) { Text(stringResource(R.string.retry)) }
             Spacer(Modifier.width(8.dp))
             Button(
                 onClick = {
@@ -324,7 +323,7 @@ private fun ErrorPage(modifier: Modifier = Modifier, state: Error, onActionPost:
                             App.getVersionReport() + "\nURL: ${url}\n${state.throwable.message}"
                         )
                     )
-                    ToastUtil.makeToast(R.string.error_copied)
+                    context.makeToast(R.string.error_copied)
                 }
             ) {
                 Text(stringResource(R.string.copy_error_report))

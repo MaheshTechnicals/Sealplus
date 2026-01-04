@@ -27,7 +27,9 @@ object FileUtil {
         val filePaths = downloadResult.getOrNull()
         if (filePaths.isNullOrEmpty()) return
         openFile(filePaths.first()) {
-            ToastUtil.makeToastSuspend(context.getString(R.string.file_unavailable))
+            App.applicationScope.launch(Dispatchers.Main) {
+                context.makeToast(R.string.file_unavailable)
+            }
         }
     }
 
@@ -217,7 +219,7 @@ object FileUtil {
         val path: String = treeUri.path.toString()
         Log.d(TAG, path)
         if (!path.contains("primary:")) {
-            ToastUtil.makeToast("This directory is not supported")
+            context.makeToast(R.string.directory_not_supported)
             return getExternalDownloadDirectory().absolutePath
         }
         val last: String = path.split("primary:").last()

@@ -25,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.junkfood.seal.R
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.UpdateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -59,7 +58,9 @@ fun UpdateDialog(onDismissRequest: () -> Unit, release: UpdateUtil.Release) {
                     .onFailure {
                         it.printStackTrace()
                         currentDownloadStatus = UpdateUtil.DownloadStatus.NotYet
-                        ToastUtil.makeToastSuspend(context.getString(R.string.app_update_failed))
+                        App.applicationScope.launch(Dispatchers.Main) {
+                            context.makeToast(R.string.app_update_failed)
+                        }
                         return@launch
                     }
             }

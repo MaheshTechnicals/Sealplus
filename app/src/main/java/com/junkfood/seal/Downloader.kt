@@ -20,7 +20,6 @@ import com.junkfood.seal.util.NotificationUtil
 import com.junkfood.seal.util.PlaylistEntry
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.PreferenceUtil.getString
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.VideoInfo
 import com.junkfood.seal.util.toHttpsUrl
 import com.yausername.youtubedl_android.YoutubeDL
@@ -121,7 +120,7 @@ object Downloader {
 
         fun onCopyError(clipboardManager: ClipboardManager) {
             clipboardManager.setText(AnnotatedString(currentLine))
-            ToastUtil.makeToast(R.string.error_copied)
+            context.makeToast(R.string.error_copied)
         }
 
         fun onCancel() {
@@ -322,7 +321,7 @@ object Downloader {
         require(url.isNotEmpty() || videoInfo != null)
 
         if (!isDownloaderAvailable()) {
-            ToastUtil.makeToast(R.string.task_added)
+            context.makeToast(R.string.task_added)
             applicationScope
                 .launch(Dispatchers.Default) {
                     while (!isDownloaderAvailable()) {
@@ -526,7 +525,9 @@ object Downloader {
         th.printStackTrace()
         val resId =
             if (isFetchingInfo) R.string.fetch_info_error_msg else R.string.download_error_msg
-        ToastUtil.makeToastSuspend(context.getString(resId))
+        applicationScope.launch(Dispatchers.Main) {
+            context.makeToast(resId)
+        }
 
         val notificationTitle = title ?: url
 
@@ -550,7 +551,7 @@ object Downloader {
     }
 
     fun cancelDownload() {
-        ToastUtil.makeToast(context.getString(R.string.task_canceled))
+        context.makeToast(R.string.task_canceled)
         currentJob?.cancel(CancellationException(context.getString(R.string.task_canceled)))
         updateState(State.Idle)
         clearProgressState(isFinished = false)

@@ -79,7 +79,6 @@ import com.junkfood.seal.util.SponsorEntity
 import com.junkfood.seal.util.SponsorShip
 import com.junkfood.seal.util.SponsorUtil
 import com.junkfood.seal.util.Tier
-import com.junkfood.seal.util.ToastUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -401,7 +400,7 @@ fun SponsorDialogContent(
 private fun LinkItem(modifier: Modifier = Modifier, icon: ImageVector, link: String) {
     val uriHandler = LocalUriHandler.current
     val clipboardManager = LocalClipboardManager.current
-    val linkCopiedText = stringResource(id = R.string.link_copied)
+    val context = LocalContext.current
     Row(
         modifier =
             modifier
@@ -411,7 +410,7 @@ private fun LinkItem(modifier: Modifier = Modifier, icon: ImageVector, link: Str
                         .runCatching { openUri(link) }
                         .onFailure {
                             clipboardManager.setText(AnnotatedString(link))
-                            ToastUtil.makeToast(linkCopiedText)
+                            context.makeToast(R.string.link_copied)
                         }
                 }
                 .padding(vertical = 12.dp),

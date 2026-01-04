@@ -18,7 +18,6 @@ import com.junkfood.seal.util.FORMAT_SELECTION
 import com.junkfood.seal.util.PLAYLIST
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.VideoInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,7 +54,7 @@ class HomePageViewModel : ViewModel() {
         }
         if (!Downloader.isDownloaderAvailable()) return
         if (url.isBlank()) {
-            ToastUtil.makeToast(context.getString(R.string.url_empty))
+            context.makeToast(R.string.url_empty)
             return
         }
         if (PLAYLIST.getBoolean()) {

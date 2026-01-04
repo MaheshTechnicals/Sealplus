@@ -26,7 +26,6 @@ import com.junkfood.seal.R
 import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.util.PlaylistResult
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.isNumberInRange
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -45,7 +44,7 @@ fun PlaylistSelectionDialog(
         error =
             !from.isNumberInRange(1, playlistCount) or !to.isNumberInRange(1, playlistCount) ||
                 from.toInt() > to.toInt()
-        if (error) ToastUtil.makeToast(R.string.invalid_index_range)
+        if (error) context.makeToast(R.string.invalid_index_range)
         else {
             onConfirm(from.toInt()..to.toInt())
             onDismissRequest()

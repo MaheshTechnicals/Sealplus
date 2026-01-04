@@ -51,7 +51,6 @@ import com.junkfood.seal.ui.component.OutlinedButtonWithIcon
 import com.junkfood.seal.ui.component.SealModalBottomSheetM2
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.FileUtil
-import com.junkfood.seal.util.ToastUtil
 
 @Composable
 fun VideoDetailDrawer(
@@ -169,7 +168,7 @@ fun VideoDetailDrawerImpl(
                 LongTapTextButton(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(url))
-                        ToastUtil.makeToast(context.getString(R.string.link_copied))
+                        context.makeToast(R.string.link_copied)
                     },
                     onClickLabel = stringResource(id = R.string.copy_link),
                     onLongClick = onOpenLink,

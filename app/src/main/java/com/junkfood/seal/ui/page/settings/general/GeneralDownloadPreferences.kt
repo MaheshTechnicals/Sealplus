@@ -98,7 +98,6 @@ import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.SPONSORBLOCK
 import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.THUMBNAIL
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.UpdateUtil
 import com.junkfood.seal.util.YT_DLP_VERSION
 import com.yausername.youtubedl_android.YoutubeDL
@@ -134,7 +133,7 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
     val notificationPermission =
         if (Build.VERSION.SDK_INT >= 33)
             rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS) { status ->
-                if (!status) ToastUtil.makeToast(context.getString(R.string.permission_denied))
+                if (!status) context.makeToast(R.string.permission_denied)
                 else isNotificationPermissionGranted = true
             }
         else null
@@ -208,15 +207,17 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
                                     }
                                     .onFailure { th ->
                                         th.printStackTrace()
-                                        ToastUtil.makeToastSuspend(
-                                            App.context.getString(R.string.yt_dlp_update_fail)
-                                        )
+                                        App.applicationScope.launch(Dispatchers.Main) {
+                                            App.context.makeToast(R.string.yt_dlp_update_fail)
+                                        }
                                     }
                                     .onSuccess {
-                                        ToastUtil.makeToastSuspend(
-                                            context.getString(R.string.yt_dlp_up_to_date) +
-                                                " (${YT_DLP_VERSION.getString()})"
-                                        )
+                                        App.applicationScope.launch(Dispatchers.Main) {
+                                            context.makeToast(
+                                                context.getString(R.string.yt_dlp_up_to_date) +
+                                                    " (${YT_DLP_VERSION.getString()})"
+                                            )
+                                        }
                                     }
                                 isUpdating = false
                             }

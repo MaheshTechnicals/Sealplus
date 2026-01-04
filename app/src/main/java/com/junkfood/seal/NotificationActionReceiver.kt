@@ -8,8 +8,8 @@ import android.util.Log
 import com.junkfood.seal.App.Companion.context
 import com.junkfood.seal.download.DownloaderV2
 import com.junkfood.seal.util.NotificationUtil
-import com.junkfood.seal.util.ToastUtil
 import com.yausername.youtubedl_android.YoutubeDL
+import kotlinx.coroutines.Dispatchers
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -63,7 +63,9 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
 
     private fun copyErrorReport(error: String, notificationId: Int) {
         App.clipboard.setPrimaryClip(ClipData.newPlainText(null, error))
-        context.let { ToastUtil.makeToastSuspend(it.getString(R.string.error_copied)) }
+        App.applicationScope.launch(Dispatchers.Main) {
+            context.makeToast(R.string.error_copied)
+        }
         NotificationUtil.cancelNotification(notificationId)
     }
 }

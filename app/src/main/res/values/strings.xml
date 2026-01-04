@@ -450,4 +450,10 @@
         <item quantity="one">%d audio</item>
         <item quantity="other">%d audios</item>
     </plurals>
+
+    <!-- Additional strings for better code quality -->
+    <string name="directory_not_supported">This directory is not supported</string>
+    <string name="not_implemented_yet">Not implemented yet!</string>
+    <string name="retry">Retry</string>
+
 </resources>

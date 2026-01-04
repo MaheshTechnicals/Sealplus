@@ -49,7 +49,6 @@ import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.STABLE
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.UPDATE_CHANNEL
 import com.junkfood.seal.util.UpdateUtil
 import kotlinx.coroutines.Dispatchers
@@ -147,17 +146,17 @@ fun UpdatePage(onNavigateBack: () -> Unit) {
                                                     release = it
                                                     showUpdateDialog = true
                                                 }
-                                                    ?: ToastUtil.makeToastSuspend(
-                                                        context.getString(R.string.app_up_to_date)
-                                                    )
+                                                    ?: App.applicationScope.launch(Dispatchers.Main) {
+                                                        context.makeToast(R.string.app_up_to_date)
+                                                    }
                                             }
                                             isLoading = false
                                         }
                                         .onFailure {
                                             it.printStackTrace()
-                                            ToastUtil.makeToastSuspend(
-                                                context.getString(R.string.app_update_failed)
-                                            )
+                                            App.applicationScope.launch(Dispatchers.Main) {
+                                                context.makeToast(R.string.app_update_failed)
+                                            }
                                             isLoading = false
                                         }
                                 }

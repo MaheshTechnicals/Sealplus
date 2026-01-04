@@ -101,7 +101,6 @@ import com.junkfood.seal.ui.svg.DynamicColorImageVectors
 import com.junkfood.seal.ui.svg.drawablevectors.videoSteaming
 import com.junkfood.seal.util.AUDIO_REGEX
 import com.junkfood.seal.util.FileUtil
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.toFileSizeText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -489,9 +488,9 @@ fun VideoListPage(viewModel: VideoListViewModel = koinViewModel(), onNavigateBac
                                 },
                                 onClick = {
                                     FileUtil.openFile(path = videoPath) {
-                                        ToastUtil.makeToastSuspend(
-                                            App.context.getString(R.string.file_unavailable)
-                                        )
+                                        App.applicationScope.launch(Dispatchers.Main) {
+                                            App.context.makeToast(R.string.file_unavailable)
+                                        }
                                     }
                                 },
                                 onLongClick = {

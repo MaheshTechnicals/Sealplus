@@ -18,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.junkfood.seal.R
 import com.junkfood.seal.util.PreferenceUtil
-import com.junkfood.seal.util.ToastUtil
 import com.junkfood.seal.util.UpdateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -99,9 +98,9 @@ fun AppUpdater() {
                             .onFailure {
                                 it.printStackTrace()
                                 currentDownloadStatus = UpdateUtil.DownloadStatus.NotYet
-                                ToastUtil.makeToastSuspend(
-                                    context.getString(R.string.app_update_failed)
-                                )
+                                App.applicationScope.launch(Dispatchers.Main) {
+                                    context.makeToast(R.string.app_update_failed)
+                                }
                                 return@launch
                             }
                     }

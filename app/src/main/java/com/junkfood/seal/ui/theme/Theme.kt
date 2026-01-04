@@ -92,9 +92,3 @@ fun SealTheme(
         )
     }
 }
-
-@Composable
-@Deprecated("Use SealTheme instead", replaceWith = ReplaceWith("SealTheme(content)"))
-fun PreviewThemeLight(content: @Composable () -> Unit) {
-    SealTheme(darkTheme = false, content = content)
-}

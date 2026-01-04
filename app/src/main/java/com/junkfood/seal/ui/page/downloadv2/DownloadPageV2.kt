@@ -446,7 +446,7 @@ fun DownloadPageImplV2(
                                 audioCount = filteredMap.size - videoCount,
                                 isGridView = isGridView,
                                 onToggleView = { isGridView = !isGridView },
-                                onShowMenu = { context.makeToast("Not implemented yet!") },
+                                onShowMenu = { context.makeToast(R.string.not_implemented_yet) },
                             )
                         }
                     }

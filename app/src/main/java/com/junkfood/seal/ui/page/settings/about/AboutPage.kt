@@ -52,7 +52,6 @@ import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferenceSwitchWithDivider
 import com.junkfood.seal.util.AUTO_UPDATE
 import com.junkfood.seal.util.PreferenceUtil
-import com.junkfood.seal.util.ToastUtil
 
 private const val releaseURL = "https://github.com/JunkFood02/Seal/releases"
 private const val repoUrl = "https://github.com/JunkFood02/Seal"
@@ -195,13 +194,13 @@ fun AboutPage(
                         icon = Icons.Outlined.Info,
                     ) {
                         clipboardManager.setText(AnnotatedString(info))
-                        ToastUtil.makeToast(R.string.info_copied)
+                        context.makeToast(R.string.info_copied)
                     }
                 }
                 item {
                     PreferenceItem(title = "Package name", description = context.packageName) {
                         clipboardManager.setText(AnnotatedString(context.packageName))
-                        ToastUtil.makeToast(R.string.info_copied)
+                        context.makeToast(R.string.info_copied)
                     }
                 }
             }

@@ -120,7 +120,7 @@ object UpdateUtil {
                 }
                 .onFailure { throwable: Throwable ->
                     throwable.printStackTrace()
-                    ToastUtil.makeToast(R.string.app_update_failed)
+                    context.makeToast(R.string.app_update_failed)
                 }
         }
 

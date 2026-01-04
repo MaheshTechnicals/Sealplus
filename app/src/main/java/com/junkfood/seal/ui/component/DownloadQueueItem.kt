@@ -55,7 +55,7 @@ import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.AsyncImageImpl
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalWindowWidthState
-import com.junkfood.seal.ui.theme.PreviewThemeLight
+import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.ui.theme.harmonizeWith
 import com.junkfood.seal.ui.theme.harmonizeWithPrimary
 import com.kyant.monet.LocalTonalPalettes
@@ -66,7 +66,7 @@ import com.kyant.monet.dynamicColorScheme
 // @Preview
 fun PlaylistPreview() {
     var selected by remember { mutableStateOf(false) }
-    Column() { PreviewThemeLight { PlaylistItem(selected = selected) { selected = !selected } } }
+    Column() { SealTheme(darkTheme = false) { PlaylistItem(selected = selected) { selected = !selected } } }
 }
 
 @Composable
@@ -130,7 +130,7 @@ fun PlaylistItem(
 @Composable
 @Preview
 fun TaskItemPreview() {
-    PreviewThemeLight {
+    SealTheme(darkTheme = false) {
         Surface {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item { CustomCommandTaskItem(status = TaskStatus.RUNNING) }
