@@ -188,23 +188,26 @@ fun animatedCardAppearance(): State<Float> {
     val alpha = remember { Animatable(0f) }
     
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.launch {
-            scale.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = 300,
-                    easing = FastOutSlowInEasing
+        // Run animations in parallel using coroutines
+        kotlinx.coroutines.coroutineScope {
+            kotlinx.coroutines.launch {
+                scale.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
                 )
-            )
-        }
-        kotlinx.coroutines.launch {
-            alpha.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = 300,
-                    easing = LinearEasing
+            }
+            kotlinx.coroutines.launch {
+                alpha.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = LinearEasing
+                    )
                 )
-            )
+            }
         }
     }
     
