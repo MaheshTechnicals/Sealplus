@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.1.0][1.1.0] - 2026-01-04
+
+### ✨ New Features
+
+* **Gradient Dark Theme - Premium UI Mode**
+  * Added new "Gradient Dark" toggle in Look & Feel settings
+  * Deep charcoal/obsidian backgrounds (#0A0A0F, #14141F) for perfect OLED viewing
+  * Vibrant linear gradients (deep blues #5B47E5 → purples #8B5CF6)
+  * Sophisticated glassmorphism effects with subtle borders and translucent surfaces
+  * Premium card-based layouts with 20-24dp rounded corners
+  * Smooth micro-animations (300ms fade-in, 150ms button press)
+  * 5 new premium UI components:
+    - PremiumGlassCard - Glassmorphism cards with animations
+    - PremiumGradientButton - Gradient buttons with press effects
+    - PremiumSectionHeader - Headers with gradient accents
+    - PremiumInfoCard - Info cards with gradient borders
+    - AnimatedCardContainer - Smooth entrance animations
+  * Hardware-accelerated animations for smooth 60fps performance
+  * WCAG AA compliant contrast ratios (4.5:1+)
+  * Graceful fallback to Material 3 when disabled
+
+### 📚 Documentation
+
+* Added comprehensive Gradient Dark theme documentation:
+  * Complete implementation guide (800+ lines)
+  * Visual design reference with color swatches and gradients
+  * Quick reference card with code snippets
+  * 5 complete integration examples
+  * API documentation for all components
+  * 2,200+ lines of documentation across 6 files
+
+### 🎨 Design System
+
+* 21 new resource files (10 XML, 6 Kotlin, 5 documentation)
+* 15+ carefully selected colors for dark aesthetic
+* 4 gradient brushes (Primary, Secondary, Accent, Vibrant)
+* Consistent spacing scale (4dp to 56dp)
+* Professional animation timings
+
 ### Changed
 
 * **Rebranded from "Seal" to "Seal Plus"**
