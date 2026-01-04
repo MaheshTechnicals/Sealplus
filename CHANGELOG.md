@@ -12,44 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Updated
 
 * **Platform & Build Tools**
-  * Updated Android Gradle Plugin to 8.8.0
-  * Updated Gradle to 9.2.1 (with Windows ARM support and improved publishing APIs)
-  * Updated Kotlin to 2.1.0 with enhanced compiler optimizations
+  * Updated Android Gradle Plugin to 8.13.2 (latest stable, Dec 2025)
+  * Updated Gradle to 8.13 (officially required for AGP 8.13)
+  * Updated Kotlin to 2.3.0 (latest stable, Dec 2025) with K2 compiler improvements
   * Migrated from deprecated kotlinOptions to modern compilerOptions
-  * Updated target SDK to 36 (Android 16)
-  * Updated compile SDK to 36
-  * Updated KSP to 2.1.0-1.0.29 for better annotation processing
+  * Updated KSP to 2.3.0-1.0.29 for latest annotation processing
+  * Target/Compile SDK 35 (AGP 8.13 fully supports API 36)
 
 * **Core Dependencies**
-  * Updated Jetpack Compose BOM to 2026.01.00 with latest Material Design 3 improvements
-  * Updated Kotlin Coroutines to 1.10.1 for improved async performance
-  * Updated AndroidX Core to 1.16.0
-  * Updated AndroidX Lifecycle to 2.9.0
-  * Updated AndroidX Navigation to 2.9.0
-  * Updated AndroidX Activity to 1.11.0
-  * Updated AppCompat to 1.8.0
-  * Updated Material Components to 1.13.0
-
-* **Media & Networking**
-  * Updated Coil to 3.0.0 with enhanced image loading capabilities
-  * Updated OkHttp to stable 5.0.0 release
-  * Updated youtubedl-android to 0.18.0 with latest yt-dlp improvements
+  * Updated Jetpack Compose BOM to 2025.01.00 (January 2025 stable release)
+  * Updated AndroidX Core to 1.17.0 (Dec 2025)
+  * Updated AndroidX AppCompat to 1.7.1 (Jun 2025)
+  * Updated AndroidX Activity to 1.12.2 (Dec 2025)
+  * Updated Lifecycle to 2.10.0 (Nov 2025)
+  * Updated Navigation to 2.9.6 (Nov 2025)
+  * Updated Room to 2.8.4 (Nov 2025)
+  * Updated Graphics Shapes to 1.0.4 (Dec 2025)
+  * Updated Kotlinx Coroutines to 1.10.1
   * Updated Kotlinx Serialization to 1.8.0
-
-* **Database & Storage**
-  * Updated Room to 2.7.0 with improved performance and stability
-  * Updated Kotlinx DateTime to 0.6.2
-
-* **Dependency Injection & UI**
-  * Updated Koin to 4.1.0 for better DI performance
   * Updated Accompanist libraries to 0.36.0
-  * Updated ConstraintLayout Compose to 1.2.0
-  * Updated Graphics Shapes to 1.1.0
+  * Updated Coil to 2.7.0 with improved image loading
+  * Updated OkHttp to 5.0.0-alpha.14
 
 * **Testing & Quality**
   * Updated Espresso to 3.6.1
   * Updated AndroidX Test Ext to 1.2.1
-  * Updated ktfmt to 0.21.0 for consistent code formatting
 
 * **CI/CD Infrastructure**
   * Updated GitHub Actions workflows to latest versions
