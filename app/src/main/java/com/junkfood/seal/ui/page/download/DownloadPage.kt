@@ -361,6 +361,7 @@ fun DownloadPageImpl(
     content: @Composable () -> Unit,
 ) {
     val view = LocalView.current
+    val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
     val showCancelButton =
