@@ -30,13 +30,13 @@ jobs:
       continue-on-error: true
       uses: ilharp/sign-android-release@nightly
       env:
-        ANDROID_SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
       with:
         releaseDir: app/build/outputs/apk
-        signingKey: ${{ secrets.SIGNING_KEY }}
-        keyAlias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
+        signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
+        keyAlias: ${{ secrets.ANDROID_ALIAS }}
+        keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     - name: Upload Signed Artifact
       if: steps.sign_app.outcome == 'success'
