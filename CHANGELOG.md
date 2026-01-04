@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Updated Kotlin to 2.0.21 (stable) with K2 compiler
   * Migrated from deprecated kotlinOptions to modern compilerOptions
   * Updated KSP to 2.0.21-1.0.28 for stable annotation processing
-  * Target/Compile SDK 35 (AGP 8.13 fully supports API 36)
+  * Updated to compileSdk/targetSdk 36 (required by latest AndroidX libraries)
 
 * **Core Dependencies**
   * Updated Jetpack Compose BOM to 2025.01.00 (January 2025 stable release)
