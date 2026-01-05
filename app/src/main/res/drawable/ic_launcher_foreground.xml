@@ -1,0 +1,58 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Adaptive icon with proper safe zone padding -->
+    <!-- Logo centered in safe zone (72x72dp area in center) -->
+    <group
+        android:translateX="21"
+        android:translateY="21">
+        <!-- Red circle background -->
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M33,0 A33,33 0,1,1 33,66 A33,33 0,1,1 33,0 Z" />
+        
+        <!-- White inner circle -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M33,6 A27,27 0,1,1 33,60 A27,27 0,1,1 33,6 Z" />
+        
+        <!-- Red cross -->
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M27,22 L27,32 L17,32 L17,34 L27,34 L27,44 L29,44 L29,34 L39,34 L39,32 L29,32 L29,22 Z" />
+        
+        <!-- Red dots/seal marks -->
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M33,12 A2,2 0,1,1 33,16 A2,2 0,1,1 33,12 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M25,15 A1.5,1.5 0,1,1 25,18 A1.5,1.5 0,1,1 25,15 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M41,15 A1.5,1.5 0,1,1 41,18 A1.5,1.5 0,1,1 41,15 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M19,24 A1.5,1.5 0,1,1 19,27 A1.5,1.5 0,1,1 19,24 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M47,24 A1.5,1.5 0,1,1 47,27 A1.5,1.5 0,1,1 47,24 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M19,39 A1.5,1.5 0,1,1 19,42 A1.5,1.5 0,1,1 19,39 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M47,39 A1.5,1.5 0,1,1 47,42 A1.5,1.5 0,1,1 47,39 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M25,48 A1.5,1.5 0,1,1 25,51 A1.5,1.5 0,1,1 25,48 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M41,48 A1.5,1.5 0,1,1 41,51 A1.5,1.5 0,1,1 41,48 Z" />
+        <path
+            android:fillColor="#E53935"
+            android:pathData="M33,50 A2,2 0,1,1 33,54 A2,2 0,1,1 33,50 Z" />
+    </group>
+</vector>
