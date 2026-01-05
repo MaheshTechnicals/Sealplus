@@ -392,6 +392,7 @@ private fun FormatPageImpl(
 
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -444,10 +445,10 @@ private fun FormatPageImpl(
         LazyVerticalGrid(
             modifier = Modifier.padding(paddingValues),
             state = lazyGridState,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            columns = GridCells.Adaptive(150.dp),
-            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            columns = GridCells.Adaptive(160.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
         ) {
             videoInfo.run {
                 item(span = { GridItemSpan(maxLineSpan) }) {
@@ -533,12 +534,12 @@ private fun FormatPageImpl(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 12.dp).padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(top = 16.dp).padding(horizontal = 12.dp),
                         ) {
                             Text(
                                 text = stringResource(id = R.string.subtitle_language),
                                 color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.titleSmall,
+                                style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.weight(1f),
                             )
 
@@ -555,7 +556,11 @@ private fun FormatPageImpl(
                             }
                         }
 
-                        LazyRow(modifier = Modifier.padding()) {
+                        LazyRow(
+                            modifier = Modifier.padding(top = 8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             for ((code, formats) in suggestedSubtitleMap) {
                                 item {
                                     VideoFilterChip(
@@ -581,9 +586,13 @@ private fun FormatPageImpl(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier =
-                            Modifier.padding(top = 12.dp, bottom = 4.dp).padding(horizontal = 12.dp),
+                            Modifier.padding(top = 20.dp).padding(horizontal = 12.dp),
                     ) {
-                        FormatSubtitle(text = stringResource(R.string.suggested))
+                        FormatSubtitle(
+                            text = stringResource(R.string.suggested),
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            showDivider = true,
+                        )
                     }
                 }
                 item(span = { GridItemSpan(maxLineSpan) }) {
@@ -608,16 +617,60 @@ private fun FormatPageImpl(
                 }
             }
 
+            // SECTION 1: Video (with audio)
+            if (videoAudioFormats.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 20.dp).padding(horizontal = 12.dp),
+                    ) {
+                        FormatSubtitle(
+                            text = stringResource(R.string.video),
+                            modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                            showDivider = true,
+                        )
+                        ClickableTextAction(
+                            visible = videoAudioItemLimit < videoAudioFormats.size,
+                            text = stringResource(R.string.show_all_items, videoAudioFormats.size),
+                        ) {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            videoAudioItemLimit = Int.MAX_VALUE
+                        }
+                    }
+                }
+                itemsIndexed(
+                    videoAudioFormats.subList(0, min(videoAudioItemLimit, videoAudioFormats.size))
+                ) { index, formatInfo ->
+                    FormatItem(
+                        formatInfo = formatInfo,
+                        duration = duration,
+                        selected = selectedVideoAudioFormat == index,
+                        onLongClick = { formatInfo.url.share() },
+                    ) {
+                        selectedVideoAudioFormat =
+                            if (selectedVideoAudioFormat == index) NOT_SELECTED
+                            else {
+                                selectedAudioOnlyFormats.clear()
+                                selectedVideoOnlyFormat = NOT_SELECTED
+                                isSuggestedFormatSelected = false
+                                index
+                            }
+                    }
+                }
+            }
+
+            // SECTION 2: Audio
             if (audioOnlyFormats.isNotEmpty())
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 16.dp).padding(horizontal = 12.dp),
+                        modifier = Modifier.padding(top = 20.dp).padding(horizontal = 12.dp),
                     ) {
                         FormatSubtitle(
                             text = stringResource(R.string.audio),
                             color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+                            modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                            showDivider = true,
                         )
 
                         ClickableTextAction(
@@ -656,17 +709,19 @@ private fun FormatPageImpl(
                 }
             }
 
+            // SECTION 3: Video (no audio)
             if (!audioOnly) {
                 if (videoOnlyFormats.isNotEmpty())
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 16.dp).padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(top = 20.dp).padding(horizontal = 12.dp),
                         ) {
                             FormatSubtitle(
                                 text = stringResource(R.string.video_only),
                                 color = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+                                modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                                showDivider = true,
                             )
 
                             ClickableTextAction(
@@ -694,45 +749,6 @@ private fun FormatPageImpl(
                             if (selectedVideoOnlyFormat == index) NOT_SELECTED
                             else {
                                 selectedVideoAudioFormat = NOT_SELECTED
-                                isSuggestedFormatSelected = false
-                                index
-                            }
-                    }
-                }
-            }
-            if (videoAudioFormats.isNotEmpty()) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 16.dp).padding(horizontal = 12.dp),
-                    ) {
-                        FormatSubtitle(
-                            text = stringResource(R.string.video),
-                            modifier = Modifier.weight(1f).padding(vertical = 4.dp),
-                        )
-                        ClickableTextAction(
-                            visible = videoAudioItemLimit < videoAudioFormats.size,
-                            text = stringResource(R.string.show_all_items, videoAudioFormats.size),
-                        ) {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            videoAudioItemLimit = Int.MAX_VALUE
-                        }
-                    }
-                }
-                itemsIndexed(
-                    videoAudioFormats.subList(0, min(videoAudioItemLimit, videoAudioFormats.size))
-                ) { index, formatInfo ->
-                    FormatItem(
-                        formatInfo = formatInfo,
-                        duration = duration,
-                        selected = selectedVideoAudioFormat == index,
-                        onLongClick = { formatInfo.url.share() },
-                    ) {
-                        selectedVideoAudioFormat =
-                            if (selectedVideoAudioFormat == index) NOT_SELECTED
-                            else {
-                                selectedAudioOnlyFormats.clear()
-                                selectedVideoOnlyFormat = NOT_SELECTED
                                 isSuggestedFormatSelected = false
                                 index
                             }
@@ -1010,13 +1026,13 @@ private fun ClickableTextAction(
     AnimatedVisibility(visible = visible, exit = fadeOut(animationSpec = spring())) {
         Text(
             text = text,
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+            style = MaterialTheme.typography.labelLarge,
             modifier =
                 modifier
-                    .clip(CircleShape)
+                    .clip(MaterialTheme.shapes.small)
                     .clickable(onClick = onClick)
-                    .padding(vertical = 4.dp, horizontal = 12.dp),
+                    .padding(vertical = 6.dp, horizontal = 12.dp),
         )
     }
 }

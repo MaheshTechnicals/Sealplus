@@ -322,24 +322,53 @@ fun FormatItem(
     onClick: () -> Unit = {},
 ) {
 
+    // Determine proper text colors based on container background
+    val selectedTextColor = when (containerColor) {
+        MaterialTheme.colorScheme.primaryContainer -> MaterialTheme.colorScheme.onPrimaryContainer
+        MaterialTheme.colorScheme.secondaryContainer -> MaterialTheme.colorScheme.onSecondaryContainer
+        MaterialTheme.colorScheme.tertiaryContainer -> MaterialTheme.colorScheme.onTertiaryContainer
+        else -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
+
     val animatedTitleColor by
         animateColorAsState(
-            if (selected) outlineColor else MaterialTheme.colorScheme.onSurface,
-            animationSpec = tween(100),
+            if (selected) selectedTextColor else MaterialTheme.colorScheme.onSurface,
+            animationSpec = tween(150),
+            label = "",
+        )
+
+    val animatedFirstLineColor by
+        animateColorAsState(
+            if (selected) selectedTextColor else MaterialTheme.colorScheme.onSurface,
+            animationSpec = tween(150),
+            label = "",
+        )
+
+    val animatedSecondLineColor by
+        animateColorAsState(
+            if (selected) selectedTextColor.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
+            animationSpec = tween(150),
+            label = "",
+        )
+
+    val animatedIconColor by
+        animateColorAsState(
+            if (selected) selectedTextColor else outlineColor,
+            animationSpec = tween(150),
             label = "",
         )
 
     val animatedContainerColor by
         animateColorAsState(
-            if (selected) containerColor else MaterialTheme.colorScheme.surface,
-            animationSpec = tween(100),
+            if (selected) containerColor else MaterialTheme.colorScheme.surfaceContainerHigh,
+            animationSpec = tween(150),
             label = "",
         )
 
     val animatedOutlineColor by
         animateColorAsState(
-            targetValue = if (selected) outlineColor else MaterialTheme.colorScheme.outlineVariant,
-            animationSpec = tween(100),
+            targetValue = if (selected) outlineColor else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+            animationSpec = tween(150),
             label = "",
         )
 
@@ -354,13 +383,13 @@ fun FormatItem(
                     onLongClickLabel = stringResource(R.string.copy_link),
                 )
                 .border(
-                    width = 1.5.dp,
+                    width = if (selected) 2.dp else 1.dp,
                     color = animatedOutlineColor,
                     shape = MaterialTheme.shapes.large,
                 )
                 .background(animatedContainerColor)
     ) {
-        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.Start) {
+        Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.Start) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
@@ -373,8 +402,8 @@ fun FormatItem(
             Text(
                 text = firstLineText,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp),
-                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 10.dp),
+                color = animatedFirstLineColor,
                 maxLines = 2,
             )
 
@@ -382,31 +411,34 @@ fun FormatItem(
                 text = secondLineText,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 4.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = animatedSecondLineColor,
                 maxLines = 1,
             )
         }
-        Row(modifier = Modifier.padding(bottom = 8.dp, end = 8.dp).align(Alignment.BottomEnd)) {
+        Row(
+            modifier = Modifier.padding(bottom = 10.dp, end = 10.dp).align(Alignment.BottomEnd),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             if (containsVideo)
                 Icon(
                     imageVector = Icons.Rounded.Videocam,
-                    tint = outlineColor,
+                    tint = animatedIconColor,
                     contentDescription = stringResource(id = R.string.video),
                     modifier = Modifier.size(18.dp),
                 )
             if (containsAudio)
                 Icon(
                     imageVector = Icons.Rounded.Audiotrack,
-                    tint = outlineColor,
+                    tint = animatedIconColor,
                     contentDescription = stringResource(id = R.string.audio),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             if (!containsVideo && !containsAudio) {
                 Icon(
                     imageVector = Icons.Rounded.QuestionMark,
-                    tint = outlineColor,
+                    tint = animatedIconColor,
                     contentDescription = stringResource(id = R.string.unknown),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
@@ -541,13 +573,21 @@ fun FormatSubtitle(
     modifier: Modifier = Modifier,
     text: String,
     color: Color = MaterialTheme.colorScheme.primary,
+    showDivider: Boolean = false,
 ) {
-    Text(
-        text = text,
-        modifier = modifier,
-        color = color,
-        style = MaterialTheme.typography.titleSmall,
-    )
+    Column(modifier = modifier) {
+        if (showDivider) {
+            androidx.compose.material3.HorizontalDivider(
+                modifier = Modifier.padding(bottom = 16.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+            )
+        }
+        Text(
+            text = text,
+            color = color,
+            style = MaterialTheme.typography.titleMedium,
+        )
+    }
 }
 
 @Preview
