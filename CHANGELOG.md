@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2026-01-05
 
-### 🔄 Auto-Update System Overhaul
+### � Bug Fixes
+
+* **App Icon/Logo Display Issue - RESOLVED**
+  * **Fixed app showing old Seal logo** on Android 8.0+ devices (API 26+)
+  * **Root cause**: Old vector logo files in `drawable/` folder were overriding new PNG logos in `mipmap/` folders
+  * **Removed** obsolete `ic_launcher_foreground.xml` and `ic_launcher_monochrome.xml` from drawable folder
+  * **Updated** adaptive icon XMLs (`mipmap-anydpi-v26/`) to correctly reference PNG foreground images from mipmap folders
+  * New Seal Plus logo now displays properly across all Android versions and device densities
+  * Applies to launcher icons, app switcher, and all system UI surfaces
+
+### �🔄 Auto-Update System Overhaul
 
 * **Repository Migration**
   * **Updated auto-update system** to point to new repository: `https://github.com/MaheshTechnicals/Seal`
