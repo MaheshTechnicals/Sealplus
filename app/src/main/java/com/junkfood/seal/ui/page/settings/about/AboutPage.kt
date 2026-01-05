@@ -54,13 +54,13 @@ import com.junkfood.seal.util.AUTO_UPDATE
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.makeToast
 
-private const val releaseURL = "https://github.com/JunkFood02/Seal/releases"
-private const val repoUrl = "https://github.com/JunkFood02/Seal"
+private const val releaseURL = "https://github.com/MaheshTechnicals/Seal/releases"
+private const val repoUrl = "https://github.com/MaheshTechnicals/Seal/blob/main/README.md"
 const val weblate = "https://hosted.weblate.org/engage/seal/"
 const val YtdlpRepository = "https://github.com/yt-dlp/yt-dlp"
-private const val githubIssueUrl = "https://github.com/JunkFood02/Seal/issues"
-private const val telegramChannelUrl = "https://t.me/seal_app"
-private const val matrixSpaceUrl = "https://matrix.to/#/#seal-space:matrix.org"
+private const val githubIssueUrl = "https://github.com/MaheshTechnicals/Seal/issues"
+private const val telegramChannelUrl = "https://t.me/maheshtechnicals"
+private const val youtubeChannelUrl = "https://youtube.com/@maheshtechnicals"
 private const val githubSponsor = "https://github.com/sponsors/JunkFood02"
 private const val TAG = "AboutPage"
 
@@ -156,11 +156,11 @@ fun AboutPage(
                 }
                 item {
                     PreferenceItem(
-                        title = stringResource(R.string.matrix_space),
-                        description = matrixSpaceUrl,
-                        icon = painterResource(id = R.drawable.icons8_matrix),
+                        title = stringResource(R.string.youtube_channel),
+                        description = youtubeChannelUrl,
+                        icon = painterResource(id = R.drawable.icons8_youtube),
                     ) {
-                        openUrl(matrixSpaceUrl)
+                        openUrl(youtubeChannelUrl)
                     }
                 }
                 item {
@@ -223,7 +223,7 @@ fun AutoUpdateUnavailableDialog(onDismissRequest: () -> Unit = {}) {
         val startIndex = text.indexOf(hyperLinkText)
         val endIndex = startIndex + hyperLinkText.length
         addUrlAnnotation(
-            UrlAnnotation("https://github.com/JunkFood02/Seal/releases/latest"),
+            UrlAnnotation("https://github.com/MaheshTechnicals/Seal/releases/latest"),
             start = startIndex,
             end = endIndex,
         )

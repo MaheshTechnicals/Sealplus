@@ -29,6 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Auto-update feature now highlighted in release descriptions
   * Proper release tagging and asset upload synchronization
 
+* **About Page Updates - Seal Plus Branding**
+  * **Updated README link** to open `https://github.com/MaheshTechnicals/Seal/blob/main/README.md`
+  * **Updated Latest release** to fetch from `https://github.com/MaheshTechnicals/Seal/releases`
+  * **Changed Telegram channel** to `https://t.me/maheshtechnicals`
+  * **Removed Matrix space** option from About screen
+  * **Added YouTube channel** at `https://youtube.com/@maheshtechnicals` with custom icon
+  * All community links now point to Mahesh Technicals channels
+  * Maintained consistent spacing, icons, and text alignment
+
 ### 🎨 UI/UX Improvements
 
 * **Navigation Drawer & Theming Consistency**
