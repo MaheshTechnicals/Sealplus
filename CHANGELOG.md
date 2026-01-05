@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🎨 UI/UX Improvements
 
+* **Navigation Drawer & Theming Consistency**
+  * **Removed distracting footer** from navigation drawer (app name, version, route display)
+  * **Enabled Gradient Dark mode by default** for all users (Settings → Look & Feel)
+  * **Fixed Download Queue tab colors** to use gradient primary accent matching FAB
+  * Tabs now use `primary` color for selected state (bold gradient accent) instead of subtle `primaryContainer`
+  * Selected tab text uses `onPrimary` (high contrast white) for excellent readability
+  * Unselected tabs use `surfaceContainerHigh` for better elevation and visual hierarchy
+  * Achieved unified premium dark-gradient experience across all surfaces with proper contrast
+  * Smooth color transitions with clear selected/unselected states
+
 * **Comprehensive UI/UX Overhaul**
   * Fixed Download Queue page gradient dark theme integration
   * Improved tab visibility with better color contrast (primaryContainer vs fixed color roles)
@@ -39,8 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🎨 Component Updates
 
+* **AppEntry.kt**: Removed footer from NavigationDrawer (cleaner UI)
+* **NavigationDrawer.kt**: Removed footer parameter and implementation
+* **SelectionGroup.kt**: Updated to use primary/onPrimary colors for gradient accent tabs, removed LocalFixedColorRoles import
+* **PreferenceUtil.kt**: Changed GRADIENT_DARK_MODE default from false to true
 * **DownloadPageV2.kt**: Applied background color to Scaffold, improved tab padding
-* **SelectionGroup.kt**: Better tab colors and corner radius (20dp/16dp), increased min height (40dp)
 * **DownloadQueueItem.kt**: surfaceContainerHigh surface, titleMedium typography, 20dp padding, shapes.large
 * **Buttons.kt**: 48dp defaultMinSize, standardized padding (24dp horizontal, 12dp vertical)
 * **ModalBottomSheetM3.kt**: Added surfaceContainerHigh containerColor
