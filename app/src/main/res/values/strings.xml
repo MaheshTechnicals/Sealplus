@@ -448,6 +448,8 @@
     <string name="wifi_only_restriction_message">Downloads are restricted to WiFi only. Please connect to WiFi to download.</string>
     <string name="mobile_only_restriction_message">Downloads are restricted to mobile data only. Please disconnect from WiFi to download.</string>
     <string name="network_unavailable">Network unavailable. Please check your connection.</string>
+    <string name="cellular_data_warning">Network error occurred. Please check your connection settings.</string>
+    <string name="network_settings">Network Settings</string>
     
     <string name="saved_urls">Saved links</string>
     <string name="add_new_url">Add new link</string>
