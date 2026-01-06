@@ -27,7 +27,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.junkfood.seal.R
-import com.junkfood.seal.ui.common.booleanState
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferenceSubtitle
@@ -42,6 +41,7 @@ import com.junkfood.seal.util.NOTIFICATION_LED
 import com.junkfood.seal.util.NOTIFICATION_SOUND
 import com.junkfood.seal.util.NOTIFICATION_SUCCESS_SOUND
 import com.junkfood.seal.util.NOTIFICATION_VIBRATE
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
@@ -53,11 +53,11 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
     var networkTypeRestriction by remember { mutableStateOf(NETWORK_TYPE_RESTRICTION.getInt()) }
     var showNetworkDialog by remember { mutableStateOf(false) }
     
-    val notificationSound by NOTIFICATION_SOUND.booleanState
-    val notificationVibrate by NOTIFICATION_VIBRATE.booleanState
-    val notificationLed by NOTIFICATION_LED.booleanState
-    val notificationSuccessSound by NOTIFICATION_SUCCESS_SOUND.booleanState
-    val notificationErrorSound by NOTIFICATION_ERROR_SOUND.booleanState
+    var notificationSound by remember { mutableStateOf(NOTIFICATION_SOUND.getBoolean()) }
+    var notificationVibrate by remember { mutableStateOf(NOTIFICATION_VIBRATE.getBoolean()) }
+    var notificationLed by remember { mutableStateOf(NOTIFICATION_LED.getBoolean()) }
+    var notificationSuccessSound by remember { mutableStateOf(NOTIFICATION_SUCCESS_SOUND.getBoolean()) }
+    var notificationErrorSound by remember { mutableStateOf(NOTIFICATION_ERROR_SOUND.getBoolean()) }
 
     Scaffold(
         modifier = Modifier
@@ -107,7 +107,10 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
                     description = stringResource(R.string.notification_sound_desc),
                     icon = Icons.Outlined.Notifications,
                     isChecked = notificationSound,
-                    onClick = { NOTIFICATION_SOUND.updateBoolean(!notificationSound) }
+                    onClick = { 
+                        NOTIFICATION_SOUND.updateBoolean(!notificationSound)
+                        notificationSound = !notificationSound
+                    }
                 )
             }
             
@@ -118,7 +121,10 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
                     icon = Icons.Outlined.Notifications,
                     isChecked = notificationVibrate,
                     enabled = notificationSound,
-                    onClick = { NOTIFICATION_VIBRATE.updateBoolean(!notificationVibrate) }
+                    onClick = { 
+                        NOTIFICATION_VIBRATE.updateBoolean(!notificationVibrate)
+                        notificationVibrate = !notificationVibrate
+                    }
                 )
             }
             
@@ -129,7 +135,10 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
                     icon = Icons.Outlined.Notifications,
                     isChecked = notificationLed,
                     enabled = notificationSound,
-                    onClick = { NOTIFICATION_LED.updateBoolean(!notificationLed) }
+                    onClick = { 
+                        NOTIFICATION_LED.updateBoolean(!notificationLed)
+                        notificationLed = !notificationLed
+                    }
                 )
             }
             
@@ -140,7 +149,10 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
                     icon = Icons.Outlined.Notifications,
                     isChecked = notificationSuccessSound,
                     enabled = notificationSound,
-                    onClick = { NOTIFICATION_SUCCESS_SOUND.updateBoolean(!notificationSuccessSound) }
+                    onClick = { 
+                        NOTIFICATION_SUCCESS_SOUND.updateBoolean(!notificationSuccessSound)
+                        notificationSuccessSound = !notificationSuccessSound
+                    }
                 )
             }
             
@@ -151,7 +163,10 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
                     icon = Icons.Outlined.Notifications,
                     isChecked = notificationErrorSound,
                     enabled = notificationSound,
-                    onClick = { NOTIFICATION_ERROR_SOUND.updateBoolean(!notificationErrorSound) }
+                    onClick = { 
+                        NOTIFICATION_ERROR_SOUND.updateBoolean(!notificationErrorSound)
+                        notificationErrorSound = !notificationErrorSound
+                    }
                 )
             }
         }

@@ -52,11 +52,19 @@ object NotificationUtil {
         isSuccess: Boolean = false,
         isError: Boolean = false
     ) {
-        // Apply sound
-        val shouldPlaySound = NOTIFICATION_SOUND.getBoolean() &&
-            ((isSuccess && NOTIFICATION_SUCCESS_SOUND.getBoolean()) ||
-             (isError && NOTIFICATION_ERROR_SOUND.getBoolean()) ||
-             (!isSuccess && !isError))
+        // Master notification sound switch
+        if (!NOTIFICATION_SOUND.getBoolean()) {
+            builder.setSound(null)
+            builder.setVibrate(null)
+            return
+        }
+        
+        // Apply sound based on task status
+        val shouldPlaySound = when {
+            isSuccess -> NOTIFICATION_SUCCESS_SOUND.getBoolean()
+            isError -> NOTIFICATION_ERROR_SOUND.getBoolean()
+            else -> true // Progress notifications always play sound if master is enabled
+        }
         
         if (shouldPlaySound) {
             val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
