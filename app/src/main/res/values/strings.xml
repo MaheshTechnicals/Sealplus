@@ -451,6 +451,21 @@
     <string name="cellular_data_warning">Network error occurred. Please check your connection settings.</string>
     <string name="network_settings">Network Settings</string>
     
+    <!-- Smart Notifications -->
+    <string name="smart_notifications">Smart Notifications</string>
+    <string name="smart_notifications_desc">Customize notification behavior for different task statuses</string>
+    <string name="notification_sound_settings">Notification Sound</string>
+    <string name="notification_sound_desc">Play sound for all notifications</string>
+    <string name="notification_vibrate_settings">Vibration</string>
+    <string name="notification_vibrate_desc">Vibrate when showing notifications</string>
+    <string name="notification_led_settings">LED Indicator</string>
+    <string name="notification_led_desc">Show LED light for completion notifications</string>
+    <string name="notification_success_sound_settings">Success Sound</string>
+    <string name="notification_success_sound_desc">Play sound when download completes successfully</string>
+    <string name="notification_error_sound_settings">Error Sound</string>
+    <string name="notification_error_sound_desc">Play sound when download fails</string>
+    <string name="notification_settings">Notification Settings</string>
+    
     <string name="saved_urls">Saved links</string>
     <string name="add_new_url">Add new link</string>
     <string name="add_to">Add to %1$s</string>

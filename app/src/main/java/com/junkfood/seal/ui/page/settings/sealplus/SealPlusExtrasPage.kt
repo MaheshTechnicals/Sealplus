@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.NetworkCell
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.SignalCellular4Bar
 import androidx.compose.material.icons.outlined.SignalWifi4Bar
 import androidx.compose.material.icons.rounded.NetworkCheck
@@ -26,15 +27,23 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.junkfood.seal.R
+import com.junkfood.seal.ui.common.booleanState
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferenceSubtitle
 import com.junkfood.seal.ui.component.PreferenceSingleChoiceItem
+import com.junkfood.seal.ui.component.PreferenceSwitch
 import com.junkfood.seal.util.NETWORK_ANY
 import com.junkfood.seal.util.NETWORK_MOBILE_ONLY
 import com.junkfood.seal.util.NETWORK_TYPE_RESTRICTION
 import com.junkfood.seal.util.NETWORK_WIFI_ONLY
+import com.junkfood.seal.util.NOTIFICATION_ERROR_SOUND
+import com.junkfood.seal.util.NOTIFICATION_LED
+import com.junkfood.seal.util.NOTIFICATION_SOUND
+import com.junkfood.seal.util.NOTIFICATION_SUCCESS_SOUND
+import com.junkfood.seal.util.NOTIFICATION_VIBRATE
 import com.junkfood.seal.util.PreferenceUtil.getInt
+import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +52,12 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var networkTypeRestriction by remember { mutableStateOf(NETWORK_TYPE_RESTRICTION.getInt()) }
     var showNetworkDialog by remember { mutableStateOf(false) }
+    
+    val notificationSound by NOTIFICATION_SOUND.booleanState
+    val notificationVibrate by NOTIFICATION_VIBRATE.booleanState
+    val notificationLed by NOTIFICATION_LED.booleanState
+    val notificationSuccessSound by NOTIFICATION_SUCCESS_SOUND.booleanState
+    val notificationErrorSound by NOTIFICATION_ERROR_SOUND.booleanState
 
     Scaffold(
         modifier = Modifier
@@ -79,6 +94,64 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
                         else -> Icons.Rounded.NetworkCheck
                     },
                     onClick = { showNetworkDialog = true }
+                )
+            }
+            
+            item {
+                PreferenceSubtitle(text = stringResource(R.string.notification_settings))
+            }
+            
+            item {
+                PreferenceSwitch(
+                    title = stringResource(R.string.notification_sound_settings),
+                    description = stringResource(R.string.notification_sound_desc),
+                    icon = Icons.Outlined.Notifications,
+                    isChecked = notificationSound,
+                    onClick = { NOTIFICATION_SOUND.updateBoolean(!notificationSound) }
+                )
+            }
+            
+            item {
+                PreferenceSwitch(
+                    title = stringResource(R.string.notification_vibrate_settings),
+                    description = stringResource(R.string.notification_vibrate_desc),
+                    icon = Icons.Outlined.Notifications,
+                    isChecked = notificationVibrate,
+                    enabled = notificationSound,
+                    onClick = { NOTIFICATION_VIBRATE.updateBoolean(!notificationVibrate) }
+                )
+            }
+            
+            item {
+                PreferenceSwitch(
+                    title = stringResource(R.string.notification_led_settings),
+                    description = stringResource(R.string.notification_led_desc),
+                    icon = Icons.Outlined.Notifications,
+                    isChecked = notificationLed,
+                    enabled = notificationSound,
+                    onClick = { NOTIFICATION_LED.updateBoolean(!notificationLed) }
+                )
+            }
+            
+            item {
+                PreferenceSwitch(
+                    title = stringResource(R.string.notification_success_sound_settings),
+                    description = stringResource(R.string.notification_success_sound_desc),
+                    icon = Icons.Outlined.Notifications,
+                    isChecked = notificationSuccessSound,
+                    enabled = notificationSound,
+                    onClick = { NOTIFICATION_SUCCESS_SOUND.updateBoolean(!notificationSuccessSound) }
+                )
+            }
+            
+            item {
+                PreferenceSwitch(
+                    title = stringResource(R.string.notification_error_sound_settings),
+                    description = stringResource(R.string.notification_error_sound_desc),
+                    icon = Icons.Outlined.Notifications,
+                    isChecked = notificationErrorSound,
+                    enabled = notificationSound,
+                    onClick = { NOTIFICATION_ERROR_SOUND.updateBoolean(!notificationErrorSound) }
                 )
             }
         }

@@ -116,6 +116,13 @@ private const val DOWNLOAD_TYPE = "download_type"
 // Network Type Restriction
 const val NETWORK_TYPE_RESTRICTION = "network_type_restriction"
 
+// Smart Notifications
+const val NOTIFICATION_SOUND = "notification_sound"
+const val NOTIFICATION_VIBRATE = "notification_vibrate"
+const val NOTIFICATION_LED = "notification_led"
+const val NOTIFICATION_SUCCESS_SOUND = "notification_success_sound"
+const val NOTIFICATION_ERROR_SOUND = "notification_error_sound"
+
 const val YT_DLP_UPDATE_CHANNEL = "yt-dlp_update_channel"
 const val YT_DLP_UPDATE_TIME = "yt-dlp_last_update"
 const val YT_DLP_UPDATE_INTERVAL = "yt-dlp_update_interval"
@@ -228,6 +235,11 @@ private val BooleanPreferenceDefaults =
         EMBED_METADATA to true,
         USE_CUSTOM_AUDIO_PRESET to false,
         AUTO_UPDATE to true,
+        NOTIFICATION_SOUND to true,
+        NOTIFICATION_VIBRATE to true,
+        NOTIFICATION_LED to true,
+        NOTIFICATION_SUCCESS_SOUND to true,
+        NOTIFICATION_ERROR_SOUND to true,
     )
 
 private val IntPreferenceDefaults =

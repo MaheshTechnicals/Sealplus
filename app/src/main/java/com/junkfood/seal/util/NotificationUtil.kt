@@ -8,6 +8,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -43,6 +46,38 @@ object NotificationUtil {
     //        NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_stat_seal)
     private val commandNotificationBuilder =
         NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_stat_seal)
+
+    private fun applySmartNotificationSettings(
+        builder: NotificationCompat.Builder,
+        isSuccess: Boolean = false,
+        isError: Boolean = false
+    ) {
+        // Apply sound
+        val shouldPlaySound = NOTIFICATION_SOUND.getBoolean() &&
+            ((isSuccess && NOTIFICATION_SUCCESS_SOUND.getBoolean()) ||
+             (isError && NOTIFICATION_ERROR_SOUND.getBoolean()) ||
+             (!isSuccess && !isError))
+        
+        if (shouldPlaySound) {
+            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            builder.setSound(soundUri)
+        } else {
+            builder.setSound(null)
+        }
+
+        // Apply vibration
+        if (NOTIFICATION_VIBRATE.getBoolean()) {
+            builder.setVibrate(longArrayOf(0, 250, 250, 250))
+        } else {
+            builder.setVibrate(null)
+        }
+
+        // Apply LED (only for success/error notifications)
+        if (NOTIFICATION_LED.getBoolean() && (isSuccess || isError)) {
+            val ledColor = if (isSuccess) Color.GREEN else Color.RED
+            builder.setLights(ledColor, 1000, 1000)
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun createNotificationChannel() {
@@ -123,6 +158,7 @@ object NotificationUtil {
                 .setAutoCancel(true)
         title?.let { builder.setContentTitle(title) }
         intent?.let { builder.setContentIntent(intent) }
+        applySmartNotificationSettings(builder, isSuccess = true)
         notificationManager.notify(notificationId, builder.build())
     }
 
@@ -141,6 +177,7 @@ object NotificationUtil {
                 .setOngoing(false)
                 .setStyle(null)
         title?.let { builder.setContentTitle(title) }
+        applySmartNotificationSettings(builder, isSuccess = true)
 
         notificationManager.notify(notificationId, builder.build())
     }
@@ -205,6 +242,7 @@ object NotificationUtil {
                 pendingIntent,
             )
             .run {
+                applySmartNotificationSettings(this, isError = true)
                 notificationManager.cancel(notificationId)
                 notificationManager.notify(notificationId, build())
             }
