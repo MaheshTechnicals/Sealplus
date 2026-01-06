@@ -47,7 +47,7 @@ android {
         applicationId = "com.junkfood.sealplus"
         minSdk = 24
         targetSdk = 36
-        versionCode = 102_010_400
+        versionCode = 102_020_400
         check(versionCode == currentVersionCode)
 
         versionName = baseVersionName
