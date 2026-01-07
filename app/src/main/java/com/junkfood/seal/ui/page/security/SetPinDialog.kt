@@ -29,6 +29,8 @@ import com.junkfood.seal.R
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.AuthenticationManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 enum class SetPinState {
     ENTER_NEW_PIN,
@@ -75,7 +77,7 @@ fun SetPinDialog(
                         SetPinState.ENTER_NEW_PIN -> stringResource(R.string.enter_new_pin)
                         SetPinState.CONFIRM_NEW_PIN -> stringResource(R.string.confirm_pin)
                         SetPinState.SUCCESS -> stringResource(R.string.pin_set_successfully)
-                        SetPinState.ERROR -> stringResource(R.string.error)
+                        SetPinState.ERROR -> errorMessage.ifEmpty { stringResource(R.string.pins_do_not_match) }
                     },
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
@@ -124,7 +126,7 @@ fun SetPinDialog(
                                             
                                             // Auto-advance when valid length
                                             if (firstPin.length in 4..6) {
-                                                kotlinx.coroutines.GlobalScope.launch {
+                                                scope.launch {
                                                     delay(100)
                                                     if (AuthenticationManager.isValidPinFormat(firstPin)) {
                                                         state = SetPinState.CONFIRM_NEW_PIN
@@ -139,7 +141,7 @@ fun SetPinDialog(
                                             
                                             // Check when lengths match
                                             if (confirmPin.length == firstPin.length) {
-                                                kotlinx.coroutines.GlobalScope.launch {
+                                                scope.launch {
                                                     delay(100)
                                                     if (firstPin == confirmPin) {
                                                         if (AuthenticationManager.setPin(firstPin)) {
