@@ -50,7 +50,8 @@ object NotificationUtil {
     private fun applySmartNotificationSettings(
         builder: NotificationCompat.Builder,
         isSuccess: Boolean = false,
-        isError: Boolean = false
+        isError: Boolean = false,
+        isProgress: Boolean = false
     ) {
         // Master notification sound switch
         if (!NOTIFICATION_SOUND.getBoolean()) {
@@ -63,7 +64,8 @@ object NotificationUtil {
         val shouldPlaySound = when {
             isSuccess -> NOTIFICATION_SUCCESS_SOUND.getBoolean()
             isError -> NOTIFICATION_ERROR_SOUND.getBoolean()
-            else -> true // Progress notifications always play sound if master is enabled
+            isProgress -> false // Progress notifications should not play sound on every update
+            else -> false // Default: no sound
         }
         
         if (shouldPlaySound) {
@@ -73,17 +75,42 @@ object NotificationUtil {
             builder.setSound(null)
         }
 
-        // Apply vibration
-        if (NOTIFICATION_VIBRATE.getBoolean()) {
+        // Apply vibration (only for completion/error, not progress)
+        if (NOTIFICATION_VIBRATE.getBoolean() && !isProgress) {
+            // Works on all Android versions including 13, 14, 15, 16+
             builder.setVibrate(longArrayOf(0, 250, 250, 250))
         } else {
             builder.setVibrate(null)
         }
 
-        // Apply LED (only for success/error notifications)
-        if (NOTIFICATION_LED.getBoolean() && (isSuccess || isError)) {
-            val ledColor = if (isSuccess) Color.GREEN else Color.RED
-            builder.setLights(ledColor, 1000, 1000)
+        // Apply LED indicator - Compatible with all Android versions
+        if (NOTIFICATION_LED.getBoolean()) {
+            val ledColor = when {
+                isSuccess -> Color.GREEN
+                isError -> Color.RED
+                isProgress -> Color.BLUE
+                else -> Color.BLUE
+            }
+            // LED only shows for non-progress notifications
+            // Note: LED support varies by device manufacturer, especially on Android 13+
+            // Some devices may not show LED even when configured
+            if (!isProgress) {
+                builder.setLights(ledColor, 1000, 1000)
+            }
+        }
+        
+        // Android 13+ (API 33+) specific enhancements
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Ensure notification shows badge on app icon
+            builder.setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
+        }
+        
+        // Android 12+ (API 31+) - Set notification category for better system handling
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            when {
+                isSuccess || isProgress -> builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
+                isError -> builder.setCategory(NotificationCompat.CATEGORY_ERROR)
+            }
         }
     }
 
@@ -91,18 +118,43 @@ object NotificationUtil {
     fun createNotificationChannel() {
         val name = context.getString(R.string.channel_name)
         val descriptionText = context.getString(R.string.channel_description)
-        val importance = NotificationManager.IMPORTANCE_LOW
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channelGroup =
             NotificationChannelGroup(NOTIFICATION_GROUP_ID, context.getString(R.string.download))
         val channel =
             NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
                 group = NOTIFICATION_GROUP_ID
+                // Enable sound, vibration, and LED - Compatible with Android 8.0+ (API 26+)
+                setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
+                    null
+                )
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 250, 250)
+                enableLights(true)
+                lightColor = Color.BLUE
+                
+                // Android 13+ (API 33+) - Additional notification settings
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    // Allow badge on app icon
+                    setShowBadge(true)
+                }
+                
+                // Android 14+ (API 34+) compatibility - No specific changes needed
+                // The channel will work correctly with all features
+                
+                // Note: For Android 13+, POST_NOTIFICATIONS permission is already declared in manifest
+                // and requested at runtime in the app's permission flow
             }
         val serviceChannel =
-            NotificationChannel(SERVICE_CHANNEL_ID, name, importance).apply {
+            NotificationChannel(SERVICE_CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW).apply {
                 description = context.getString(R.string.service_title)
                 group = NOTIFICATION_GROUP_ID
+                // Service notifications should be silent
+                setSound(null, null)
+                enableVibration(false)
+                enableLights(false)
             }
         notificationManager.createNotificationChannelGroup(channelGroup)
         notificationManager.createNotificationChannel(channel)
@@ -133,19 +185,22 @@ object NotificationUtil {
                     }
             }
 
-        NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_seal)
             .setContentTitle(title)
             .setProgress(PROGRESS_MAX, progress, progress <= 0)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .run {
-                pendingIntent?.let {
-                    addAction(R.drawable.outline_cancel_24, context.getString(R.string.cancel), it)
-                }
-                notificationManager.notify(notificationId, build())
-            }
+        
+        pendingIntent?.let {
+            builder.addAction(R.drawable.outline_cancel_24, context.getString(R.string.cancel), it)
+        }
+        
+        // Apply smart notification settings for progress notifications
+        applySmartNotificationSettings(builder, isProgress = true)
+        
+        notificationManager.notify(notificationId, builder.build())
     }
 
     fun finishNotification(
@@ -280,7 +335,7 @@ object NotificationUtil {
                 PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-        NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_seal)
             .setContentTitle(
                 "[${templateName}_${taskUrl}] " +
@@ -294,7 +349,11 @@ object NotificationUtil {
                 context.getString(R.string.cancel),
                 pendingIntent,
             )
-            .run { notificationManager.notify(notificationId, build()) }
+        
+        // Apply smart notification settings
+        applySmartNotificationSettings(builder, isProgress = true)
+        
+        notificationManager.notify(notificationId, builder.build())
     }
 
     fun cancelAllNotifications() {
@@ -302,7 +361,31 @@ object NotificationUtil {
     }
 
     fun areNotificationsEnabled(): Boolean {
-        return if (Build.VERSION.SDK_INT <= 24) true
-        else notificationManager.areNotificationsEnabled()
+        return when {
+            // Android 13+ (API 33+) - Check POST_NOTIFICATIONS permission
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                notificationManager.areNotificationsEnabled()
+            }
+            // Android 7.1+ (API 25+) - Check if notifications are enabled
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
+                notificationManager.areNotificationsEnabled()
+            }
+            // Android 7.0 and below - Notifications always enabled
+            else -> true
+        }
+    }
+    
+    /**
+     * Check if a specific notification channel is enabled
+     * Useful for Android 8.0+ (API 26+) where users can disable specific channels
+     */
+    fun isChannelEnabled(channelId: String = CHANNEL_ID): Boolean {
+        return when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+                val channel = notificationManager.getNotificationChannel(channelId)
+                channel?.importance != NotificationManager.IMPORTANCE_NONE
+            }
+            else -> areNotificationsEnabled()
+        }
     }
 }
