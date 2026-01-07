@@ -486,5 +486,64 @@
     <string name="directory_not_supported">This directory is not supported</string>
     <string name="not_implemented_yet">Not implemented yet!</string>
     <string name="retry">Retry</string>
-
-</resources>
+    
+    <!-- Security and Authentication strings -->
+    <string name="security_settings">Security Settings</string>
+    <string name="security_and_privacy">Security &amp; Privacy</string>
+    <string name="app_lock">App Lock</string>
+    <string name="enable_app_lock">Enable App Lock</string>
+    <string name="protect_app_with_pin_biometric">Protect app with PIN or biometric authentication</string>
+    <string name="lock_app_with_pin_biometric">Lock app with PIN/Fingerprint/Face</string>
+    <string name="authentication_methods">Authentication Methods</string>
+    <string name="use_biometric_authentication">Use Biometric Authentication</string>
+    <string name="unlock_with_fingerprint_face">Unlock with fingerprint or face recognition</string>
+    <string name="pin_management">PIN Management</string>
+    <string name="change_pin">Change PIN</string>
+    <string name="update_your_pin_code">Update your PIN code</string>
+    <string name="security_options">Security Options</string>
+    <string name="require_auth_on_launch">Require Authentication on Launch</string>
+    <string name="always_require_authentication_when_opening">Always require authentication when opening app</string>
+    <string name="authentication_timeout">Authentication Timeout</string>
+    <string name="auth_timeout_description">Require authentication after %d minutes of inactivity</string>
+    <string name="security_info_message">App lock protects your privacy by requiring authentication to access Seal Plus. Your PIN is securely stored on your device.</string>
+    <string name="disable_security">Disable Security</string>
+    <string name="disable_security_warning">Are you sure you want to disable app lock? This will remove all security restrictions.</string>
+    <string name="disable">Disable</string>
+    <string name="security_enabled">Security enabled</string>
+    <string name="security_disabled">Security disabled</string>
+    <string name="timeout_updated">Timeout updated</string>
+    <string name="select_timeout_duration">Select timeout duration:</string>
+    <string name="timeout_minutes">%d minutes</string>
+    
+    <!-- Lock Screen strings -->
+    <string name="seal_plus" translatable="false">Seal Plus</string>
+    <string name="unlock_seal_plus">Unlock Seal Plus</string>
+    <string name="enter_pin_to_unlock">Enter PIN to unlock</string>
+    <string name="biometric_prompt_subtitle">Authenticate to access Seal Plus</string>
+    <string name="biometric_prompt_description">Use your fingerprint or face to unlock</string>
+    <string name="use_biometric">Use Biometric</string>
+    <string name="backspace">Backspace</string>
+    <string name="incorrect_pin_attempts">Incorrect PIN. %d attempts remaining.</string>
+    <string name="too_many_attempts">Too many incorrect attempts. Please try again later.</string>
+    <string name="authentication_failed">Authentication failed</string>
+    
+    <!-- Set PIN Dialog strings -->
+    <string name="enter_new_pin">Enter New PIN</string>
+    <string name="confirm_pin">Confirm PIN</string>
+    <string name="pin_set_successfully">PIN Set Successfully</string>
+    <string name="enter_pin_4_6_digits">Enter a PIN with 4–6 digits</string>
+    <string name="enter_pin_again">Enter your PIN again to confirm</string>
+    <string name="pin_has_been_set">Your PIN has been set successfully</string>
+    <string name="error_setting_pin">Error setting PIN. Please try again.</string>
+    <string name="pins_do_not_match">PINs do not match. Please try again.</string>
+    <string name="pin_changed_successfully">PIN changed successfully</string>
+    
+    <!-- Biometric Status strings -->
+    <string name="biometric_available">Biometric authentication is available</string>
+    <string name="biometric_no_hardware">No biometric hardware detected</string>
+    <string name="biometric_hw_unavailable">Biometric hardware is currently unavailable</string>
+    <string name="biometric_none_enrolled">No biometric credentials enrolled. Please set up fingerprint or face recognition in device settings.</string>
+    <string name="biometric_security_update_required">Security update required for biometric authentication</string>
+    <string name="biometric_unsupported">Biometric authentication is not supported on this device</string>
+    <string name="biometric_status_unknown">Biometric status unknown</string>
+    <string name="biometric_unavailable">Biometric authentication is unavailable</string>

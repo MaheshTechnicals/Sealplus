@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.NetworkCell
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.SignalCellular4Bar
@@ -48,7 +49,10 @@ import com.junkfood.seal.util.PreferenceUtil.updateInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
+fun SealPlusExtrasPage(
+    onNavigateBack: () -> Unit,
+    onNavigateToSecurity: () -> Unit = {}
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var networkTypeRestriction by remember { mutableStateOf(NETWORK_TYPE_RESTRICTION.getInt()) }
     var showNetworkDialog by remember { mutableStateOf(false) }
@@ -76,6 +80,19 @@ fun SealPlusExtrasPage(onNavigateBack: () -> Unit) {
         LazyColumn(
             modifier = Modifier.padding(paddingValues)
         ) {
+            item {
+                PreferenceSubtitle(text = stringResource(R.string.security_and_privacy))
+            }
+            
+            item {
+                PreferenceItem(
+                    title = stringResource(R.string.app_lock),
+                    description = stringResource(R.string.lock_app_with_pin_biometric),
+                    icon = Icons.Outlined.Lock,
+                    onClick = onNavigateToSecurity
+                )
+            }
+            
             item {
                 PreferenceSubtitle(text = stringResource(R.string.network_settings))
             }

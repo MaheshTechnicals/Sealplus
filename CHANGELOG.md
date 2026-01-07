@@ -5,6 +5,35 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-01-07
+
+### 🔒 Password Protection
+
+* **App Lock with PIN/Fingerprint/Face Authentication**
+  * **Multi-factor authentication** - Secure your app with PIN (4-6 digits), fingerprint, or face recognition
+  * **Comprehensive security settings** - Enable/disable app lock, change PIN, configure timeout
+  * **Biometric integration** - Use fingerprint or face unlock on supported devices
+  * **Smart timeout management** - Auto-lock after configurable inactivity (1-60 minutes)
+  * **Background protection** - App locks when sent to background
+  * **Beautiful lock screen UI** - Animated number pad with Material Design 3
+  * **Secure PIN storage** - SHA-256 hashed and securely stored using MMKV
+  * **Attempt limiting** - Prevents brute force attacks with max 5 attempts
+  * **Customizable options**:
+    - Toggle biometric authentication
+    - Require authentication on app launch
+    - Set inactivity timeout duration
+    - Change PIN anytime
+  * **Full theme support** - Works with all themes including Gradient Dark
+  * **Privacy focused** - All authentication data stored locally on device
+  * Access via: Settings → Seal Plus Extras → Security & Privacy → App Lock
+
+### 🎨 UI/UX Improvements
+
+* **Enhanced security settings page** with comprehensive options
+* **Animated lock screen** with smooth transitions and haptic feedback
+* **Clear visual feedback** for authentication success/failure
+* **Accessibility compliant** - Proper content descriptions and contrast ratios
+
 ## [1.2.3] - 2026-01-07
 
 ### 🌐 Network Type Restrictions

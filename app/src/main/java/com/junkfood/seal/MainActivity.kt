@@ -6,14 +6,20 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import com.junkfood.seal.App.Companion.context
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.SettingsProvider
 import com.junkfood.seal.ui.page.AppEntry
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
+import com.junkfood.seal.ui.page.security.LockScreen
 import com.junkfood.seal.ui.theme.SealTheme
+import com.junkfood.seal.util.AuthenticationManager
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.matchUrlFromSharedText
 import com.junkfood.seal.util.setLanguage
@@ -23,6 +29,7 @@ import org.koin.compose.KoinContext
 
 class MainActivity : AppCompatActivity() {
     private val dialogViewModel: DownloadDialogViewModel by viewModel()
+    private var isAppInBackground = false
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,19 +41,58 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         context = this.baseContext
+        
+        // Reset auth time on app start
+        if (savedInstanceState == null) {
+            AuthenticationManager.resetAuthTime()
+        }
+        
         setContent {
             KoinContext {
                 val windowSizeClass = calculateWindowSizeClass(this)
+                var isLocked by remember { 
+                    mutableStateOf(
+                        AuthenticationManager.isSecurityEnabled() && 
+                        AuthenticationManager.isAuthenticationNeeded()
+                    )
+                }
+                
                 SettingsProvider(windowWidthSizeClass = windowSizeClass.widthSizeClass) {
                     SealTheme(
                         darkTheme = LocalDarkTheme.current.isDarkTheme(),
                         isHighContrastModeEnabled = LocalDarkTheme.current.isHighContrastModeEnabled,
                     ) {
-                        AppEntry(dialogViewModel = dialogViewModel)
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            AppEntry(dialogViewModel = dialogViewModel)
+                            
+                            // Show lock screen overlay if locked
+                            if (isLocked) {
+                                LockScreen(
+                                    onUnlocked = {
+                                        isLocked = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        isAppInBackground = true
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        if (isAppInBackground && AuthenticationManager.isSecurityEnabled() && 
+            AuthenticationManager.isAuthenticationNeeded()) {
+            // Trigger re-authentication by recreating activity
+            recreate()
+        }
+        isAppInBackground = false
     }
 
     override fun onNewIntent(intent: Intent) {

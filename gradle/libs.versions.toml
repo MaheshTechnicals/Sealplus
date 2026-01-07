@@ -6,6 +6,7 @@ androidxCore = "1.17.0"
 androidMaterial = "1.12.0"
 androidxAppCompat = "1.7.1"
 androidxActivity = "1.12.2"
+androidxBiometric = "1.1.0"
 graphics = "1.0.4"
 constraintLayout = "1.1.0"
 
@@ -46,6 +47,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 android-material = { group = "com.google.android.material", name = "material", version.ref = "androidMaterial" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidxAppCompat" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "androidxBiometric" }
 
 androidx-lifecycle-runtimeCompose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 
@@ -147,4 +149,5 @@ youtubedlAndroid = ["youtubedl-android-library",
 core = ["androidx-activity-compose",
     "android-material",
     "androidx-appcompat",
-    "androidx-core-ktx"]
+    "androidx-core-ktx",
+    "androidx-biometric"]
