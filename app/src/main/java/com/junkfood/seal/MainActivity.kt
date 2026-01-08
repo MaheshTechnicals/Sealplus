@@ -42,11 +42,6 @@ class MainActivity : AppCompatActivity() {
 
         context = this.baseContext
         
-        // Reset auth time on app start
-        if (savedInstanceState == null) {
-            AuthenticationManager.resetAuthTime()
-        }
-        
         setContent {
             KoinContext {
                 val windowSizeClass = calculateWindowSizeClass(this)

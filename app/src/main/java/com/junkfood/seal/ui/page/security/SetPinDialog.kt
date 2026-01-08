@@ -111,7 +111,7 @@ fun SetPinDialog(
                         SetPinDots(
                             pinLength = currentPin.length,
                             isError = state == SetPinState.ERROR,
-                            maxLength = 6
+                            maxLength = 4
                         )
                         
                         Spacer(modifier = Modifier.height(32.dp))
@@ -121,11 +121,11 @@ fun SetPinDialog(
                             onNumberClick = { number ->
                                 when (state) {
                                     SetPinState.ENTER_NEW_PIN -> {
-                                        if (firstPin.length < 6) {
+                                        if (firstPin.length < 4) {
                                             firstPin += number
                                             
                                             // Auto-advance when valid length
-                                            if (firstPin.length in 4..6) {
+                                            if (firstPin.length == 4) {
                                                 scope.launch {
                                                     delay(100)
                                                     if (AuthenticationManager.isValidPinFormat(firstPin)) {
@@ -136,7 +136,7 @@ fun SetPinDialog(
                                         }
                                     }
                                     SetPinState.CONFIRM_NEW_PIN -> {
-                                        if (confirmPin.length < 6) {
+                                        if (confirmPin.length < 4) {
                                             confirmPin += number
                                             
                                             // Check when lengths match

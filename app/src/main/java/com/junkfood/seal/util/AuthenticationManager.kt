@@ -255,24 +255,31 @@ object AuthenticationManager {
     }
     
     /**
-     * Validate PIN format (4-6 digits)
+     * Validate PIN format (4 digits only)
      */
     fun isValidPinFormat(pin: String): Boolean {
-        return pin.length in 4..6 && pin.all { it.isDigit() }
+        return pin.length == 4 && pin.all { it.isDigit() }
     }
     
     /**
      * Check if authentication is needed based on timeout
      */
-    private var lastAuthTime = 0L
+    private const val PREF_LAST_AUTH_TIME = "last_auth_time"
     
     fun updateLastAuthTime() {
-        lastAuthTime = System.currentTimeMillis()
+        prefs?.encode(PREF_LAST_AUTH_TIME, System.currentTimeMillis())
+    }
+    
+    fun getLastAuthTime(): Long {
+        return prefs?.decodeLong(PREF_LAST_AUTH_TIME, 0L) ?: 0L
     }
     
     fun isAuthenticationNeeded(): Boolean {
         if (!isSecurityEnabled()) return false
         if (!requireAuthOnLaunch()) return false
+        
+        val lastAuthTime = getLastAuthTime()
+        if (lastAuthTime == 0L) return true // First time or after reset
         
         val timeout = getAuthTimeout() * 60 * 1000L // Convert to milliseconds
         val currentTime = System.currentTimeMillis()
@@ -281,6 +288,6 @@ object AuthenticationManager {
     }
     
     fun resetAuthTime() {
-        lastAuthTime = 0L
+        prefs?.encode(PREF_LAST_AUTH_TIME, 0L)
     }
 }

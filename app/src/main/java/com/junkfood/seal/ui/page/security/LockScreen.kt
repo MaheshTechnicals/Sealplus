@@ -76,7 +76,7 @@ fun LockScreen(
     
     // Handle PIN verification
     LaunchedEffect(pin) {
-        if (pin.length == 4 || pin.length == 6) {
+        if (pin.length == 4) {
             delay(100) // Small delay for better UX
             if (AuthenticationManager.verifyPin(pin)) {
                 AuthenticationManager.updateLastAuthTime()
@@ -152,7 +152,7 @@ fun LockScreen(
                 PinDots(
                     pinLength = pin.length,
                     isError = isError,
-                    maxLength = 6
+                    maxLength = 4
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -179,7 +179,7 @@ fun LockScreen(
             ) {
                 NumberPad(
                     onNumberClick = { number ->
-                        if (pin.length < 6) {
+                        if (pin.length < 4) {
                             pin += number
                         }
                     },
