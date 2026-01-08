@@ -39,7 +39,7 @@ object TorrentUtil {
      * Check if torrent support is enabled
      */
     fun isTorrentSupportEnabled(): Boolean {
-        return TORRENT_SUPPORT.getBoolean()
+        return with(PreferenceUtil) { TORRENT_SUPPORT.getBoolean() }
     }
 
     /**
@@ -155,7 +155,7 @@ object TorrentUtil {
 
             // Calculate speed (rough estimate)
             val speed = if (progress > lastProgress) {
-                (progress - lastProgress) * 1024 * 1024 // Rough MB/s estimate
+                ((progress - lastProgress) * 1024 * 1024).toDouble() // Rough MB/s estimate
             } else {
                 lastSpeed
             }
@@ -167,7 +167,7 @@ object TorrentUtil {
                 TorrentProgress(
                     torrentId = torrentId,
                     progress = progress,
-                    downloadSpeed = speed,
+                    downloadSpeed = speed.toDouble(),
                     uploadSpeed = 0.0,
                     totalSize = totalSize,
                     downloadedSize = (totalSize * progress / 100).toLong(),
