@@ -51,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **Clear visual feedback** for all authentication states
 * **Confirmation dialogs** for critical security actions
 * **Accessibility compliant** - Proper content descriptions and contrast ratios
+* **Exit Confirmation Dialog** - Stylish and professional confirmation dialog when exiting from Download Queue page
+  * Prevents accidental app closure
+  * Material Design 3 styled dialog
+  * Theme-aware colors matching Gradient Dark and other themes
+  * Clear messaging about ongoing downloads continuing in background
+  * Smooth animations and haptic feedback
 
 ## [1.2.3] - 2026-01-07
 

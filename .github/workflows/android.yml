@@ -64,28 +64,42 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## 🚀 Seal Plus v1.2.3 - Network Control & Smart Notifications
+          ## 🚀 Seal Plus v1.2.4 - App Lock & Enhanced Security
           
-          ### 🌐 Network Type Restrictions
+          ### 🔒 App Lock System (Security & Privacy)
           
-          * **Smart Network Control**
-            * **Download only on WiFi, Mobile Data, or Any network** - Full control over network usage
-            * Automatic pause when network type changes
-            * Resume downloads when preferred network becomes available
-            * Battery-friendly and data-conscious downloading
-            * Prevents unwanted mobile data usage for large files
-            * Configure per-download or globally in settings
+          * **Multi-Factor Authentication**
+            * **4-digit PIN protection** - Fast and secure PIN authentication
+            * **Biometric authentication** - Unlock with fingerprint or face recognition
+            * **Old PIN verification** - Secure PIN change requires current PIN
+            * **Complete reset option** - Reset all AppLock settings if needed
           
-          ### 🔔 Smart Notifications
+          * **Smart Timeout Management**
+            * **Immediately** - Always require authentication when app opens
+            * **Flexible timeouts** - 1, 2, 5, 10, 15, 30, or 60 minutes of inactivity
+            * **Background protection** - Auto-lock when app goes to background
+            * **Persistent settings** - Timeout settings survive app restarts
           
-          * **Customizable Notification System**
-            * **Customizable notifications** with sound, vibration, and LED settings per task status
-            * Different notification profiles for started, in progress, completed, failed, and paused states
-            * Per-task status customization: Choose notification sound, enable/disable vibration, set LED color
-            * Rich notification controls: Priority levels, channel management
-            * Actionable notifications (Pause, Cancel, Retry)
-            * Grouped notifications for multiple downloads
-            * Silent mode support with visual-only indicators
+          * **Secure Implementation**
+            * **SHA-256 PIN hashing** - PIN never stored in plain text
+            * **MMKV encrypted storage** - All data securely stored locally
+            * **Brute force protection** - Maximum 5 attempts with auto-dismiss
+            * **No cloud sync** - All data stays on your device
+          
+          ### 🎨 UI/UX Enhancements
+          
+          * **Exit Confirmation Dialog**
+            * Prevents accidental app closure from Download Queue page
+            * Stylish Material Design 3 styled dialog
+            * Theme-aware colors matching all themes including Gradient Dark
+            * Clear messaging about ongoing downloads
+            * Smooth animations with proper haptic feedback
+          
+          * **Animated Lock Screen**
+            * Beautiful number pad with smooth transitions
+            * PIN dots indicator with visual feedback
+            * Error shake animations on incorrect PIN
+            * Haptic feedback for better user experience
           
           ---
           
@@ -98,6 +112,8 @@ jobs:
           - **x86**: For 32-bit x86 devices
           
           ### 💎 Key Features
+          - 🔒 App Lock with PIN & Biometric authentication
+          - 🚪 Exit confirmation dialog for Download Queue
           - 🌐 Network type restrictions (WiFi/Mobile/Any)
           - 🔔 Smart customizable notifications
           - 🎨 Gradient Dark theme with glassmorphism
