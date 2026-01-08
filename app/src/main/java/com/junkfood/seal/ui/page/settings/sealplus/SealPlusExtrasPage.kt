@@ -25,14 +25,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferenceSubtitle
 import com.junkfood.seal.ui.component.PreferenceSingleChoiceItem
 import com.junkfood.seal.ui.component.PreferenceSwitch
+import com.junkfood.seal.ui.page.security.LockScreen
+import com.junkfood.seal.util.AuthenticationManager
 import com.junkfood.seal.util.NETWORK_ANY
 import com.junkfood.seal.util.NETWORK_MOBILE_ONLY
 import com.junkfood.seal.util.NETWORK_TYPE_RESTRICTION
@@ -53,6 +57,7 @@ fun SealPlusExtrasPage(
     onNavigateBack: () -> Unit,
     onNavigateToSecurity: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var networkTypeRestriction by remember { mutableStateOf(NETWORK_TYPE_RESTRICTION.getInt()) }
     var showNetworkDialog by remember { mutableStateOf(false) }
@@ -62,6 +67,23 @@ fun SealPlusExtrasPage(
     var notificationLed by remember { mutableStateOf(NOTIFICATION_LED.getBoolean()) }
     var notificationSuccessSound by remember { mutableStateOf(NOTIFICATION_SUCCESS_SOUND.getBoolean()) }
     var notificationErrorSound by remember { mutableStateOf(NOTIFICATION_ERROR_SOUND.getBoolean()) }
+    
+    // Authentication state for AppLock settings
+    var showAuthScreen by remember { mutableStateOf(false) }
+    var isAuthenticated by remember { mutableStateOf(false) }
+
+    // Show authentication screen if AppLock is enabled and user tries to access settings
+    if (showAuthScreen && !isAuthenticated) {
+        LockScreen(
+            onUnlocked = {
+                isAuthenticated = true
+                showAuthScreen = false
+                onNavigateToSecurity()
+            },
+            useBiometric = AuthenticationManager.useBiometric()
+        )
+        return
+    }
 
     Scaffold(
         modifier = Modifier
@@ -89,7 +111,16 @@ fun SealPlusExtrasPage(
                     title = stringResource(R.string.app_lock),
                     description = stringResource(R.string.lock_app_with_pin_biometric),
                     icon = Icons.Outlined.Lock,
-                    onClick = onNavigateToSecurity
+                    onClick = {
+                        // Check if AppLock is enabled and PIN is set
+                        if (AuthenticationManager.isSecurityEnabled() && AuthenticationManager.isPinSet()) {
+                            // Show authentication screen before allowing access
+                            showAuthScreen = true
+                        } else {
+                            // AppLock not enabled, go directly to settings
+                            onNavigateToSecurity()
+                        }
+                    }
                 )
             }
             

@@ -35,6 +35,7 @@ object AuthenticationManager {
     private const val PREF_USE_BIOMETRIC = "use_biometric"
     private const val PREF_REQUIRE_AUTH_ON_LAUNCH = "require_auth_on_launch"
     private const val PREF_AUTH_TIMEOUT = "auth_timeout"
+    private const val PREF_LAST_AUTH_TIME = "last_auth_time"
     
     private val prefs = MMKV.defaultMMKV()
     
@@ -134,6 +135,19 @@ object AuthenticationManager {
      */
     fun clearPin() {
         prefs?.removeValueForKey(PREF_PIN_HASH)
+    }
+    
+    /**
+     * Reset all AppLock settings
+     * Clears PIN, disables security, and resets all preferences
+     */
+    fun resetAppLock() {
+        prefs?.removeValueForKey(PREF_PIN_HASH)
+        prefs?.removeValueForKey(PREF_SECURITY_ENABLED)
+        prefs?.removeValueForKey(PREF_USE_BIOMETRIC)
+        prefs?.removeValueForKey(PREF_REQUIRE_AUTH_ON_LAUNCH)
+        prefs?.removeValueForKey(PREF_AUTH_TIMEOUT)
+        prefs?.removeValueForKey(PREF_LAST_AUTH_TIME)
     }
     
     /**

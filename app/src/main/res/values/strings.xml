@@ -548,4 +548,12 @@
     <string name="biometric_unsupported">Biometric authentication is not supported on this device</string>
     <string name="biometric_status_unknown">Biometric status unknown</string>
     <string name="biometric_unavailable">Biometric authentication is unavailable</string>
+    
+    <!-- Reset AppLock strings -->
+    <string name="reset_options">Reset Options</string>
+    <string name="reset_app_lock">Reset App Lock</string>
+    <string name="reset_app_lock_desc">Remove all PIN data and turn off App Lock completely</string>
+    <string name="reset_app_lock_warning">Are you sure you want to reset App Lock? This will:\n\n• Remove your PIN\n• Turn off App Lock\n• Reset all security settings\n\nYou can set up App Lock again from scratch afterward.</string>
+    <string name="app_lock_reset_success">App Lock has been reset successfully</string>
+    <string name="reset">Reset</string>
 </resources>

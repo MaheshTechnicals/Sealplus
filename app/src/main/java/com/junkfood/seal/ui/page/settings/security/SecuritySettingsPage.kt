@@ -48,6 +48,7 @@ fun SecuritySettingsPage(
     var showVerifyOldPinDialog by remember { mutableStateOf(false) }
     var showTimeoutDialog by remember { mutableStateOf(false) }
     var showDisableSecurityDialog by remember { mutableStateOf(false) }
+    var showResetAppLockDialog by remember { mutableStateOf(false) }
     
     val isPinSet = AuthenticationManager.isPinSet()
     val isBiometricAvailable = AuthenticationManager.isBiometricAvailable(context)
@@ -177,6 +178,24 @@ fun SecuritySettingsPage(
                 }
             }
             
+            // Reset AppLock section
+            if (securityEnabled && isPinSet) {
+                item {
+                    PreferenceSubtitle(
+                        text = stringResource(R.string.reset_options)
+                    )
+                }
+                
+                item {
+                    PreferenceItem(
+                        title = stringResource(R.string.reset_app_lock),
+                        description = stringResource(R.string.reset_app_lock_desc),
+                        icon = Icons.Default.RestartAlt,
+                        onClick = { showResetAppLockDialog = true }
+                    )
+                }
+            }
+            
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -282,6 +301,35 @@ fun SecuritySettingsPage(
             },
             dismissButton = {
                 TextButton(onClick = { showDisableSecurityDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
+    
+    // Reset AppLock Confirmation Dialog
+    if (showResetAppLockDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetAppLockDialog = false },
+            icon = { Icon(Icons.Default.RestartAlt, contentDescription = null) },
+            title = { Text(stringResource(R.string.reset_app_lock)) },
+            text = { Text(stringResource(R.string.reset_app_lock_warning)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        AuthenticationManager.resetAppLock()
+                        securityEnabled = false
+                        showResetAppLockDialog = false
+                        context.makeToast(R.string.app_lock_reset_success)
+                        // Navigate back after reset
+                        onBackPressed()
+                    }
+                ) {
+                    Text(stringResource(R.string.reset))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetAppLockDialog = false }) {
                     Text(stringResource(android.R.string.cancel))
                 }
             }
