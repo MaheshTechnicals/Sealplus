@@ -5,33 +5,51 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.4] - 2026-01-07
+## [1.2.4] - 2026-01-08
 
-### 🔒 Password Protection
+### 🔒 New Feature: App Lock (Security & Privacy)
 
-* **App Lock with PIN/Fingerprint/Face Authentication**
-  * **Multi-factor authentication** - Secure your app with PIN (4-6 digits), fingerprint, or face recognition
-  * **Comprehensive security settings** - Enable/disable app lock, change PIN, configure timeout
-  * **Biometric integration** - Use fingerprint or face unlock on supported devices
-  * **Smart timeout management** - Auto-lock after configurable inactivity (1-60 minutes)
-  * **Background protection** - App locks when sent to background
-  * **Beautiful lock screen UI** - Animated number pad with Material Design 3
-  * **Secure PIN storage** - SHA-256 hashed and securely stored using MMKV
-  * **Attempt limiting** - Prevents brute force attacks with max 5 attempts
-  * **Customizable options**:
-    - Toggle biometric authentication
-    - Require authentication on app launch
-    - Set inactivity timeout duration
-    - Change PIN anytime
-  * **Full theme support** - Works with all themes including Gradient Dark
-  * **Privacy focused** - All authentication data stored locally on device
+* **Complete App Lock System with Multi-Factor Authentication**
+  * **4-digit PIN protection** - Fast and secure PIN authentication
+  * **Biometric authentication** - Unlock with fingerprint or face recognition on supported devices
+  * **Lock screen on access** - Automatically authenticate before accessing security settings when AppLock is enabled
+  * **Old PIN verification** - Secure PIN change requires verification of current PIN
+  * **Complete reset option** - Reset all AppLock settings and start fresh if needed
+  
+* **Smart Timeout Management**
+  * **Immediately** - Always require authentication every time app is opened (NEW)
+  * **Flexible timeouts** - Choose from 1, 2, 5, 10, 15, 30, or 60 minutes of inactivity
+  * **Persistent timeout** - Timeout settings survive app restarts using MMKV storage
+  * **Require auth on launch** - Option to always authenticate when opening app
+  * **Background protection** - Auto-lock when app goes to background
+  
+* **Secure Implementation**
+  * **SHA-256 PIN hashing** - Your PIN is never stored in plain text
+  * **MMKV encrypted storage** - All authentication data securely stored locally
+  * **Brute force protection** - Maximum 5 attempts with auto-dismiss
+  * **No cloud sync** - All data stays on your device for maximum privacy
+  
+* **Beautiful Material Design 3 UI**
+  * **Animated lock screen** - Smooth transitions with number pad
+  * **PIN dots indicator** - Clear visual feedback (4 dots for 4-digit PIN)
+  * **Error animations** - Shake animation on incorrect PIN
+  * **Theme support** - Works with all themes including Gradient Dark
+  * **Haptic feedback** - Touch feedback for better user experience
+  
+* **Comprehensive Settings**
+  * Enable/disable App Lock easily
+  * Toggle biometric authentication on/off
+  * Change PIN anytime (with old PIN verification)
+  * Configure authentication timeout (Immediately to 60 minutes)
+  * Reset all AppLock settings and data
   * Access via: Settings → Seal Plus Extras → Security & Privacy → App Lock
 
 ### 🎨 UI/UX Improvements
 
-* **Enhanced security settings page** with comprehensive options
-* **Animated lock screen** with smooth transitions and haptic feedback
-* **Clear visual feedback** for authentication success/failure
+* **Enhanced security settings page** with intuitive controls
+* **Animated lock screen** with smooth number pad interactions
+* **Clear visual feedback** for all authentication states
+* **Confirmation dialogs** for critical security actions
 * **Accessibility compliant** - Proper content descriptions and contrast ratios
 
 ## [1.2.3] - 2026-01-07
