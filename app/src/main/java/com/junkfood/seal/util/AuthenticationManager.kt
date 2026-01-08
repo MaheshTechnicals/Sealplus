@@ -276,18 +276,22 @@ object AuthenticationManager {
     }
     
     /**
-     * Check if authentication is needed based on timeout
+     * Update last authentication time
      */
-    private const val PREF_LAST_AUTH_TIME = "last_auth_time"
-    
     fun updateLastAuthTime() {
         prefs?.encode(PREF_LAST_AUTH_TIME, System.currentTimeMillis())
     }
     
+    /**
+     * Get last authentication time
+     */
     fun getLastAuthTime(): Long {
         return prefs?.decodeLong(PREF_LAST_AUTH_TIME, 0L) ?: 0L
     }
     
+    /**
+     * Check if authentication is needed based on timeout
+     */
     fun isAuthenticationNeeded(): Boolean {
         if (!isSecurityEnabled()) return false
         if (!requireAuthOnLaunch()) return false
@@ -301,6 +305,9 @@ object AuthenticationManager {
         return (currentTime - lastAuthTime) > timeout
     }
     
+    /**
+     * Reset authentication time
+     */
     fun resetAuthTime() {
         prefs?.encode(PREF_LAST_AUTH_TIME, 0L)
     }
