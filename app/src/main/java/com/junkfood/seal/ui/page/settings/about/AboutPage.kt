@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.UpdateDisabled
@@ -71,6 +72,7 @@ fun AboutPage(
     onNavigateToCreditsPage: () -> Unit,
     onNavigateToUpdatePage: () -> Unit,
     onNavigateToDonatePage: () -> Unit,
+    onNavigateToOnboarding: () -> Unit = {},
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -161,6 +163,15 @@ fun AboutPage(
                         icon = painterResource(id = R.drawable.icons8_youtube),
                     ) {
                         openUrl(youtubeChannelUrl)
+                    }
+                }
+                item {
+                    PreferenceItem(
+                        title = "View Onboarding",
+                        description = "See the introduction screens again",
+                        icon = Icons.Outlined.Lightbulb,
+                    ) {
+                        onNavigateToOnboarding()
                     }
                 }
                 item {

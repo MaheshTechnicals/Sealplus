@@ -45,6 +45,7 @@ import com.junkfood.seal.ui.page.command.TaskListPage
 import com.junkfood.seal.ui.page.command.TaskLogPage
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.downloadv2.DownloadPageV2
+import com.junkfood.seal.ui.page.onboarding.OnboardingScreen
 import com.junkfood.seal.ui.page.settings.SettingsPage
 import com.junkfood.seal.ui.page.settings.about.AboutPage
 import com.junkfood.seal.ui.page.settings.about.CreditsPage
@@ -207,6 +208,7 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateToCreditsPage = { onNavigateTo(Route.CREDITS) },
                 onNavigateToUpdatePage = { onNavigateTo(Route.AUTO_UPDATE) },
                 onNavigateToDonatePage = { onNavigateTo(Route.DONATE) },
+                onNavigateToOnboarding = { onNavigateTo(Route.ONBOARDING) },
             )
         }
         animatedComposable(Route.DONATE) { SponsorsPage(onNavigateBack) }
@@ -264,6 +266,9 @@ fun NavGraphBuilder.settingsGraph(
         }
         animatedComposable(Route.TROUBLESHOOTING) {
             TroubleShootingPage(onNavigateTo = onNavigateTo, onBack = onNavigateBack)
+        }
+        animatedComposable(Route.ONBOARDING) {
+            OnboardingScreen(onFinish = onNavigateBack)
         }
     }
 }

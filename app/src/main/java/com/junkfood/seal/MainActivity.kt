@@ -17,11 +17,15 @@ import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.SettingsProvider
 import com.junkfood.seal.ui.page.AppEntry
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
+import com.junkfood.seal.ui.page.onboarding.OnboardingScreen
 import com.junkfood.seal.ui.page.security.LockScreen
 import com.junkfood.seal.ui.page.splash.SplashScreen
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.AuthenticationManager
+import com.junkfood.seal.util.ONBOARDING_COMPLETED
 import com.junkfood.seal.util.PreferenceUtil
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
+import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.matchUrlFromSharedText
 import com.junkfood.seal.util.setLanguage
 import kotlinx.coroutines.runBlocking
@@ -47,6 +51,7 @@ class MainActivity : AppCompatActivity() {
             KoinContext {
                 val windowSizeClass = calculateWindowSizeClass(this)
                 var showSplash by remember { mutableStateOf(true) }
+                var showOnboarding by remember { mutableStateOf(!ONBOARDING_COMPLETED.getBoolean()) }
                 var isLocked by remember { 
                     mutableStateOf(
                         AuthenticationManager.isSecurityEnabled() && 
@@ -60,22 +65,33 @@ class MainActivity : AppCompatActivity() {
                         isHighContrastModeEnabled = LocalDarkTheme.current.isHighContrastModeEnabled,
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            if (showSplash) {
-                                SplashScreen(
-                                    onSplashFinished = {
-                                        showSplash = false
-                                    }
-                                )
-                            } else {
-                                AppEntry(dialogViewModel = dialogViewModel)
-                                
-                                // Show lock screen overlay if locked
-                                if (isLocked) {
-                                    LockScreen(
-                                        onUnlocked = {
-                                            isLocked = false
+                            when {
+                                showSplash -> {
+                                    SplashScreen(
+                                        onSplashFinished = {
+                                            showSplash = false
                                         }
                                     )
+                                }
+                                showOnboarding -> {
+                                    OnboardingScreen(
+                                        onFinish = {
+                                            ONBOARDING_COMPLETED.updateBoolean(true)
+                                            showOnboarding = false
+                                        }
+                                    )
+                                }
+                                else -> {
+                                    AppEntry(dialogViewModel = dialogViewModel)
+                                    
+                                    // Show lock screen overlay if locked
+                                    if (isLocked) {
+                                        LockScreen(
+                                            onUnlocked = {
+                                                isLocked = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }

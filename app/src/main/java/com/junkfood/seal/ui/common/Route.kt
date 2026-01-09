@@ -33,6 +33,7 @@ object Route {
     const val TROUBLESHOOTING = "troubleshooting"
     const val SEALPLUS_EXTRAS = "sealplus_extras"
     const val SECURITY_SETTINGS = "security_settings"
+    const val ONBOARDING = "onboarding"
 
     const val TASK_HASHCODE = "task_hashcode"
     const val TEMPLATE_ID = "template_id"

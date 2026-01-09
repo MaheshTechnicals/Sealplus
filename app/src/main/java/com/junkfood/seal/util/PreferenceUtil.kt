@@ -52,6 +52,7 @@ const val FORMAT_SORTING = "format_sorting"
 const val SORTING_FIELDS = "sorting_fields"
 
 const val WELCOME_DIALOG = "welcome_dialog"
+const val ONBOARDING_COMPLETED = "onboarding_completed"
 const val VIDEO_DIRECTORY = "download_dir"
 const val AUDIO_DIRECTORY = "audio_dir"
 const val COMMAND_DIRECTORY = "command_directory"
@@ -240,6 +241,7 @@ private val BooleanPreferenceDefaults =
         NOTIFICATION_LED to true,
         NOTIFICATION_SUCCESS_SOUND to true,
         NOTIFICATION_ERROR_SOUND to true,
+        ONBOARDING_COMPLETED to false,
     )
 
 private val IntPreferenceDefaults =
