@@ -18,6 +18,7 @@ import com.junkfood.seal.ui.common.SettingsProvider
 import com.junkfood.seal.ui.page.AppEntry
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.security.LockScreen
+import com.junkfood.seal.ui.page.splash.SplashScreen
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.AuthenticationManager
 import com.junkfood.seal.util.PreferenceUtil
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             KoinContext {
                 val windowSizeClass = calculateWindowSizeClass(this)
+                var showSplash by remember { mutableStateOf(true) }
                 var isLocked by remember { 
                     mutableStateOf(
                         AuthenticationManager.isSecurityEnabled() && 
@@ -58,15 +60,23 @@ class MainActivity : AppCompatActivity() {
                         isHighContrastModeEnabled = LocalDarkTheme.current.isHighContrastModeEnabled,
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            AppEntry(dialogViewModel = dialogViewModel)
-                            
-                            // Show lock screen overlay if locked
-                            if (isLocked) {
-                                LockScreen(
-                                    onUnlocked = {
-                                        isLocked = false
+                            if (showSplash) {
+                                SplashScreen(
+                                    onSplashFinished = {
+                                        showSplash = false
                                     }
                                 )
+                            } else {
+                                AppEntry(dialogViewModel = dialogViewModel)
+                                
+                                // Show lock screen overlay if locked
+                                if (isLocked) {
+                                    LockScreen(
+                                        onUnlocked = {
+                                            isLocked = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
