@@ -205,30 +205,6 @@ fun SplashScreen(
             )
             
             Spacer(modifier = Modifier.height(48.dp))
-            
-            // Premium badge (only in Gradient Dark mode)
-            if (isGradientDark && taglineVisible) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .alpha(taglineAlpha)
-                        .background(
-                            brush = GradientBrushes.Primary,
-                            shape = MaterialTheme.shapes.small
-                        )
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "✨ PLUS",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp
-                        ),
-                        color = Color.White
-                    )
-                }
-            }
         }
         
         // Bottom branding
@@ -240,7 +216,7 @@ fun SplashScreen(
                 .alpha(taglineAlpha)
         ) {
             Text(
-                text = "Powered by yt-dlp",
+                text = "Powered by Mahesh Technicals",
                 style = MaterialTheme.typography.bodySmall,
                 color = if (isGradientDark) {
                     GradientDarkColors.OnSurface.copy(alpha = 0.6f)
