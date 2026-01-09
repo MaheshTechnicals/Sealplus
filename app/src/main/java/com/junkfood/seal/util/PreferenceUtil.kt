@@ -345,7 +345,7 @@ object PreferenceUtil {
         return when (networkRestriction) {
             NETWORK_WIFI_ONLY -> !isMetered  // Only allow WiFi (non-metered)
             NETWORK_MOBILE_ONLY -> isMetered  // Only allow Mobile (metered)
-            NETWORK_ANY -> CELLULAR_DOWNLOAD.getBoolean() || !isMetered  // Any network (respect legacy setting)
+            NETWORK_ANY -> true  // Allow any network type (both WiFi and Mobile)
             else -> CELLULAR_DOWNLOAD.getBoolean() || !isMetered
         }
     }
