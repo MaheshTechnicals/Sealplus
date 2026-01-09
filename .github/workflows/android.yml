@@ -161,7 +161,6 @@ jobs:
         make_latest: true
         files: |
           app/build/outputs/apk/generic/release/*-signed.apk
-          app/build/outputs/apk/generic/release/SealPlus-*.apk
 
     - name: Upload Universal APK as Artifact
       if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
