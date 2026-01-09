@@ -56,7 +56,20 @@ jobs:
         echo "Remaining APKs:"
         ls -lh app/build/outputs/apk/generic/release/*.apk
 
+    - name: Read release configuration
+      id: release_config
+      run: |
+        SHOULD_RELEASE=$(jq -r '.release' release.json)
+        echo "SHOULD_RELEASE=${SHOULD_RELEASE}" >> $GITHUB_OUTPUT
+        echo "Release flag: ${SHOULD_RELEASE}"
+        if [ "${SHOULD_RELEASE}" = "true" ]; then
+          echo "✅ Release will be published"
+        else
+          echo "⚠️ Release publishing is disabled - APKs will be uploaded as artifacts only"
+        fi
+
     - name: Create Release
+      if: steps.release_config.outputs.SHOULD_RELEASE == 'true'
       uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -137,10 +150,56 @@ jobs:
         files: |
           app/build/outputs/apk/generic/release/*-signed.apk
 
-    - name: Upload Artifacts (Backup)
+    - name: Upload Universal APK as Artifact
+      if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
       uses: actions/upload-artifact@v4
       with:
-        name: signed-apks
+        name: SealPlus-${{ steps.version.outputs.VERSION }}-universal
+        path: app/build/outputs/apk/generic/release/*-universal-signed.apk
+        if-no-files-found: warn
+        retention-days: 30
+
+    - name: Upload arm64-v8a APK as Artifact
+      if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
+      uses: actions/upload-artifact@v4
+      with:
+        name: SealPlus-${{ steps.version.outputs.VERSION }}-arm64-v8a
+        path: app/build/outputs/apk/generic/release/*-arm64-v8a-signed.apk
+        if-no-files-found: warn
+        retention-days: 30
+
+    - name: Upload armeabi-v7a APK as Artifact
+      if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
+      uses: actions/upload-artifact@v4
+      with:
+        name: SealPlus-${{ steps.version.outputs.VERSION }}-armeabi-v7a
+        path: app/build/outputs/apk/generic/release/*-armeabi-v7a-signed.apk
+        if-no-files-found: warn
+        retention-days: 30
+
+    - name: Upload x86_64 APK as Artifact
+      if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
+      uses: actions/upload-artifact@v4
+      with:
+        name: SealPlus-${{ steps.version.outputs.VERSION }}-x86_64
+        path: app/build/outputs/apk/generic/release/*-x86_64-signed.apk
+        if-no-files-found: warn
+        retention-days: 30
+
+    - name: Upload x86 APK as Artifact
+      if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
+      uses: actions/upload-artifact@v4
+      with:
+        name: SealPlus-${{ steps.version.outputs.VERSION }}-x86
+        path: app/build/outputs/apk/generic/release/*-x86-signed.apk
+        if-no-files-found: warn
+        retention-days: 30
+
+    - name: Upload Artifacts (Backup - Always)
+      if: steps.release_config.outputs.SHOULD_RELEASE == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: signed-apks-backup
         path: app/build/outputs/apk/generic/release/*-signed.apk
         if-no-files-found: error
         retention-days: 20
