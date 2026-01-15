@@ -299,6 +299,7 @@ private fun FormatPageImpl(
         videoInfo.formats.filter { it.vcodec != "none" && it.acodec == "none" }.reversed()
     val audioOnlyFormats =
         videoInfo.formats.filter { it.acodec != "none" && it.vcodec == "none" }.reversed()
+    // Show all video+audio formats (not limited) so users can see all quality options
     val videoAudioFormats =
         videoInfo.formats.filter { it.acodec != "none" && it.vcodec != "none" }.reversed()
     
@@ -320,7 +321,8 @@ private fun FormatPageImpl(
 
     var videoOnlyItemLimit by remember { mutableIntStateOf(6) }
     var audioOnlyItemLimit by remember { mutableIntStateOf(6) }
-    var videoAudioItemLimit by remember { mutableIntStateOf(6) }
+    // Show all video+audio formats by default (removed 6 item limit)
+    var videoAudioItemLimit by remember { mutableIntStateOf(Int.MAX_VALUE) }
 
     val isSuggestedFormatAvailable =
         !videoInfo.requestedFormats.isNullOrEmpty() || !videoInfo.requestedDownloads.isNullOrEmpty()

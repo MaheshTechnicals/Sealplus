@@ -94,6 +94,7 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.page.downloadv2.configure.FormatPage
 import com.junkfood.seal.ui.page.downloadv2.configure.PlaylistSelectionPage
+import com.junkfood.seal.ui.page.videolist.RemoveItemDialog
 import com.junkfood.seal.ui.theme.GradientDarkColors
 import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.DownloadUtil
@@ -124,14 +125,19 @@ fun NewHomePage(
     var urlText by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     
+    // Delete confirmation dialog state
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var itemToDelete by remember { mutableStateOf<DownloadedVideoInfo?>(null) }
+    var deleteFileWithRecord by remember { mutableStateOf(false) }
+    
     // Get recent downloads from database
     val recentDownloads by DatabaseUtil.getDownloadHistoryFlow()
         .collectAsStateWithLifecycle(initialValue = emptyList())
     
-    // Get recent 5 downloads (remove duplicates by video ID)
+    // Get recent 5 downloads (remove duplicates by video URL and path to prevent duplicate cards)
     val recentFiveDownloads = remember(recentDownloads) {
         recentDownloads
-            .distinctBy { it.videoUrl }
+            .distinctBy { it.videoUrl + it.videoPath } // Use both URL and path to ensure uniqueness
             .takeLast(5)
             .reversed()
     }
@@ -165,6 +171,29 @@ fun NewHomePage(
                 TextButton(onClick = { showExitDialog = false }) {
                     Text(stringResource(R.string.dismiss))
                 }
+            }
+        )
+    }
+    
+    // Delete confirmation dialog
+    if (showDeleteDialog && itemToDelete != null) {
+        RemoveItemDialog(
+            info = itemToDelete!!,
+            deleteFile = deleteFileWithRecord,
+            onDeleteFileToggled = { deleteFileWithRecord = it },
+            onRemoveConfirm = { shouldDeleteFile ->
+                scope.launch {
+                    DatabaseUtil.deleteInfoList(listOf(itemToDelete!!), deleteFile = shouldDeleteFile)
+                    context.makeToast(R.string.delete_info)
+                    showDeleteDialog = false
+                    itemToDelete = null
+                    deleteFileWithRecord = false
+                }
+            },
+            onDismissRequest = {
+                showDeleteDialog = false
+                itemToDelete = null
+                deleteFileWithRecord = false
             }
         )
     }
@@ -334,9 +363,10 @@ fun NewHomePage(
                         },
                         onDelete = {
                             view.slightHapticFeedback()
+                            // Show delete confirmation dialog
                             scope.launch {
-                                DatabaseUtil.deleteInfoList(listOf(downloadInfo), deleteFile = false)
-                                context.makeToast(R.string.delete_info)
+                                showDeleteDialog = true
+                                itemToDelete = downloadInfo
                             }
                         }
                     )
