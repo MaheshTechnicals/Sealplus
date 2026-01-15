@@ -336,7 +336,7 @@ fun NewHomePage(
                             view.slightHapticFeedback()
                             scope.launch {
                                 DatabaseUtil.deleteInfoList(listOf(downloadInfo), deleteFile = false)
-                                context.makeToast(R.string.removed)
+                                context.makeToast(R.string.delete_info)
                             }
                         }
                     )
