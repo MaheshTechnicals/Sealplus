@@ -303,13 +303,20 @@ private fun FormatPageImpl(
     val videoAudioFormats =
         videoInfo.formats.filter { it.acodec != "none" && it.vcodec != "none" }.reversed()
     
-    // Find highest resolution MP4 format for suggested section when downloading video
-    val highestMp4Format = remember(videoInfo, audioOnly) {
+    // Find highest resolution video format (video-only) for suggested section when downloading video
+    // Modern platforms like YouTube provide separate video-only and audio-only streams for high quality
+    val highestVideoFormat = remember(videoInfo, audioOnly) {
         if (!audioOnly) {
-            videoAudioFormats
-                .filter { it.ext?.equals("mp4", ignoreCase = true) == true }
+            // First try to find highest quality video-only format (supports up to 4K/8K)
+            val bestVideoOnly = videoOnlyFormats
                 .maxByOrNull { format -> 
-                    // Sort by resolution (height), then by total bitrate
+                    // Sort by resolution (height), then by video bitrate
+                    (format.height ?: 0.0) * 10000 + (format.vbr ?: format.tbr ?: 0.0)
+                }
+            
+            // Fallback to highest muxed format if no video-only formats available
+            bestVideoOnly ?: videoAudioFormats
+                .maxByOrNull { format -> 
                     (format.height ?: 0.0) * 10000 + (format.tbr ?: 0.0)
                 }
         } else {
@@ -383,9 +390,9 @@ private fun FormatPageImpl(
         derivedStateOf {
             mutableListOf<Format>().apply {
                 if (isSuggestedFormatSelected) {
-                    // If highest MP4 format exists and we're downloading video, use it
-                    if (highestMp4Format != null && !audioOnly) {
-                        add(highestMp4Format)
+                    // If highest video format exists and we're downloading video, use it
+                    if (highestVideoFormat != null && !audioOnly) {
+                        add(highestVideoFormat)
                         // Add best audio format if available
                         audioOnlyFormats.firstOrNull()?.let { add(it) }
                     } else {
@@ -631,11 +638,11 @@ private fun FormatPageImpl(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        // Create a modified videoInfo with highest MP4 format for display
-                        val displayVideoInfo = if (highestMp4Format != null && !audioOnly) {
+                        // Create a modified videoInfo with highest video format for display
+                        val displayVideoInfo = if (highestVideoFormat != null && !audioOnly) {
                             videoInfo.copy(
                                 requestedFormats = listOfNotNull(
-                                    highestMp4Format,
+                                    highestVideoFormat,
                                     audioOnlyFormats.firstOrNull()
                                 )
                             )
@@ -646,8 +653,8 @@ private fun FormatPageImpl(
                         SuggestedFormatItem(
                             modifier = Modifier.weight(1f),
                             videoInfo = videoInfo,
-                            overrideFormats = if (highestMp4Format != null && !audioOnly) {
-                                listOfNotNull(highestMp4Format, audioOnlyFormats.firstOrNull())
+                            overrideFormats = if (highestVideoFormat != null && !audioOnly) {
+                                listOfNotNull(highestVideoFormat, audioOnlyFormats.firstOrNull())
                             } else null,
                             selected = isSuggestedFormatSelected,
                             onClick = onClick,
