@@ -40,6 +40,9 @@ object TaskFactory {
         val audioOnly = audioOnlyFormats.isNotEmpty() && videoFormats.isEmpty()
         val mergeAudioStream = audioOnlyFormats.size > 1
         val formatId = formatList.joinToString(separator = "+") { it.formatId.toString() }
+        
+        // Check if we're merging video and audio (common for high-quality downloads)
+        val isMergingVideoAudio = videoFormats.isNotEmpty() && audioOnlyFormats.isNotEmpty()
 
         val subtitleLanguage =
             (selectedSubtitles + selectedAutoCaptions).joinToString(separator = ",")
@@ -47,6 +50,10 @@ object TaskFactory {
         val preferences =
             DownloadPreferences.createFromPreferences()
                 .run {
+                    // When merging video+audio, force MP4 output (not MKV)
+                    // This ensures high-quality merged videos are in MP4 container
+                    val shouldUseMp4 = if (isMergingVideoAudio) false else this.mergeToMkv
+                    
                     copy(
                         formatIdString = formatId,
                         videoClips = videoClips,
@@ -54,6 +61,7 @@ object TaskFactory {
                         newTitle = newTitle,
                         mergeAudioStream = mergeAudioStream,
                         extractAudio = extractAudio || audioOnly,
+                        mergeToMkv = shouldUseMp4,
                     )
                 }
                 .run {

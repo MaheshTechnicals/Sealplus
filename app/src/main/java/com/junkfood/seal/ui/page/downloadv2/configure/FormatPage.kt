@@ -299,9 +299,32 @@ private fun FormatPageImpl(
         videoInfo.formats.filter { it.vcodec != "none" && it.acodec == "none" }.reversed()
     val audioOnlyFormats =
         videoInfo.formats.filter { it.acodec != "none" && it.vcodec == "none" }.reversed()
-    // Show all video+audio formats (not limited) so users can see all quality options
+    // Original video+audio combined formats (usually lower quality like 360p, 480p)
     val videoAudioFormats =
         videoInfo.formats.filter { it.acodec != "none" && it.vcodec != "none" }.reversed()
+    
+    // Get the best audio format to auto-merge with video-only formats
+    val bestAudioFormat = audioOnlyFormats.firstOrNull()
+    
+    // Create merged video formats: video-only + best audio
+    // This allows high-quality videos (720p, 1080p, 4K) to appear in Video section
+    val mergedVideoFormats = if (!audioOnly && bestAudioFormat != null) {
+        videoOnlyFormats.map { videoFormat ->
+            // Store reference to both formats for later merging
+            videoFormat.copy(
+                // Mark this as requiring audio merge (yt-dlp will handle it)
+                format = "${videoFormat.format} + audio",
+                // Keep original properties but indicate it will have audio
+                acodec = bestAudioFormat.acodec ?: "audio"
+            )
+        }
+    } else emptyList()
+    
+    // Combine original video+audio formats with new merged formats
+    // Show merged high-quality formats first, then original combined formats
+    val allVideoFormats = (mergedVideoFormats + videoAudioFormats).distinctBy { 
+        it.formatId 
+    }
     
     // Find highest resolution video format (video-only) for suggested section when downloading video
     // Modern platforms like YouTube provide separate video-only and audio-only streams for high quality
@@ -328,7 +351,7 @@ private fun FormatPageImpl(
 
     var videoOnlyItemLimit by remember { mutableIntStateOf(6) }
     var audioOnlyItemLimit by remember { mutableIntStateOf(6) }
-    // Show all video+audio formats by default (removed 6 item limit)
+    // Show all video formats by default (including merged high-quality ones)
     var videoAudioItemLimit by remember { mutableIntStateOf(Int.MAX_VALUE) }
 
     val isSuggestedFormatAvailable =
@@ -406,7 +429,27 @@ private fun FormatPageImpl(
                     selectedAudioOnlyFormats.forEach { index ->
                         add(audioOnlyFormats.elementAt(index))
                     }
-                    videoAudioFormats.getOrNull(selectedVideoAudioFormat)?.let { add(it) }
+                    // Handle merged video formats (video-only + audio)
+                    allVideoFormats.getOrNull(selectedVideoAudioFormat)?.let { selectedFormat ->
+                        // Check if this is a merged format by checking if it exists in mergedVideoFormats
+                        val isMergedFormat = mergedVideoFormats.any { it.formatId == selectedFormat.formatId }
+                        
+                        if (isMergedFormat && bestAudioFormat != null) {
+                            // This is a merged format - add original video-only + best audio
+                            val originalVideoFormat = videoOnlyFormats.find { 
+                                it.formatId == selectedFormat.formatId 
+                            }
+                            if (originalVideoFormat != null) {
+                                // Add original video-only format
+                                add(originalVideoFormat)
+                                // Add best audio format for merging
+                                add(bestAudioFormat)
+                            }
+                        } else {
+                            // This is an original combined format, add as-is
+                            add(selectedFormat)
+                        }
+                    }
                     videoOnlyFormats.getOrNull(selectedVideoOnlyFormat)?.let { add(it) }
                 }
             }
@@ -663,8 +706,8 @@ private fun FormatPageImpl(
                 }
             }
 
-            // SECTION 1: Video (with audio)
-            if (videoAudioFormats.isNotEmpty()) {
+            // SECTION 1: Video (with audio) - Now includes high-quality merged formats
+            if (allVideoFormats.isNotEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -676,8 +719,8 @@ private fun FormatPageImpl(
                             showDivider = true,
                         )
                         ClickableTextAction(
-                            visible = videoAudioItemLimit < videoAudioFormats.size,
-                            text = stringResource(R.string.show_all_items, videoAudioFormats.size),
+                            visible = videoAudioItemLimit < allVideoFormats.size,
+                            text = stringResource(R.string.show_all_items, allVideoFormats.size),
                         ) {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             videoAudioItemLimit = Int.MAX_VALUE
@@ -685,7 +728,7 @@ private fun FormatPageImpl(
                     }
                 }
                 itemsIndexed(
-                    videoAudioFormats.subList(0, min(videoAudioItemLimit, videoAudioFormats.size))
+                    allVideoFormats.subList(0, min(videoAudioItemLimit, allVideoFormats.size))
                 ) { index, formatInfo ->
                     FormatItem(
                         formatInfo = formatInfo,

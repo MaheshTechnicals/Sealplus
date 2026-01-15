@@ -451,6 +451,16 @@ object DownloadUtil {
                     if (mergeAudioStream) {
                         addOption("--audio-multistreams")
                     }
+                    // When merging video+audio formats (e.g., 303+251), ensure MP4 output
+                    // This handles high-quality downloads that need audio merged
+                    if (!mergeToMkv && formatIdString.contains("+")) {
+                        val formatParts = formatIdString.split("+")
+                        if (formatParts.size >= 2) {
+                            // Multiple formats means we're merging - ensure MP4 output
+                            addOption("--remux-video", "mp4")
+                            addOption("--merge-output-format", "mp4")
+                        }
+                    }
                 } else {
                     applyFormatSorter(this, toFormatSorter())
                 }
