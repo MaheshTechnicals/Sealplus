@@ -107,12 +107,66 @@ import com.junkfood.seal.util.VIDEO_CLIP
 import com.junkfood.seal.util.VideoClip
 import com.junkfood.seal.util.VideoInfo
 import com.junkfood.seal.util.toHttpsUrl
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.pow
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
 private const val TAG = "FormatPage"
+
+/**
+ * Extracts resolution (width x height) from format string.
+ * Format strings typically look like: "616 - 1920x1080 (Premium)" or "2480x1920"
+ * Returns a Pair of (width, height) or null if no resolution found.
+ */
+private fun extractResolution(format: Format): Pair<Int, Int>? {
+    // Try to extract from format string first (e.g., "1920x1080")
+    val formatString = format.format ?: ""
+    val resolutionRegex = """(\d{3,4})x(\d{3,4})""".toRegex()
+    val resolutionMatch = resolutionRegex.find(formatString)
+    if (resolutionMatch != null) {
+        val width = resolutionMatch.groupValues[1].toIntOrNull()
+        val height = resolutionMatch.groupValues[2].toIntOrNull()
+        if (width != null && height != null && width > 0 && height > 0) {
+            return Pair(width, height)
+        }
+    }
+    
+    // Try to extract resolution from height if available (common in YouTube formats)
+    // YouTube format strings often contain height in format like "1080p"
+    val heightPattern = """(\d{3,4})p""".toRegex()
+    val heightMatch = heightPattern.find(formatString)
+    if (heightMatch != null) {
+        val height = heightMatch.groupValues[1].toIntOrNull()
+        if (height != null && height > 0) {
+            // Estimate width based on common aspect ratios (16:9 is most common)
+            val width = (height * 16.0 / 9.0).toInt()
+            return Pair(width, height)
+        }
+    }
+    
+    // Use fileSizeApprox as a fallback indicator (larger file = higher quality)
+    // This is not ideal but better than nothing when resolution can't be extracted
+    return null
+}
+
+/**
+ * Calculate a quality score based on resolution.
+ * Higher score = better quality.
+ */
+private fun getQualityScore(format: Format): Int {
+    val resolution = extractResolution(format)
+    if (resolution != null) {
+        // Use area (width × height) as quality score
+        return resolution.first * resolution.second
+    }
+    
+    // Fallback: use fileSizeApprox if available
+    val fileSize = format.fileSizeApprox ?: format.fileSize ?: 0.0
+    return fileSize.toInt()
+}
 
 private data class FormatConfig(
     val formatList: List<Format>,
@@ -321,17 +375,22 @@ private fun FormatPageImpl(
     } else emptyList()
     
     // Combine original video+audio formats with new merged formats
-    // Show merged high-quality formats first, then original combined formats
-    val allVideoFormats = (mergedVideoFormats + videoAudioFormats).distinctBy { 
-        it.formatId 
+    // Sort ALL video formats by quality score (highest resolution first)
+    val allVideoFormats = remember(videoInfo, audioOnly, mergedVideoFormats, videoAudioFormats) {
+        if (audioOnly) {
+            emptyList()
+        } else {
+            val combined = (mergedVideoFormats + videoAudioFormats).distinctBy { it.formatId }
+            // Sort by quality score (highest first) - this ensures best quality appears first
+            combined.sortedByDescending { getQualityScore(it) }
+        }
     }
     
     // Find highest resolution format from allVideoFormats for suggested section
-    // This will be a merged format (video+audio) for the best user experience
+    // This will be the best quality format based on resolution sorting
     val highestVideoFormat = remember(videoInfo, audioOnly, allVideoFormats) {
         if (!audioOnly && allVideoFormats.isNotEmpty()) {
-            // Get the highest quality from allVideoFormats (merged formats come first)
-            allVideoFormats.firstOrNull() // Already sorted, merged formats with highest quality first
+            allVideoFormats.firstOrNull() // Already sorted by quality, highest quality first
         } else {
             null
         }

@@ -57,11 +57,14 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -142,8 +145,28 @@ fun NewHomePage(
             .reversed()
     }
     
-    // Get active downloads
-    val taskStateMap = downloader.getTaskStateMap()
+    // Get active downloads with proper state observation for real-time updates
+    val taskStateMap by downloader.getTaskStateMap().collectAsStateWithLifecycle(
+        initialValue = emptyMap()
+    )
+    
+    // Create a set of URLs that are already in recent downloads to avoid duplicates
+    val recentDownloadUrls = remember(recentFiveDownloads) {
+        recentFiveDownloads.map { it.videoUrl }.toSet()
+    }
+    
+    // Filter active downloads - only show non-completed tasks OR completed tasks not in recent downloads
+    val activeDownloads by remember(taskStateMap, recentDownloadUrls) {
+        derivedStateOf {
+            taskStateMap.toList().filter { (task, state) ->
+                val isCompleted = state.downloadState is Task.DownloadState.Completed
+                val isInRecentDownloads = task.url in recentDownloadUrls
+                
+                // Show if: not completed OR completed but not in recent downloads
+                !isCompleted || (isCompleted && !isInRecentDownloads)
+            }
+        }
+    }
     
     // Handle back press to show exit confirmation
     BackHandler {
@@ -293,8 +316,8 @@ fun NewHomePage(
             }
             
             // Show active downloads first
-            if (taskStateMap.isNotEmpty()) {
-                items(taskStateMap.toList()) { (task, state) ->
+            if (activeDownloads.isNotEmpty()) {
+                items(activeDownloads) { (task, state) ->
                     ActiveDownloadCard(
                         task = task,
                         state = state,
