@@ -13,6 +13,7 @@ import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object DatabaseUtil {
     private const val DATABASE_NAME = "app_database"
@@ -59,10 +60,11 @@ object DatabaseUtil {
 
     suspend fun getShortcutList() = dao.getShortcutList()
 
-    suspend fun deleteInfoList(infoList: List<DownloadedVideoInfo>, deleteFile: Boolean = false) {
-        dao.deleteInfoList(infoList)
-        infoList.forEach { info -> if (deleteFile) FileUtil.deleteFile(info.videoPath) }
-    }
+    suspend fun deleteInfoList(infoList: List<DownloadedVideoInfo>, deleteFile: Boolean = false) =
+        withContext(Dispatchers.IO) {
+            dao.deleteInfoList(infoList)
+            infoList.forEach { info -> if (deleteFile) FileUtil.deleteFile(info.videoPath) }
+        }
 
     suspend fun getInfoById(id: Int): DownloadedVideoInfo = dao.getInfoById(id)
 
