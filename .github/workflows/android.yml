@@ -89,34 +89,33 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## 🚀 Seal Plus v1.2.6 - Enhanced Video Quality & Performance
+          ## 🚀 Seal Plus v1.2.7 - Redesigned UI & Enhanced Quality
           
-          ### ✨ New Features
+          ### ✨ Major UI Redesign
           
-          * **Enhanced Video Download Quality**
-            * **Highest Resolution MP4 Selection** - Automatically select the best available MP4 format for video downloads
-            * Smart format selection prioritizes quality while maintaining compatibility
-            * Optimized for maximum video quality with MP4 container support
+          * **Fully Redesigned Home Page**
+            * **Modern Layout** - Cleaner, clutter-free interface with improved visual hierarchy
+            * **Refined Aesthetics** - Beautifully matched with premium Gradient Dark theming
+            * **Smoother Experience** - Optimized performance and smoother scrolling
           
-          * **Advanced Download Configuration**
-            * **External Downloader Arguments** - Added aria2c external downloader arguments support
-            * Enables advanced aria2c configurations for multi-threaded downloads
-            * Better control over download behavior and performance tuning
+          * **All-New Navigation Drawer**
+            * **Gradient Header** - Stunning theme-aware gradient backgrounds
+            * **Professional Branding** - Prominent app identity and version badge
+            * **Modern Styling** - Improved spacing, new icon styles, and elegant dividers
           
-          ### 📦 Dependencies
+          ### 🎥 Video Quality Upgrades
           
-          * **Updated yt-dlp Engine**
-            * Updated youtubedl-android library to 0.18.1
-            * Includes yt-dlp 2025.12.08 with latest site support and bug fixes
-            * Improved download reliability and compatibility across platforms
-            * Enhanced format detection and extraction capabilities
+          * **Advanced Stream Merging**
+            * **Best Quality Guarantee** - Automatically merges best video + best audio streams
+            * **Smart Format Selection** - "Suggested" option now ensures maximum resolution
+            * **High Quality Option** - Added high quality video or audio download in suggested section
           
-          ### 🎯 Improvements
+          ### 🐛 Critical Fixes
           
-          * Better video format selection algorithm for optimal quality
-          * Enhanced aria2c integration for faster multi-segment downloads
-          * Improved download stability with latest yt-dlp improvements
-          * More reliable format detection and extraction
+          * **Homepage Delete Fix** - Resolved unresponsive delete button in home menu
+          * **Duplicate Cards Fix** - Fixed double entries in active/recent download lists
+          * **Crash Fixes** - Resolved NPE crash during item deletion
+          * **Stability Improvements** - Enhanced database reliability
           
           ---
           

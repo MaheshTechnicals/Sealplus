@@ -5,6 +5,43 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-01-24
+
+### ✨ UI Redesign & UX Improvements
+
+* **Fully Redesigned Home Page**
+  * **Modern, clutter-free interface** with cleaner layout and improved visual hierarchy
+  * **Enhanced navigation** for smoother access to core features
+  * **Optimized performance** for faster loading and smoother scrolling
+  * **Refined aesthetics** matching the premium Gradient Dark theme
+
+* **Redesigned Navigation Drawer**
+  * **Modern Gradient Header** with theme-aware colors (Purple/Blue for Dark, Soft for Light)
+  * **App Branding** with prominent "Seal Plus" typography and version badge
+  * **Improved Organization** with clear section dividers and better spacing
+  * **Visual Enhancements** including new icon containers and hover effects
+
+### 🚀 Video Quality & Formats
+
+* **Enhanced Video/Audio Merging**
+  * **Automatic merging** of best video and best audio streams in "Suggested" format
+  * **Highest quality guarantee** - Now gets the absolute best resolution available by combining streams
+  * **Seamless processing** - Merging happens automatically in the background
+
+* **High Quality Download Options**
+  * **"Suggested" section upgrade** - Now explicitly prioritized for highest resolution/bitrate
+  * **Smart quality selection** - Automatically picks the top-tier quality available
+  * **Better format detection** for complex media sources
+
+### 🎯 Improvements
+
+* **Homepage Delete Fixed**: Resolved issue where delete button in three-dot menu was unresponsive
+* **Duplicate Cards Fixed**: Solved issue where downloads appeared twice in active/recent lists
+* **Crash Fix**: Fixed NPE crash when deleting items from active list
+* **Performance optimization** for list rendering and database operations
+
+---
+
 ## [1.2.6] - 2026-01-14
 
 ### ✨ New Features

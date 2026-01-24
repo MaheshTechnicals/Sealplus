@@ -217,14 +217,14 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 ### 🚀 Latest Releases
 
 - **Latest Stable**: [Download from GitHub Releases](https://github.com/MaheshTechnicals/Sealplus/releases/latest)
-  - ✅ **Current Version**: v1.2.5 (January 2026)
-  - ✨ Professional onboarding screens with smooth animations
-  - 🎨 Elegant splash screen with gradient branding
-  - 🔒 App Lock with PIN & Biometric authentication
-  - 🌐 Network type restrictions (WiFi/Mobile/Any) - Fixed!
-  - 🔔 Smart notifications with customization
-  - 🎨 Gradient Dark theme with glassmorphism
-  - 🚀 Auto-update system enabled by default
+  - ✅ **Current Version**: v1.2.7 (January 2026)
+  - 🎨 **Fully Redesigned Home Page & Navigation Drawer**
+  - 🎥 **Enhanced Video/Audio Merging** for best available quality
+  - 🚀 **High Quality Download Options** in Suggested section
+  - 🛠️ **Critical Fixes** for Delete functionality and duplicate cards
+  - 🎨 **Premium Gradient UI** with theme-aware navigation header
+  - 🔄 **Latest yt-dlp Engine** integration 2025.12.08
+  - 🚀 **Auto-Update System** enabled for seamless updates
 
 - **Preview Builds**: [Download Pre-release Versions](https://github.com/MaheshTechnicals/Sealplus/releases) 
   - 🧪 Test cutting-edge features
@@ -237,8 +237,8 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 |------------|---------------|
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target Android** | Android 14 (API 36) |
-| **Current Version** | 1.2.5 |
-| **Release Date** | January 8, 2026 |
+| **Current Version** | 1.2.7 |
+| **Release Date** | January 24, 2026 |
 
 ### 🏗️ Architecture Support
 
