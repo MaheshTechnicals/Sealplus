@@ -241,7 +241,7 @@ fun DrawerHeader(
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = "v1.2.6",
+                    text = "v1.2.7",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Medium
                     ),
