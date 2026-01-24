@@ -148,17 +148,31 @@ fun NewHomePage(
     // Get active downloads with proper state observation for real-time updates
     val taskStateMap = downloader.getTaskStateMap()
     
-    // Create a set of URLs that are already in recent downloads to avoid duplicates
-    val recentDownloadUrls = remember(recentFiveDownloads) {
-        recentFiveDownloads.map { it.videoUrl }.toSet()
+    // Create a set of URLs and Paths that are already in recent downloads to avoid duplicates
+    val recentDownloadData = remember(recentFiveDownloads) {
+        val urls = recentFiveDownloads.map { it.videoUrl }.toSet()
+        val paths = recentFiveDownloads.map { it.videoPath }.toSet()
+        urls to paths
     }
     
     // Filter active downloads - only show non-completed tasks OR completed tasks not in recent downloads
-    val activeDownloads by remember(taskStateMap, recentDownloadUrls) {
+    val activeDownloads by remember(taskStateMap, recentDownloadData) {
         derivedStateOf {
             taskStateMap.toList().filter { (task, state) ->
-                val isCompleted = state.downloadState is Task.DownloadState.Completed
-                val isInRecentDownloads = task.url in recentDownloadUrls
+                val downloadState = state.downloadState
+                val isCompleted = downloadState is Task.DownloadState.Completed
+                
+                val (recentUrls, recentPaths) = recentDownloadData
+                
+                // Check if URL matches
+                val isUrlMatch = task.url in recentUrls
+                
+                // Check if File Path matches (more reliable for completed downloads)
+                val isPathMatch = if (isCompleted && downloadState is Task.DownloadState.Completed) {
+                    downloadState.filePath in recentPaths
+                } else false
+                
+                val isInRecentDownloads = isUrlMatch || isPathMatch
                 
                 // Show if: not completed OR completed but not in recent downloads
                 !isCompleted || (isCompleted && !isInRecentDownloads)
