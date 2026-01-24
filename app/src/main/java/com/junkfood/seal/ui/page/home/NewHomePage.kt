@@ -216,11 +216,11 @@ fun NewHomePage(
             info = itemToDelete!!,
             deleteFile = deleteFileWithRecord,
             onDeleteFileToggled = { deleteFileWithRecord = it },
-            onRemoveConfirm = { shouldDeleteFile ->
+            onRemoveConfirm = {
                 val info = itemToDelete
                 if (info != null) {
                     scope.launch {
-                        DatabaseUtil.deleteInfoList(listOf(info), deleteFile = shouldDeleteFile)
+                        DatabaseUtil.deleteInfoList(listOf(info), deleteFile = deleteFileWithRecord)
                         context.makeToast(R.string.delete_info)
                         showDeleteDialog = false
                         itemToDelete = null
