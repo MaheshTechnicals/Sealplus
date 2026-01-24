@@ -402,10 +402,8 @@ fun NewHomePage(
                         onDelete = {
                             view.slightHapticFeedback()
                             // Show delete confirmation dialog
-                            scope.launch {
-                                showDeleteDialog = true
-                                itemToDelete = downloadInfo
-                            }
+                            showDeleteDialog = true
+                            itemToDelete = downloadInfo
                         }
                     )
                 }
