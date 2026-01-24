@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -56,13 +57,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.junkfood.seal.R
+import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalWindowWidthState
 import com.junkfood.seal.ui.common.Route
 import com.junkfood.seal.ui.page.downloadv2.DownloadPageImplV2
@@ -153,6 +158,101 @@ fun NavigationDrawer(
 }
 
 @Composable
+fun DrawerHeader(
+    modifier: Modifier = Modifier
+) {
+    val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
+    
+    // Create gradient based on theme
+    val headerGradient = if (isDarkTheme) {
+        Brush.verticalGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+                MaterialTheme.colorScheme.surface
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                MaterialTheme.colorScheme.surface
+            )
+        )
+    }
+    
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .background(headerGradient)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // App Name with gradient text effect
+            Text(
+                text = "Seal Plus",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 32.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Tagline
+            Text(
+                text = "Download Manager",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Version badge with gradient background
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(
+                        if (isDarkTheme) {
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            )
+                        } else {
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    )
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "v1.2.6",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun NavigationDrawerSheetContent(
     modifier: Modifier = Modifier,
     currentRoute: String? = null,
@@ -164,136 +264,171 @@ fun NavigationDrawerSheetContent(
     Column(
         modifier =
             modifier
-                .padding(horizontal = 12.dp)
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
                 .systemBarsPadding()
     ) {
-        Spacer(Modifier.height(72.dp))
-        ProvideTextStyle(MaterialTheme.typography.labelLarge) {
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.home)) },
-                icon = { Icon(Icons.Filled.Download, null) },
-                onClick = {
-                    scope
-                        .launch { onDismissRequest() }
-                        .invokeOnCompletion { onNavigateToRoute(Route.HOME) }
-                },
-                selected = currentRoute == Route.HOME,
-            )
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.downloads_history)) },
-                icon = { Icon(Icons.Outlined.Subscriptions, null) },
-                onClick = {
-                    scope
-                        .launch { onDismissRequest() }
-                        .invokeOnCompletion { onNavigateToRoute(Route.DOWNLOADS) }
-                },
-                selected = currentRoute == Route.DOWNLOADS,
-            )
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.custom_command)) },
-                icon = { Icon(Icons.Outlined.Terminal, null) },
-                onClick = {
-                    scope
-                        .launch { onDismissRequest() }
-                        .invokeOnCompletion { onNavigateToRoute(Route.TASK_LIST) }
-                },
-                selected = currentRoute == Route.TASK_LIST,
-            )
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.settings)) },
-                icon = { Icon(Icons.Outlined.Settings, null) },
-                onClick = {
-                    scope
-                        .launch { onDismissRequest() }
-                        .invokeOnCompletion { onNavigateToRoute(Route.SETTINGS) }
-                },
-                selected = currentRoute == Route.SETTINGS_PAGE,
-            )
+        // Modern gradient header
+        DrawerHeader()
+        
+        Spacer(Modifier.height(16.dp))
+        
+        // Main Navigation Section
+        Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+            ProvideTextStyle(MaterialTheme.typography.labelLarge) {
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.home)) },
+                    icon = { Icon(Icons.Filled.Download, null) },
+                    onClick = {
+                        scope
+                            .launch { onDismissRequest() }
+                            .invokeOnCompletion { onNavigateToRoute(Route.HOME) }
+                    },
+                    selected = currentRoute == Route.HOME,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.downloads_history)) },
+                    icon = { Icon(Icons.Outlined.Subscriptions, null) },
+                    onClick = {
+                        scope
+                            .launch { onDismissRequest() }
+                            .invokeOnCompletion { onNavigateToRoute(Route.DOWNLOADS) }
+                    },
+                    selected = currentRoute == Route.DOWNLOADS,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.custom_command)) },
+                    icon = { Icon(Icons.Outlined.Terminal, null) },
+                    onClick = {
+                        scope
+                            .launch { onDismissRequest() }
+                            .invokeOnCompletion { onNavigateToRoute(Route.TASK_LIST) }
+                    },
+                    selected = currentRoute == Route.TASK_LIST,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.settings)) },
+                    icon = { Icon(Icons.Outlined.Settings, null) },
+                    onClick = {
+                        scope
+                            .launch { onDismissRequest() }
+                            .invokeOnCompletion { onNavigateToRoute(Route.SETTINGS) }
+                    },
+                    selected = currentRoute == Route.SETTINGS_PAGE,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
 
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.sponsor)) },
-                icon = { Icon(Icons.Outlined.VolunteerActivism, null) },
-                onClick = {
-                    scope
-                        .launch { onDismissRequest() }
-                        .invokeOnCompletion { onNavigateToRoute(Route.DONATE) }
-                },
-                selected = currentRoute == Route.DONATE,
-            )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.sponsor)) },
+                    icon = { Icon(Icons.Outlined.VolunteerActivism, null) },
+                    onClick = {
+                        scope
+                            .launch { onDismissRequest() }
+                            .invokeOnCompletion { onNavigateToRoute(Route.DONATE) }
+                    },
+                    selected = currentRoute == Route.DONATE,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
 
-            if (showQuickSettings) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                if (showQuickSettings) {
+                    // Gradient divider
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Column(
-                    modifier = Modifier.padding(start = 16.dp).padding(top = 16.dp, bottom = 12.dp),
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        stringResource(R.string.settings),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier,
+                    Column(
+                        modifier = Modifier.padding(start = 16.dp).padding(top = 8.dp, bottom = 8.dp),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            stringResource(R.string.settings),
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier,
+                        )
+                    }
+
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.general_settings)) },
+                        icon = { Icon(Icons.Rounded.SettingsApplications, null) },
+                        onClick = {
+                            scope
+                                .launch { onDismissRequest() }
+                                .invokeOnCompletion {
+                                    onNavigateToRoute(Route.GENERAL_DOWNLOAD_PREFERENCES)
+                                }
+                        },
+                        selected = currentRoute == Route.GENERAL_DOWNLOAD_PREFERENCES,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.download_directory)) },
+                        icon = { Icon(Icons.Rounded.Folder, null) },
+                        onClick = {
+                            scope
+                                .launch { onDismissRequest() }
+                                .invokeOnCompletion { onNavigateToRoute(Route.DOWNLOAD_DIRECTORY) }
+                        },
+                        selected = currentRoute == Route.DOWNLOAD_DIRECTORY,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.cookies)) },
+                        icon = { Icon(Icons.Rounded.Cookie, null) },
+                        onClick = {
+                            scope
+                                .launch { onDismissRequest() }
+                                .invokeOnCompletion { onNavigateToRoute(Route.COOKIE_PROFILE) }
+                        },
+                        selected = currentRoute == Route.COOKIE_PROFILE,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.trouble_shooting)) },
+                        icon = { Icon(Icons.Rounded.BugReport, null) },
+                        onClick = {
+                            scope
+                                .launch { onDismissRequest() }
+                                .invokeOnCompletion { onNavigateToRoute(Route.TROUBLESHOOTING) }
+                        },
+                        selected = currentRoute == Route.TROUBLESHOOTING,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.about)) },
+                        icon = { Icon(Icons.Rounded.Info, null) },
+                        onClick = {
+                            scope
+                                .launch { onDismissRequest() }
+                                .invokeOnCompletion { onNavigateToRoute(Route.ABOUT) }
+                        },
+                        selected = currentRoute == Route.ABOUT,
+                        modifier = Modifier.padding(vertical = 2.dp)
                     )
                 }
-
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.general_settings)) },
-                    icon = { Icon(Icons.Rounded.SettingsApplications, null) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion {
-                                onNavigateToRoute(Route.GENERAL_DOWNLOAD_PREFERENCES)
-                            }
-                    },
-                    selected = currentRoute == Route.GENERAL_DOWNLOAD_PREFERENCES,
-                )
-
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.download_directory)) },
-                    icon = { Icon(Icons.Rounded.Folder, null) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.DOWNLOAD_DIRECTORY) }
-                    },
-                    selected = currentRoute == Route.DOWNLOAD_DIRECTORY,
-                )
-
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.cookies)) },
-                    icon = { Icon(Icons.Rounded.Cookie, null) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.COOKIE_PROFILE) }
-                    },
-                    selected = currentRoute == Route.COOKIE_PROFILE,
-                )
-
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.trouble_shooting)) },
-                    icon = { Icon(Icons.Rounded.BugReport, null) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.TROUBLESHOOTING) }
-                    },
-                    selected = currentRoute == Route.TROUBLESHOOTING,
-                )
-
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.about)) },
-                    icon = { Icon(Icons.Rounded.Info, null) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.ABOUT) }
-                    },
-                    selected = currentRoute == Route.ABOUT,
-                )
             }
         }
         Spacer(Modifier.weight(1f))
