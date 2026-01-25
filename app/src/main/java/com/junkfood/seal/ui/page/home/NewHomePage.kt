@@ -133,9 +133,13 @@ fun NewHomePage(
     var itemToDelete by remember { mutableStateOf<DownloadedVideoInfo?>(null) }
     var deleteFileWithRecord by remember { mutableStateOf(false) }
     
-    // Get recent downloads from database
-    val recentDownloads by DatabaseUtil.getDownloadHistoryFlow()
-        .collectAsStateWithLifecycle(initialValue = emptyList())
+    // Deletion trigger to force state refresh after delete operations
+    var deletionTrigger by remember { mutableIntStateOf(0) }
+    
+    // Get recent downloads from database - depends on deletionTrigger for refresh
+    val recentDownloads by remember(deletionTrigger) {
+        DatabaseUtil.getDownloadHistoryFlow()
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
     
     // Get recent 5 downloads (remove duplicates by video URL and path to prevent duplicate cards)
     val recentFiveDownloads = remember(recentDownloads) {
@@ -148,34 +152,40 @@ fun NewHomePage(
     // Get active downloads with proper state observation for real-time updates
     val taskStateMap = downloader.getTaskStateMap()
     
-    // Create a set of URLs and Paths that are already in recent downloads to avoid duplicates
-    val recentDownloadData = remember(recentFiveDownloads) {
-        val urls = recentFiveDownloads.map { it.videoUrl }.toSet()
-        val paths = recentFiveDownloads.map { it.videoPath }.toSet()
-        urls to paths
+    // Create a comprehensive set of identifiers from recent downloads to avoid duplicates
+    val recentDownloadIdentifiers = remember(recentFiveDownloads) {
+        recentFiveDownloads.flatMap { download ->
+            listOf(
+                download.videoUrl,
+                download.videoPath,
+                "${download.videoUrl}|${download.videoPath}" // Combined key for extra safety
+            )
+        }.toSet()
     }
     
     // Filter active downloads - only show non-completed tasks OR completed tasks not in recent downloads
-    val activeDownloads by remember(taskStateMap, recentDownloadData) {
+    val activeDownloads by remember(taskStateMap, recentDownloadIdentifiers) {
         derivedStateOf {
             taskStateMap.toList().filter { (task, state) ->
                 val downloadState = state.downloadState
                 val isCompleted = downloadState is Task.DownloadState.Completed
                 
-                val (recentUrls, recentPaths) = recentDownloadData
-                
-                // Check if URL matches
-                val isUrlMatch = task.url in recentUrls
-                
-                // Check if File Path matches (more reliable for completed downloads)
-                val isPathMatch = if (isCompleted && downloadState is Task.DownloadState.Completed) {
-                    downloadState.filePath in recentPaths
-                } else false
-                
-                val isInRecentDownloads = isUrlMatch || isPathMatch
-                
-                // Show if: not completed OR completed but not in recent downloads
-                !isCompleted || (isCompleted && !isInRecentDownloads)
+                when {
+                    // If completed, check if it's already in recent downloads
+                    isCompleted && downloadState is Task.DownloadState.Completed -> {
+                        val filePath = downloadState.filePath
+                        val taskUrl = task.url
+                        
+                        // Don't show if URL, path, or combined key is in recent downloads
+                        val isInRecent = recentDownloadIdentifiers.contains(taskUrl) ||
+                                       recentDownloadIdentifiers.contains(filePath) ||
+                                       recentDownloadIdentifiers.contains("$taskUrl|$filePath")
+                        
+                        !isInRecent // Show only if NOT in recent downloads
+                    }
+                    // Show all non-completed tasks (running, canceled, error, etc.)
+                    else -> true
+                }
             }
         }
     }
@@ -220,8 +230,16 @@ fun NewHomePage(
                 val info = itemToDelete
                 if (info != null) {
                     scope.launch {
+                        // Delete from database
                         DatabaseUtil.deleteInfoList(listOf(info), deleteFile = deleteFileWithRecord)
+                        
+                        // Increment deletion trigger to force UI refresh
+                        deletionTrigger++
+                        
+                        // Show confirmation toast
                         context.makeToast(R.string.delete_info)
+                        
+                        // Reset dialog state
                         showDeleteDialog = false
                         itemToDelete = null
                         deleteFileWithRecord = false
