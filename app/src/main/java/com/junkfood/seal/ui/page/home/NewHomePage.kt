@@ -134,7 +134,7 @@ fun NewHomePage(
     var deleteFileWithRecord by remember { mutableStateOf(false) }
     
     // Deletion trigger to force state refresh after delete operations
-    var deletionTrigger by remember { mutableIntStateOf(0) }
+    var deletionTrigger by remember { mutableStateOf(0) }
     
     // Get recent downloads from database - depends on deletionTrigger for refresh
     val recentDownloads by remember(deletionTrigger) {
@@ -234,7 +234,7 @@ fun NewHomePage(
                         DatabaseUtil.deleteInfoList(listOf(info), deleteFile = deleteFileWithRecord)
                         
                         // Increment deletion trigger to force UI refresh
-                        deletionTrigger++
+                        deletionTrigger = deletionTrigger + 1
                         
                         // Show confirmation toast
                         context.makeToast(R.string.delete_info)
