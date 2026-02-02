@@ -2,6 +2,14 @@ package com.junkfood.seal.util
 
 import android.content.Context
 import android.util.Log
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
+import com.junkfood.seal.util.PreferenceUtil.getInt
+import com.junkfood.seal.util.PreferenceUtil.getLong
+import com.junkfood.seal.util.PreferenceUtil.getString
+import com.junkfood.seal.util.PreferenceUtil.updateBoolean
+import com.junkfood.seal.util.PreferenceUtil.updateInt
+import com.junkfood.seal.util.PreferenceUtil.updateLong
+import com.junkfood.seal.util.PreferenceUtil.updateString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -96,7 +104,7 @@ object ProxyManager {
                 val (host, port) = if (useFreeProxy) {
                     val parts = freeProxyAddress.split(":")
                     if (parts.size != 2) return null
-                    parts[0] to parts[1].toIntOrNull() ?: return null
+                    parts[0] to (parts[1].toIntOrNull() ?: return null)
                 } else {
                     customProxyHost to customProxyPort
                 }
@@ -110,7 +118,7 @@ object ProxyManager {
                     }
                 }
 
-                Proxy(type, InetSocketAddress(host, port))
+                Proxy(type, InetSocketAddress.createUnresolved(host, port))
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to create proxy", e)
                 null
