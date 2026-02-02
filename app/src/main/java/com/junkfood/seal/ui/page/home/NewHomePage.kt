@@ -57,6 +57,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -66,6 +67,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -129,12 +132,29 @@ fun NewHomePage(
     var urlText by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     
-    // Get recent downloads from database - requery on composition to ensure fresh data
-    val recentDownloads by DatabaseUtil.getDownloadHistoryFlow()
-        .collectAsStateWithLifecycle(
-            initialValue = emptyList(),
-            minActiveState = androidx.lifecycle.Lifecycle.State.STARTED
-        )
+    // Get lifecycle owner
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    
+    // State to track lifecycle and force refresh
+    var lifecycleRefreshTrigger by remember { mutableStateOf(0) }
+    
+    // Monitor lifecycle events to trigger refresh when screen resumes
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                lifecycleRefreshTrigger++
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Get recent downloads from database - will refresh when lifecycleRefreshTrigger changes
+    val recentDownloads by remember(lifecycleRefreshTrigger) {
+        DatabaseUtil.getDownloadHistoryFlow()
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
     
     // Get recent 5 downloads (remove duplicates by video URL and path to prevent duplicate cards)
     val recentFiveDownloads = remember(recentDownloads) {
