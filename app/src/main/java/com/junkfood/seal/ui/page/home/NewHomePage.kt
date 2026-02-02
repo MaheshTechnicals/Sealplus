@@ -108,6 +108,7 @@ import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
 import com.junkfood.seal.util.SWIPE_TO_DELETE_SHOWN
 import com.junkfood.seal.util.PreferenceUtil
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.getErrorReport
 import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.matchUrlFromClipboard
@@ -139,19 +140,6 @@ fun NewHomePage(
     var itemToDelete by remember { mutableStateOf<DownloadedVideoInfo?>(null) }
     var deleteFileWithRecord by remember { mutableStateOf(false) }
     
-    // Swipe-to-delete onboarding dialog state
-    var showSwipeOnboarding by remember { mutableStateOf(!SWIPE_TO_DELETE_SHOWN.getBoolean()) }
-    
-    // Show onboarding only when there are recent downloads to swipe
-    LaunchedEffect(recentFiveDownloads, showSwipeOnboarding) {
-        if (showSwipeOnboarding && recentFiveDownloads.isNotEmpty()) {
-            // Onboarding will be shown
-        } else if (showSwipeOnboarding && recentFiveDownloads.isEmpty()) {
-            // Don't show until there are items to demonstrate swipe on
-            showSwipeOnboarding = false
-        }
-    }
-    
     // Get recent downloads from database - using Flow directly to sync with deletions from downloads page
     val recentDownloads by DatabaseUtil.getDownloadHistoryFlow()
         .collectAsStateWithLifecycle(initialValue = emptyList())
@@ -162,6 +150,19 @@ fun NewHomePage(
             .distinctBy { it.videoUrl + it.videoPath } // Use both URL and path to ensure uniqueness
             .takeLast(5)
             .reversed()
+    }
+    
+    // Swipe-to-delete onboarding dialog state (placed after recentFiveDownloads is defined)
+    var showSwipeOnboarding by remember { mutableStateOf(!SWIPE_TO_DELETE_SHOWN.getBoolean()) }
+    
+    // Show onboarding only when there are recent downloads to swipe
+    LaunchedEffect(recentFiveDownloads, showSwipeOnboarding) {
+        if (showSwipeOnboarding && recentFiveDownloads.isNotEmpty()) {
+            // Onboarding will be shown
+        } else if (showSwipeOnboarding && recentFiveDownloads.isEmpty()) {
+            // Don't show until there are items to demonstrate swipe on
+            showSwipeOnboarding = false
+        }
     }
     
     // Get active downloads with proper state observation for real-time updates
