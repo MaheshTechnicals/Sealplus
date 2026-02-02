@@ -23,6 +23,10 @@ build_job:
       
       echo "Java Path is: $JAVA_HOME"
       java -version
+
+      # FIX: Write the Java path to gradle.properties instead of the command line.
+      # This prevents the "Task not found" error.
+      echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
       
       echo "Decoding Key..."
       echo "$ANDROID_SIGNING_KEY" | tr -d '\n' | tr -d ' ' | base64 -d > "$CI_PROJECT_DIR/Mahesh.jks"
@@ -34,14 +38,9 @@ build_job:
       echo "🚀 Building Version: $VERSION"
 
     # --- STEP 2: BUILD & SIGN ---
-    # FIXED: Flags are now BEFORE the task name 'assembleRelease'
-    - bash ./gradlew \
-        -Dorg.gradle.java.home="$JAVA_HOME" \
-        -Pandroid.injected.signing.store.file="$CI_PROJECT_DIR/Mahesh.jks" \
-        -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
-        -Pandroid.injected.signing.key.alias="$ANDROID_ALIAS" \
-        -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD" \
-        assembleRelease
+    # We moved the Java configuration to gradle.properties, so this command is clean now.
+    # We put the signing variables on one line to ensure no spaces break it.
+    - bash ./gradlew assembleRelease -Pandroid.injected.signing.store.file="$CI_PROJECT_DIR/Mahesh.jks" -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" -Pandroid.injected.signing.key.alias="$ANDROID_ALIAS" -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
 
     # --- STEP 3: ORGANIZE OUTPUT ---
     - mkdir -p release_output
