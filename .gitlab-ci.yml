@@ -7,7 +7,6 @@ variables:
 build_job:
   stage: build
   image: mobiledevops/android-sdk-image:34.0.0-jdk17
-  when: manual
 
   before_script:
     - |

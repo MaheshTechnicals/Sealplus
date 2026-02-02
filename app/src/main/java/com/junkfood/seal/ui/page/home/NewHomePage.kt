@@ -34,7 +34,7 @@ import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.SwipeLeft
+import androidx.compose.material.icons.outlined.Swipe
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -244,7 +244,7 @@ fun NewHomePage(
             },
             icon = { 
                 Icon(
-                    imageVector = Icons.Outlined.SwipeLeft,
+                    imageVector = Icons.Outlined.Swipe,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
                 ) 
@@ -279,7 +279,7 @@ fun NewHomePage(
                             modifier = Modifier.weight(1f)
                         )
                         Icon(
-                            imageVector = Icons.Outlined.SwipeLeft,
+                            imageVector = Icons.Outlined.Swipe,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onErrorContainer
                         )
