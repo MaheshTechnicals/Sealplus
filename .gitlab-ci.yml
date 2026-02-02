@@ -9,13 +9,24 @@ build_job:
   image: mobiledevops/android-sdk-image:34.0.0-jdk17
 
   before_script:
-    - echo "Using default Java version..."
+    # 1. Manually Download Java 21 (No root permission needed)
+    - echo "Downloading Java 21..."
+    - wget -qO jdk21.tar.gz https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz
+    - tar -xzf jdk21.tar.gz
+    
+    # 2. Set JAVA_HOME to the new Java 21 folder
+    - export JAVA_HOME="$CI_PROJECT_DIR/jdk-21.0.6" 
+    # (Note: The extracted folder name usually matches the version. 
+    # If the build fails saying folder not found, we will list files to check name)
+    
+    # Update PATH so the system uses this new Java
+    - export PATH="$JAVA_HOME/bin:$PATH"
+    
+    # Verify Version
     - java -version
 
-    # Decode the key (We keep the 'tr' fix because it worked!)
+    # 3. Decode the Keystore (Standard fix)
     - echo "$ANDROID_SIGNING_KEY" | tr -d '\n' | tr -d ' ' | base64 -d > "$CI_PROJECT_DIR/Mahesh.jks"
-
-    # REMOVED: chmod +x ./gradlew (This was causing the error)
 
   script:
     # --- STEP 1: EXTRACT VERSION ---
@@ -23,23 +34,16 @@ build_job:
       VERSION=$(grep -A 1 'val currentVersion: Version =' buildSrc/src/main/kotlin/Version.kt | grep -oP 'versionMajor = \K\d+' | head -1).$(grep -A 1 'val currentVersion: Version =' buildSrc/src/main/kotlin/Version.kt | grep -oP 'versionMinor = \K\d+' | head -1).$(grep -A 1 'val currentVersion: Version =' buildSrc/src/main/kotlin/Version.kt | grep -oP 'versionPatch = \K\d+' | head -1)
       echo "🚀 Building Version: $VERSION"
 
-    # --- STEP 2: CHECK RELEASE CONFIG ---
-    - |
-      if grep -q '"release": true' release.json; then
-        echo "Release Mode: ON"
-      else
-        echo "Release Mode: OFF"
-      fi
-
-    # --- STEP 3: BUILD & SIGN ---
-    # CHANGED: We use 'bash ./gradlew' instead of just './gradlew'
+    # --- STEP 2: BUILD & SIGN ---
+    # We force Gradle to use our new JAVA_HOME
     - bash ./gradlew assembleRelease \
+        -Dorg.gradle.java.home="$JAVA_HOME" \
         -Pandroid.injected.signing.store.file="$CI_PROJECT_DIR/Mahesh.jks" \
         -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
         -Pandroid.injected.signing.key.alias="$ANDROID_ALIAS" \
         -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
 
-    # --- STEP 4: ORGANIZE OUTPUT ---
+    # --- STEP 3: ORGANIZE OUTPUT ---
     - mkdir -p release_output
     - mv app/build/outputs/apk/generic/release/*-signed.apk release_output/ || true
     - mv app/build/outputs/apk/release/*.apk release_output/ || true
