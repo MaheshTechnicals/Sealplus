@@ -65,6 +65,7 @@ import com.junkfood.seal.ui.page.settings.interaction.InteractionPreferencePage
 import com.junkfood.seal.ui.page.settings.network.CookieProfilePage
 import com.junkfood.seal.ui.page.settings.network.CookiesViewModel
 import com.junkfood.seal.ui.page.settings.network.NetworkPreferences
+import com.junkfood.seal.ui.page.settings.network.ProxySettingsPage
 import com.junkfood.seal.ui.page.settings.network.WebViewPage
 import com.junkfood.seal.ui.page.settings.sealplus.SealPlusExtrasPage
 import com.junkfood.seal.ui.page.settings.security.SecuritySettingsPage
@@ -265,11 +266,15 @@ fun NavGraphBuilder.settingsGraph(
         animatedComposable(Route.SEALPLUS_EXTRAS) {
             SealPlusExtrasPage(
                 onNavigateBack = onNavigateBack,
-                onNavigateToSecurity = { onNavigateTo(Route.SECURITY_SETTINGS) }
+                onNavigateToSecurity = { onNavigateTo(Route.SECURITY_SETTINGS) },
+                onNavigateToProxySettings = { onNavigateTo(Route.PROXY_SETTINGS) }
             )
         }
         animatedComposable(Route.SECURITY_SETTINGS) {
             SecuritySettingsPage(onBackPressed = onNavigateBack)
+        }
+        animatedComposable(Route.PROXY_SETTINGS) {
+            ProxySettingsPage(onNavigateBack = onNavigateBack)
         }
         animatedComposable(Route.TROUBLESHOOTING) {
             TroubleShootingPage(onNavigateTo = onNavigateTo, onBack = onNavigateBack)

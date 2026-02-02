@@ -38,7 +38,6 @@ import com.junkfood.seal.util.CELLULAR_DOWNLOAD
 import com.junkfood.seal.util.COOKIES
 import com.junkfood.seal.util.CUSTOM_COMMAND
 import com.junkfood.seal.util.FORCE_IPV4
-import com.junkfood.seal.util.PROXY
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateValue
@@ -55,9 +54,7 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
 
     var showConcurrentDownloadDialog by remember { mutableStateOf(false) }
     var showRateLimitDialog by remember { mutableStateOf(false) }
-    var showProxyDialog by remember { mutableStateOf(false) }
     var aria2c by remember { mutableStateOf(ARIA2C.getBoolean()) }
-    var proxy by PROXY.booleanState
     var isCookiesEnabled by COOKIES.booleanState
     var forceIpv4 by FORCE_IPV4.booleanState
 
@@ -130,20 +127,6 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
                     )
                 }
                 item {
-                    PreferenceSwitchWithDivider(
-                        title = stringResource(id = R.string.proxy),
-                        description = stringResource(id = R.string.proxy_desc),
-                        icon = Icons.Outlined.VpnKey,
-                        isChecked = proxy,
-                        onChecked = {
-                            proxy = !proxy
-                            PROXY.updateBoolean(proxy)
-                        },
-                        onClick = { showProxyDialog = true },
-                        enabled = !isCustomCommandEnabled,
-                    )
-                }
-                item {
                     PreferenceItem(
                         title = stringResource(id = R.string.concurrent_download),
                         description = stringResource(R.string.concurrent_download_desc),
@@ -183,8 +166,5 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
 
     if (showRateLimitDialog) {
         RateLimitDialog { showRateLimitDialog = false }
-    }
-    if (showProxyDialog) {
-        ProxyConfigurationDialog { showProxyDialog = false }
     }
 }

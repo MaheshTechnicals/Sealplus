@@ -570,4 +570,37 @@
     <string name="recent_downloads">Recent downloads</string>
     <string name="enter_url_to_download">Enter URL to download</string>
     <string name="view_all_downloads">View all downloads</string>
+    
+    <!-- Proxy Settings strings -->
+    <string name="proxy_settings">Proxy Settings</string>
+    <string name="enable_proxy">Enable Proxy</string>
+    <string name="proxy_toggle_description">Route all downloads through a proxy server</string>
+    <string name="proxy_type">Proxy Type</string>
+    <string name="free_proxy">Free Proxy</string>
+    <string name="custom_proxy">Custom Proxy</string>
+    <string name="connection_status">Connection Status</string>
+    <string name="not_tested">Not tested yet. Click \'Test Connection\' to validate.</string>
+    <string name="testing">Testing…</string>
+    <string name="testing_connection">Testing connection…</string>
+    <string name="test_connection">Test Connection</string>
+    <string name="speed_test_results">Speed Test Results</string>
+    <string name="run_speed_test">Run Speed Test</string>
+    <string name="testing_speed">Testing speed…</string>
+    <string name="latency">Latency</string>
+    <string name="download_speed">Download Speed</string>
+    <string name="upload_latency">Upload Latency</string>
+    <string name="free_proxy_settings">Free Proxy Settings</string>
+    <string name="select_country">Select Country</string>
+    <string name="selected_proxy">Selected Proxy</string>
+    <string name="fetch_proxies">Fetch Proxies</string>
+    <string name="loading_proxies">Loading proxies…</string>
+    <string name="select_proxy">Select Proxy</string>
+    <string name="custom_proxy_settings">Custom Proxy Settings</string>
+    <string name="proxy_host">Host / IP Address</string>
+    <string name="proxy_port">Port</string>
+    <string name="proxy_protocol">Proxy Protocol</string>
+    <string name="save_configuration">Save Configuration</string>
+    <string name="proxy_info_title">How It Works</string>
+    <string name="proxy_info_description">When enabled, all download requests will be routed through the configured proxy server. This can help bypass regional restrictions or improve privacy. Test the connection before enabling to ensure the proxy is working correctly.</string>
 </resources>
+

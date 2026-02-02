@@ -344,8 +344,12 @@ object DownloadUtil {
                     videoClips = emptyList(),
                     splitByChapter = false,
                     debug = DEBUG.getBoolean(),
-                    proxy = PROXY.getBoolean(),
-                    proxyUrl = PROXY_URL.getString(),
+                    proxy = PROXY.getBoolean() || ProxyManager.isProxyActive(),
+                    proxyUrl = if (ProxyManager.isProxyActive()) {
+                        ProxyManager.loadProxyConfig().getProxyAddress()
+                    } else {
+                        PROXY_URL.getString()
+                    },
                     newTitle = "",
                     userAgentString =
                         USER_AGENT_STRING.run { if (USER_AGENT.getBoolean()) getString() else "" },

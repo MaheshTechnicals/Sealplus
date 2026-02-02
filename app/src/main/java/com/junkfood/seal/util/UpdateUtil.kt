@@ -39,7 +39,14 @@ object UpdateUtil {
     private const val X64 = "x86_64"
     private const val TAG = "UpdateUtil"
 
-    private val client = OkHttpClient()
+    private fun getClient(): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+        ProxyManager.getActiveProxy()?.let { proxy ->
+            builder.proxy(proxy)
+        }
+        return builder.build()
+    }
+
     private val requestForLatestRelease =
         Request.Builder()
             .url("https://api.github.com/repos/${OWNER}/${REPO}/releases/latest")
@@ -75,7 +82,7 @@ object UpdateUtil {
         }
 
     private fun getLatestRelease(): Release =
-        client.newCall(requestForReleases).execute().body.use {
+        getClient().newCall(requestForReleases).execute().body.use {
             val releaseList = jsonFormat.decodeFromString<List<Release>>(it.string())
             val stable = UPDATE_CHANNEL.getInt() == STABLE
             val latestRelease =
@@ -169,7 +176,7 @@ object UpdateUtil {
                     ?.browserDownloadUrl ?: return@withContext emptyFlow()
             val request = Request.Builder().url(targetUrl).build()
             try {
-                val response = client.newCall(request).execute()
+                val response = getClient().newCall(request).execute()
                 val responseBody = response.body
                 return@withContext responseBody.downloadFileWithProgress(context.getLatestApk())
             } catch (e: Exception) {

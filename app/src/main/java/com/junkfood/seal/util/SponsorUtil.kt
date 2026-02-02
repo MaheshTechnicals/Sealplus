@@ -33,13 +33,20 @@ object SponsorUtil {
             .addHeader("Authorization", "bearer $magicString")
             .build()
 
-    private val client = OkHttpClient()
+    private fun getClient(): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+        ProxyManager.getActiveProxy()?.let { proxy ->
+            builder.proxy(proxy)
+        }
+        return builder.build()
+    }
+
     private val jsonFormat = Json { ignoreUnknownKeys = true }
     private var sponsorData: SponsorData? = null
 
     @CheckResult
     fun getSponsors(): Result<SponsorData> =
-        client
+        getClient()
             .runCatching {
                 sponsorData
                     ?: jsonFormat

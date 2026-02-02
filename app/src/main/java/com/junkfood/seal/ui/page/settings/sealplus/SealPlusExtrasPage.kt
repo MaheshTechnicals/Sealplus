@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.NetworkCell
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.SignalCellular4Bar
 import androidx.compose.material.icons.outlined.SignalWifi4Bar
 import androidx.compose.material.icons.rounded.NetworkCheck
@@ -55,7 +56,8 @@ import com.junkfood.seal.util.PreferenceUtil.updateInt
 @Composable
 fun SealPlusExtrasPage(
     onNavigateBack: () -> Unit,
-    onNavigateToSecurity: () -> Unit = {}
+    onNavigateToSecurity: () -> Unit = {},
+    onNavigateToProxySettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -126,6 +128,15 @@ fun SealPlusExtrasPage(
             
             item {
                 PreferenceSubtitle(text = stringResource(R.string.network_settings))
+            }
+
+            item {
+                PreferenceItem(
+                    title = stringResource(R.string.proxy_settings),
+                    description = stringResource(R.string.proxy_toggle_description),
+                    icon = Icons.Outlined.Public,
+                    onClick = { onNavigateToProxySettings() }
+                )
             }
 
             item {

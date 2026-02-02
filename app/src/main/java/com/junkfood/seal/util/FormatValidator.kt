@@ -22,11 +22,18 @@ private const val TAG = "FormatValidator"
  */
 object FormatValidator {
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
-        .followRedirects(true)
-        .build()
+    private fun getClient(): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .followRedirects(true)
+        
+        ProxyManager.getActiveProxy()?.let { proxy ->
+            builder.proxy(proxy)
+        }
+        
+        return builder.build()
+    }
 
     // Known unsupported codecs that may cause issues
     private val unsupportedVideoCodecs = setOf(
@@ -175,7 +182,7 @@ object FormatValidator {
                     .head()
                     .build()
 
-                client.newCall(request).execute().use { response ->
+                getClient().newCall(request).execute().use { response ->
                     val code = response.code
                     // Accept 200 OK and 206 Partial Content (for streaming)
                     code == HttpURLConnection.HTTP_OK || code == HttpURLConnection.HTTP_PARTIAL
