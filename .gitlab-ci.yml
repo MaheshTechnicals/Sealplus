@@ -9,7 +9,6 @@ build_job:
   image: mobiledevops/android-sdk-image:34.0.0-jdk17
 
   before_script:
-    # We use ' | ' to start a script block. This prevents YAML syntax errors.
     - |
       echo "Downloading Java 21..."
       curl -L https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz -o jdk21.tar.gz
@@ -35,13 +34,14 @@ build_job:
       echo "🚀 Building Version: $VERSION"
 
     # --- STEP 2: BUILD & SIGN ---
-    # We use 'bash ./gradlew' and force the Java Home
-    - bash ./gradlew assembleRelease \
+    # FIXED: Flags are now BEFORE the task name 'assembleRelease'
+    - bash ./gradlew \
         -Dorg.gradle.java.home="$JAVA_HOME" \
         -Pandroid.injected.signing.store.file="$CI_PROJECT_DIR/Mahesh.jks" \
         -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
         -Pandroid.injected.signing.key.alias="$ANDROID_ALIAS" \
-        -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
+        -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD" \
+        assembleRelease
 
     # --- STEP 3: ORGANIZE OUTPUT ---
     - mkdir -p release_output
