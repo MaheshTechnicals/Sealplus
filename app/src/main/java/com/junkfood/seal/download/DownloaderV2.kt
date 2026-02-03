@@ -378,7 +378,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
             }
             .also { job -> 
                 // Restore progress if this download was resumed from a paused state
-                val initialProgress = resumedProgressMap.remove(id) ?: PROGRESS_INDETERMINATE
+                val initialProgress = resumedProgressMap.remove(id) ?: -1f
                 downloadState = Running(job = job, taskId = id, progress = initialProgress)
             }
     }
