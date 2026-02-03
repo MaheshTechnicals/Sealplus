@@ -117,6 +117,7 @@ internal object FakeDownloaderV2 : DownloaderV2 {
 class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComponent {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val taskStateMap = mutableStateMapOf<Task, Task.State>()
+    private val resumedProgressMap = mutableMapOf<String, Float>()
     private val snapshotFlow = snapshotFlow { taskStateMap.toMap() }
 
     init {
@@ -375,7 +376,11 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                         )
                     }
             }
-            .also { job -> downloadState = Running(job = job, taskId = id) }
+            .also { job -> 
+                // Restore progress if this download was resumed from a paused state
+                val initialProgress = resumedProgressMap.remove(id) ?: PROGRESS_INDETERMINATE
+                downloadState = Running(job = job, taskId = id, progress = initialProgress)
+            }
     }
 
     private fun Task.pauseImpl(): Boolean {
@@ -405,6 +410,10 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     private fun Task.resumeImpl(): Boolean {
         when (val preState = downloadState) {
             is DownloadState.Paused -> {
+                // Store the paused progress so it can be restored when download resumes
+                preState.progress?.let { progress ->
+                    resumedProgressMap[id] = progress
+                }
                 downloadState =
                     when (preState.action) {
                         Download -> ReadyWithInfo
