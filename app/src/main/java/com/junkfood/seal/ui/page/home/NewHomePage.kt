@@ -709,17 +709,29 @@ fun ActiveDownloadCard(
     val progressText = if (downloadState is Task.DownloadState.Running) downloadState.progressText else ""
     val downloadPhase = when {
         progressText.contains("[Merger]", ignoreCase = true) || 
-        progressText.contains("Merging formats", ignoreCase = true) -> "merging"
-        progressText.contains("Destination:", ignoreCase = true) -> {
-            // Determine if downloading video or audio based on file extension patterns
+        progressText.contains("Merging formats", ignoreCase = true) ||
+        progressText.contains("Merging", ignoreCase = true) -> "merging"
+        progressText.isNotEmpty() -> {
+            // Check for audio indicators first (more specific)
             when {
                 progressText.contains(".m4a", ignoreCase = true) || 
                 progressText.contains(".opus", ignoreCase = true) ||
                 progressText.contains(".mp3", ignoreCase = true) ||
-                progressText.contains(".webm", ignoreCase = true) && progressText.contains("audio", ignoreCase = true) -> "audio"
+                progressText.contains(".aac", ignoreCase = true) ||
+                progressText.contains(".flac", ignoreCase = true) ||
+                progressText.contains(".wav", ignoreCase = true) ||
+                progressText.contains("audio only", ignoreCase = true) ||
+                progressText.contains("f251", ignoreCase = false) ||
+                progressText.contains("f140", ignoreCase = false) ||
+                (progressText.contains(".webm", ignoreCase = true) && progressText.contains("audio", ignoreCase = true)) -> "audio"
+                // Check for video indicators
                 progressText.contains(".mp4", ignoreCase = true) || 
-                progressText.contains(".webm", ignoreCase = true) ||
-                progressText.contains(".mkv", ignoreCase = true) -> "video"
+                progressText.contains(".mkv", ignoreCase = true) ||
+                progressText.contains(".avi", ignoreCase = true) ||
+                progressText.contains("video", ignoreCase = true) ||
+                progressText.contains("f616", ignoreCase = false) ||
+                progressText.contains("f137", ignoreCase = false) ||
+                progressText.contains(".webm", ignoreCase = true) -> "video"
                 else -> "downloading"
             }
         }
@@ -828,12 +840,13 @@ fun ActiveDownloadCard(
                 if (downloadState is Task.DownloadState.Running) {
                     IconButton(
                         onClick = { onAction(UiAction.Pause) },
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Pause,
                             contentDescription = stringResource(R.string.pause),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -841,18 +854,19 @@ fun ActiveDownloadCard(
                 if (downloadState is Task.DownloadState.Paused) {
                     IconButton(
                         onClick = { onAction(UiAction.Resume) },
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.PlayArrow,
                             contentDescription = stringResource(R.string.resume),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
                 
                 // More button with dropdown menu
-                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd).offset(x = 4.dp)) {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
                             imageVector = Icons.Outlined.MoreVert,
