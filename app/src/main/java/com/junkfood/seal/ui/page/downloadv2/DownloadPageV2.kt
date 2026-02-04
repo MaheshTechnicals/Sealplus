@@ -277,6 +277,9 @@ fun DownloadPageV2(
                     context.startActivity(Intent.createChooser(it, shareTitle))
                 }
             }
+            UiAction.ShowDetails -> {
+                // Handled in NewHomePage - no action needed here
+            }
         }
     }
 
