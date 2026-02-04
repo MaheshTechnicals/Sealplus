@@ -1086,6 +1086,9 @@ fun DownloadDetailsDialog(
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var showFilePathDialog by remember { mutableStateOf(false) }
     
     BackHandler {
         onDismiss()
@@ -1233,7 +1236,8 @@ fun DownloadDetailsDialog(
                                 icon = Icons.Outlined.Folder,
                                 label = stringResource(R.string.file_path),
                                 value = path,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                onClick = { showFilePathDialog = true }
                             )
                         }
                     }
@@ -1249,7 +1253,16 @@ fun DownloadDetailsDialog(
                 
                 // Source URL Card
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            clipboardManager.setText(AnnotatedString(state.viewState.url))
+                            android.widget.Toast.makeText(
+                                context,
+                                context.getString(R.string.link_copied),
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                     ),
@@ -1294,6 +1307,34 @@ fun DownloadDetailsDialog(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+    
+    // File Path Dialog
+    if (showFilePathDialog && state.downloadState is Task.DownloadState.Completed) {
+        state.downloadState.filePath?.let { path ->
+            AlertDialog(
+                onDismissRequest = { showFilePathDialog = false },
+                title = {
+                    Text(
+                        text = stringResource(R.string.file_path),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                text = {
+                    SelectionContainer {
+                        Text(
+                            text = path,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showFilePathDialog = false }) {
+                        Text(stringResource(android.R.string.ok))
+                    }
+                }
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1304,6 +1345,8 @@ fun RecentDownloadDetailsDialog(
 ) {
     val sheetState = rememberModalBottomSheetState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var showFilePathDialog by remember { mutableStateOf(false) }
     
     BackHandler {
         onDismiss()
@@ -1446,7 +1489,8 @@ fun RecentDownloadDetailsDialog(
                         icon = Icons.Outlined.Folder,
                         label = stringResource(R.string.file_path),
                         value = downloadInfo.videoPath,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        onClick = { showFilePathDialog = true }
                     )
                     
                     val downloadDate = if (file.exists()) {
@@ -1465,7 +1509,16 @@ fun RecentDownloadDetailsDialog(
                 
                 // Source URL Card
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            clipboardManager.setText(AnnotatedString(downloadInfo.videoUrl))
+                            android.widget.Toast.makeText(
+                                context,
+                                context.getString(R.string.link_copied),
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                     ),
@@ -1510,6 +1563,32 @@ fun RecentDownloadDetailsDialog(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+    
+    // File Path Dialog
+    if (showFilePathDialog) {
+        AlertDialog(
+            onDismissRequest = { showFilePathDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.file_path),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                SelectionContainer {
+                    Text(
+                        text = downloadInfo.videoPath,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showFilePathDialog = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -1517,10 +1596,15 @@ private fun DetailCard(
     icon: ImageVector,
     label: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (onClick != null) {
+                Modifier.clickable { onClick() }
+            } else Modifier
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ),
