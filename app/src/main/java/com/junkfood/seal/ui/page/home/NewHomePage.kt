@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MoreVert
@@ -45,6 +46,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -57,6 +59,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -85,6 +88,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -108,6 +112,8 @@ import com.junkfood.seal.ui.theme.GradientDarkColors
 import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
+import com.junkfood.seal.util.toFileSizeText
+import com.junkfood.seal.util.toDurationText
 import com.junkfood.seal.util.getErrorReport
 import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.matchUrlFromClipboard
@@ -337,6 +343,10 @@ fun NewHomePage(
                     items = activeDownloads,
                     key = { (task, _) -> task.id }
                 ) { (task, state) ->
+                    var showDetailsDialog by remember { mutableStateOf(false) }
+                    var detailsTask by remember { mutableStateOf<Task?>(null) }
+                    var detailsState by remember { mutableStateOf<Task.State?>(null) }
+                    
                     ActiveDownloadCard(
                         task = task,
                         state = state,
@@ -356,6 +366,11 @@ fun NewHomePage(
                                 is UiAction.CopyVideoURL -> {
                                     clipboardManager.setText(AnnotatedString(task.url))
                                     context.makeToast(R.string.link_copied)
+                                }
+                                UiAction.ShowDetails -> {
+                                    detailsTask = task
+                                    detailsState = state
+                                    showDetailsDialog = true
                                 }
                                 is UiAction.OpenFile -> {
                                     action.filePath?.let {
@@ -379,6 +394,14 @@ fun NewHomePage(
                             }
                         }
                     )
+                    
+                    if (showDetailsDialog && detailsTask != null && detailsState != null) {
+                        DownloadDetailsDialog(
+                            task = detailsTask!!,
+                            state = detailsState!!,
+                            onDismiss = { showDetailsDialog = false }
+                        )
+                    }
                 }
             }
             
@@ -911,6 +934,23 @@ fun ActiveDownloadCard(
                             }
                         )
                         
+                        // Details option (only for completed downloads)
+                        if (downloadState is Task.DownloadState.Completed) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.details)) },
+                                onClick = {
+                                    onAction(UiAction.ShowDetails)
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Info,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        }
+                        
                         // Delete option
                         if (downloadState is Task.DownloadState.Completed || downloadState is Task.DownloadState.Error || downloadState is Task.DownloadState.Canceled) {
                             DropdownMenuItem(
@@ -948,5 +988,164 @@ fun ActiveDownloadCard(
                 )
             }
         }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DownloadDetailsDialog(
+    task: Task,
+    state: Task.State,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    
+    BackHandler {
+        onDismiss()
+    }
+    
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Text(
+                text = stringResource(R.string.download_details),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            
+            // Thumbnail
+            state.videoInfo?.thumbnail?.let { thumbnailUrl ->
+                AsyncImage(
+                    model = thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            
+            HorizontalDivider()
+            
+            // Title
+            DetailItem(
+                label = stringResource(R.string.title),
+                value = state.viewState.title
+            )
+            
+            // File Name
+            if (state.downloadState is Task.DownloadState.Completed) {
+                state.downloadState.filePath?.let { path ->
+                    val fileName = path.substringAfterLast("/")
+                    DetailItem(
+                        label = stringResource(R.string.file_name),
+                        value = fileName
+                    )
+                }
+            }
+            
+            // File Size
+            val fileSize = state.viewState.fileSizeApprox
+            if (fileSize > 0) {
+                DetailItem(
+                    label = stringResource(R.string.file_size),
+                    value = fileSize.toFileSizeText()
+                )
+            }
+            
+            // Duration
+            val duration = state.viewState.duration
+            if (duration > 0) {
+                DetailItem(
+                    label = stringResource(R.string.duration),
+                    value = duration.toDurationText()
+                )
+            }
+            
+            // Resolution
+            state.viewState.videoFormats?.firstOrNull()?.resolution?.let { resolution ->
+                if (resolution.isNotBlank()) {
+                    DetailItem(
+                        label = stringResource(R.string.resolution),
+                        value = resolution
+                    )
+                }
+            }
+            
+            // File Format
+            state.viewState.videoFormats?.firstOrNull()?.ext?.let { ext ->
+                if (ext.isNotBlank()) {
+                    DetailItem(
+                        label = stringResource(R.string.file_format),
+                        value = ext.uppercase()
+                    )
+                }
+            }
+            
+            // Uploader
+            if (state.viewState.uploader.isNotBlank()) {
+                DetailItem(
+                    label = stringResource(R.string.video_creator_label),
+                    value = state.viewState.uploader
+                )
+            }
+            
+            // Extractor
+            if (state.viewState.extractorKey.isNotBlank()) {
+                DetailItem(
+                    label = stringResource(R.string.platform),
+                    value = state.viewState.extractorKey
+                )
+            }
+            
+            // Download Date
+            DetailItem(
+                label = stringResource(R.string.download_date),
+                value = java.text.SimpleDateFormat("MMM dd, yyyy HH:mm", java.util.Locale.getDefault())
+                    .format(java.util.Date(task.timeCreated))
+            )
+            
+            // Source URL
+            SelectionContainer {
+                DetailItem(
+                    label = stringResource(R.string.source_url),
+                    value = state.viewState.url
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun DetailItem(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }

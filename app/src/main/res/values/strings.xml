@@ -164,6 +164,7 @@
     <string name="open_file">Open file</string>
     <string name="restart">Restart</string>
     <string name="pause">Pause</string>
+    <string name="details">Details</string>
     <string name="status_error">Error</string>
     <string name="copy_link">Copy link</string>
     <string name="copy_error_report">Copy report</string>
@@ -437,6 +438,19 @@
     <string name="resume">Resume</string>
     <string name="delete">Delete</string>
     <string name="media_info">Media info</string>
+    <string name="download_details">Download Details</string>
+    <string name="file_name">File name</string>
+    <string name="file_size">File size</string>
+    <string name="source_url">Source URL</string>
+    <string name="file_format">File format</string>
+    <string name="resolution">Resolution</string>
+    <string name="download_date">Download date</string>
+    <string name="duration">Duration</string>
+    <string name="video_creator_label">Creator</string>
+    <string name="platform">Platform</string>
+    <string name="title">Title</string>
+    <string name="video">Video</string>
+    <string name="audio">Audio</string>
     <string name="trouble_shooting">Troubleshooting</string>
     <string name="issue_tracker">Issue tracker</string>
     <string name="trouble_shooting_desc">Fix common errors and check for known issues</string>

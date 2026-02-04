@@ -199,6 +199,8 @@ sealed interface UiAction {
     data object Resume : UiAction
 
     data class CopyErrorReport(val throwable: Throwable) : UiAction
+
+    data object ShowDetails : UiAction
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
