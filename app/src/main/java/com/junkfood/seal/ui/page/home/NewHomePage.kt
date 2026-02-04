@@ -708,10 +708,17 @@ fun ActiveDownloadCard(
     
     // Parse progress text to determine download phase
     val progressText = if (downloadState is Task.DownloadState.Running) downloadState.progressText else ""
+    
+    // Log progressText for debugging
+    android.util.Log.d("ActiveDownloadCard", "ProgressText: '$progressText'")
+    
     val downloadPhase = when {
         progressText.contains("[Merger]", ignoreCase = true) || 
         progressText.contains("Merging formats", ignoreCase = true) ||
-        progressText.contains("Merging", ignoreCase = true) -> "merging"
+        progressText.contains("Merging", ignoreCase = true) -> {
+            android.util.Log.d("ActiveDownloadCard", "Detected phase: merging")
+            "merging"
+        }
         progressText.isNotEmpty() -> {
             // Check for audio indicators first (more specific)
             when {
@@ -724,7 +731,10 @@ fun ActiveDownloadCard(
                 progressText.contains("audio only", ignoreCase = true) ||
                 progressText.contains("f251", ignoreCase = false) ||
                 progressText.contains("f140", ignoreCase = false) ||
-                (progressText.contains(".webm", ignoreCase = true) && progressText.contains("audio", ignoreCase = true)) -> "audio"
+                (progressText.contains(".webm", ignoreCase = true) && progressText.contains("audio", ignoreCase = true)) -> {
+                    android.util.Log.d("ActiveDownloadCard", "Detected phase: audio")
+                    "audio"
+                }
                 // Check for video indicators
                 progressText.contains(".mp4", ignoreCase = true) || 
                 progressText.contains(".mkv", ignoreCase = true) ||
@@ -732,11 +742,20 @@ fun ActiveDownloadCard(
                 progressText.contains("video", ignoreCase = true) ||
                 progressText.contains("f616", ignoreCase = false) ||
                 progressText.contains("f137", ignoreCase = false) ||
-                progressText.contains(".webm", ignoreCase = true) -> "video"
-                else -> "downloading"
+                progressText.contains(".webm", ignoreCase = true) -> {
+                    android.util.Log.d("ActiveDownloadCard", "Detected phase: video")
+                    "video"
+                }
+                else -> {
+                    android.util.Log.d("ActiveDownloadCard", "Detected phase: downloading (no match)")
+                    "downloading"
+                }
             }
         }
-        else -> "downloading"
+        else -> {
+            android.util.Log.d("ActiveDownloadCard", "Detected phase: downloading (empty)")
+            "downloading"
+        }
     }
     
     val statusText = when (downloadState) {
@@ -867,7 +886,7 @@ fun ActiveDownloadCard(
                 }
                 
                 // More button with dropdown menu
-                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd).offset(x = 4.dp)) {
+                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
                             imageVector = Icons.Outlined.MoreVert,
