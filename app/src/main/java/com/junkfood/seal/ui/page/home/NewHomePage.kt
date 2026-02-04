@@ -1266,7 +1266,7 @@ fun RecentDownloadDetailsDialog(
                 val fileSize = file.length()
                 DetailItem(
                     label = stringResource(R.string.file_size),
-                    value = FileUtil.getFileSizeText(fileSize)
+                    value = fileSize.toFileSizeText()
                 )
                 
                 // File Format
