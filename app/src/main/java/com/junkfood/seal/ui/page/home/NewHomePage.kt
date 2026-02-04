@@ -1381,9 +1381,8 @@ fun RecentDownloadDetailsDialog(
             )
             
             // Grid Layout for Details
-            val fileName = downloadInfo.videoPath.substringAfterLast("/")
             val file = java.io.File(downloadInfo.videoPath)
-            val fileExtension = fileName.substringAfterLast(".", "")
+            val fileExtension = downloadInfo.videoPath.substringAfterLast(".", "")
             
             Column(
                 modifier = Modifier
@@ -1391,56 +1390,73 @@ fun RecentDownloadDetailsDialog(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Row 1: File Name and Format
+                // Row 1: File Format and File Size
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    DetailCard(
-                        icon = Icons.Outlined.FileDownload,
-                        label = stringResource(R.string.file_name),
-                        value = fileName,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
                     if (fileExtension.isNotEmpty()) {
                         DetailCard(
                             icon = Icons.Outlined.VideoFile,
                             label = stringResource(R.string.file_format),
                             value = fileExtension.uppercase(),
-                            modifier = Modifier.weight(0.5f)
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    
+                    if (file.exists()) {
+                        val fileSize = file.length()
+                        DetailCard(
+                            icon = Icons.Outlined.Storage,
+                            label = stringResource(R.string.file_size),
+                            value = fileSize.toFileSizeText(),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
                 
-                // Row 2: File Size
-                if (file.exists()) {
-                    val fileSize = file.length()
+                // Row 2: Creator and Platform
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (downloadInfo.videoAuthor.isNotEmpty()) {
+                        DetailCard(
+                            icon = Icons.Outlined.Person,
+                            label = stringResource(R.string.video_creator_label),
+                            value = downloadInfo.videoAuthor,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    
                     DetailCard(
-                        icon = Icons.Outlined.Storage,
-                        label = stringResource(R.string.file_size),
-                        value = fileSize.toFileSizeText(),
-                        modifier = Modifier.fillMaxWidth()
+                        icon = Icons.Outlined.Language,
+                        label = stringResource(R.string.platform),
+                        value = downloadInfo.extractor,
+                        modifier = Modifier.weight(1f)
                     )
                 }
                 
-                // Creator
-                if (downloadInfo.videoAuthor.isNotEmpty()) {
+                // Row 3: File Path and Download Date
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     DetailCard(
-                        icon = Icons.Outlined.Person,
-                        label = stringResource(R.string.video_creator_label),
-                        value = downloadInfo.videoAuthor,
-                        modifier = Modifier.fillMaxWidth()
+                        icon = Icons.Outlined.Folder,
+                        label = stringResource(R.string.file_path),
+                        value = downloadInfo.videoPath,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    DetailCard(
+                        icon = Icons.Outlined.CalendarToday,
+                        label = stringResource(R.string.download_date),
+                        value = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
+                            .format(java.util.Date(downloadInfo.timeCreated)),
+                        modifier = Modifier.weight(1f)
                     )
                 }
-                
-                // Platform
-                DetailCard(
-                    icon = Icons.Outlined.Language,
-                    label = stringResource(R.string.platform),
-                    value = downloadInfo.extractor,
-                    modifier = Modifier.fillMaxWidth()
-                )
                 
                 // Source URL Card
                 Card(
