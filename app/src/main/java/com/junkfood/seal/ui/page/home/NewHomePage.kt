@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,21 +27,30 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.HighQuality
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.VideoFile
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -1086,116 +1097,221 @@ fun DownloadDetailsDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 32.dp)
         ) {
-            // Header
-            Text(
-                text = stringResource(R.string.download_details),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
+            // Header with gradient background
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    )
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.download_details),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = state.viewState.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
             
-            // Thumbnail
+            // Thumbnail Card
             state.videoInfo?.thumbnail?.let { thumbnailUrl ->
-                AsyncImage(
-                    model = thumbnailUrl,
-                    contentDescription = null,
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentScale = ContentScale.Crop
-                )
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
             
-            HorizontalDivider()
-            
-            // Title
-            DetailItem(
-                label = stringResource(R.string.title),
-                value = state.viewState.title
+            // Media Information Section
+            Text(
+                text = stringResource(R.string.media_info),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                color = MaterialTheme.colorScheme.primary
             )
             
-            // File Name
-            if (state.downloadState is Task.DownloadState.Completed) {
-                state.downloadState.filePath?.let { path ->
-                    val fileName = path.substringAfterLast("/")
-                    DetailItem(
-                        label = stringResource(R.string.file_name),
-                        value = fileName
+            // Grid Layout for Details
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Row 1: File Name and Format
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (state.downloadState is Task.DownloadState.Completed) {
+                        state.downloadState.filePath?.let { path ->
+                            val fileName = path.substringAfterLast("/")
+                            DetailCard(
+                                icon = Icons.Outlined.FileDownload,
+                                label = stringResource(R.string.file_name),
+                                value = fileName,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    
+                    state.viewState.videoFormats?.firstOrNull()?.ext?.let { ext ->
+                        if (ext.isNotBlank()) {
+                            DetailCard(
+                                icon = Icons.Outlined.VideoFile,
+                                label = stringResource(R.string.file_format),
+                                value = ext.uppercase(),
+                                modifier = Modifier.weight(0.5f)
+                            )
+                        }
+                    }
+                }
+                
+                // Row 2: File Size and Duration
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val fileSize = state.viewState.fileSizeApprox
+                    if (fileSize > 0) {
+                        DetailCard(
+                            icon = Icons.Outlined.Storage,
+                            label = stringResource(R.string.file_size),
+                            value = fileSize.toFileSizeText(),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    
+                    val duration = state.viewState.duration
+                    if (duration > 0) {
+                        DetailCard(
+                            icon = Icons.Outlined.Schedule,
+                            label = stringResource(R.string.duration),
+                            value = duration.toDurationText(),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                
+                // Row 3: Resolution and Download Date
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    state.viewState.videoFormats?.firstOrNull()?.resolution?.let { resolution ->
+                        if (resolution.isNotBlank()) {
+                            DetailCard(
+                                icon = Icons.Outlined.HighQuality,
+                                label = stringResource(R.string.resolution),
+                                value = resolution,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    
+                    DetailCard(
+                        icon = Icons.Outlined.CalendarToday,
+                        label = stringResource(R.string.download_date),
+                        value = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
+                            .format(java.util.Date(task.timeCreated)),
+                        modifier = Modifier.weight(1f)
                     )
                 }
-            }
-            
-            // File Size
-            val fileSize = state.viewState.fileSizeApprox
-            if (fileSize > 0) {
-                DetailItem(
-                    label = stringResource(R.string.file_size),
-                    value = fileSize.toFileSizeText()
-                )
-            }
-            
-            // Duration
-            val duration = state.viewState.duration
-            if (duration > 0) {
-                DetailItem(
-                    label = stringResource(R.string.duration),
-                    value = duration.toDurationText()
-                )
-            }
-            
-            // Resolution
-            state.viewState.videoFormats?.firstOrNull()?.resolution?.let { resolution ->
-                if (resolution.isNotBlank()) {
-                    DetailItem(
-                        label = stringResource(R.string.resolution),
-                        value = resolution
+                
+                // Creator Section
+                if (state.viewState.uploader.isNotBlank()) {
+                    DetailCard(
+                        icon = Icons.Outlined.Person,
+                        label = stringResource(R.string.video_creator_label),
+                        value = state.viewState.uploader,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
-            }
-            
-            // File Format
-            state.viewState.videoFormats?.firstOrNull()?.ext?.let { ext ->
-                if (ext.isNotBlank()) {
-                    DetailItem(
-                        label = stringResource(R.string.file_format),
-                        value = ext.uppercase()
+                
+                // Platform
+                if (state.viewState.extractorKey.isNotBlank()) {
+                    DetailCard(
+                        icon = Icons.Outlined.Language,
+                        label = stringResource(R.string.platform),
+                        value = state.viewState.extractorKey,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
-            }
-            
-            // Uploader
-            if (state.viewState.uploader.isNotBlank()) {
-                DetailItem(
-                    label = stringResource(R.string.video_creator_label),
-                    value = state.viewState.uploader
-                )
-            }
-            
-            // Extractor
-            if (state.viewState.extractorKey.isNotBlank()) {
-                DetailItem(
-                    label = stringResource(R.string.platform),
-                    value = state.viewState.extractorKey
-                )
-            }
-            
-            // Download Date
-            DetailItem(
-                label = stringResource(R.string.download_date),
-                value = java.text.SimpleDateFormat("MMM dd, yyyy HH:mm", java.util.Locale.getDefault())
-                    .format(java.util.Date(task.timeCreated))
-            )
-            
-            // Source URL
-            SelectionContainer {
-                DetailItem(
-                    label = stringResource(R.string.source_url),
-                    value = state.viewState.url
-                )
+                
+                // Source URL Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Link,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.source_url),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SelectionContainer {
+                            Text(
+                                text = state.viewState.url,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -1223,82 +1339,174 @@ fun RecentDownloadDetailsDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 32.dp)
         ) {
-            // Header
-            Text(
-                text = stringResource(R.string.download_details),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            
-            // Thumbnail
-            AsyncImage(
-                model = downloadInfo.thumbnailUrl,
-                contentDescription = null,
+            // Header with gradient background
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentScale = ContentScale.Crop
-            )
-            
-            HorizontalDivider()
-            
-            // Title
-            DetailItem(
-                label = stringResource(R.string.title),
-                value = downloadInfo.videoTitle
-            )
-            
-            // File Name
-            val fileName = downloadInfo.videoPath.substringAfterLast("/")
-            DetailItem(
-                label = stringResource(R.string.file_name),
-                value = fileName
-            )
-            
-            // File Size
-            val file = java.io.File(downloadInfo.videoPath)
-            if (file.exists()) {
-                val fileSize = file.length()
-                DetailItem(
-                    label = stringResource(R.string.file_size),
-                    value = fileSize.toFileSizeText()
-                )
-                
-                // File Format
-                val fileExtension = fileName.substringAfterLast(".", "")
-                if (fileExtension.isNotEmpty()) {
-                    DetailItem(
-                        label = stringResource(R.string.file_format),
-                        value = fileExtension.uppercase()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    )
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.download_details),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = downloadInfo.videoTitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
             }
             
-            // Video Creator
-            if (downloadInfo.videoAuthor.isNotEmpty()) {
-                DetailItem(
-                    label = stringResource(R.string.video_creator_label),
-                    value = downloadInfo.videoAuthor
+            // Thumbnail Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                AsyncImage(
+                    model = downloadInfo.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
                 )
             }
             
-            // Platform
-            DetailItem(
-                label = stringResource(R.string.platform),
-                value = downloadInfo.extractor
+            // Media Information Section
+            Text(
+                text = stringResource(R.string.media_info),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                color = MaterialTheme.colorScheme.primary
             )
             
-            // Source URL
-            SelectionContainer {
-                DetailItem(
-                    label = stringResource(R.string.source_url),
-                    value = downloadInfo.videoUrl
+            // Grid Layout for Details
+            val fileName = downloadInfo.videoPath.substringAfterLast("/")
+            val file = java.io.File(downloadInfo.videoPath)
+            val fileExtension = fileName.substringAfterLast(".", "")
+            
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Row 1: File Name and Format
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    DetailCard(
+                        icon = Icons.Outlined.FileDownload,
+                        label = stringResource(R.string.file_name),
+                        value = fileName,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    if (fileExtension.isNotEmpty()) {
+                        DetailCard(
+                            icon = Icons.Outlined.VideoFile,
+                            label = stringResource(R.string.file_format),
+                            value = fileExtension.uppercase(),
+                            modifier = Modifier.weight(0.5f)
+                        )
+                    }
+                }
+                
+                // Row 2: File Size
+                if (file.exists()) {
+                    val fileSize = file.length()
+                    DetailCard(
+                        icon = Icons.Outlined.Storage,
+                        label = stringResource(R.string.file_size),
+                        value = fileSize.toFileSizeText(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                
+                // Creator
+                if (downloadInfo.videoAuthor.isNotEmpty()) {
+                    DetailCard(
+                        icon = Icons.Outlined.Person,
+                        label = stringResource(R.string.video_creator_label),
+                        value = downloadInfo.videoAuthor,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                
+                // Platform
+                DetailCard(
+                    icon = Icons.Outlined.Language,
+                    label = stringResource(R.string.platform),
+                    value = downloadInfo.extractor,
+                    modifier = Modifier.fillMaxWidth()
                 )
+                
+                // Source URL Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Link,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.source_url),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SelectionContainer {
+                            Text(
+                                text = downloadInfo.videoUrl,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -1307,23 +1515,50 @@ fun RecentDownloadDetailsDialog(
 }
 
 @Composable
-private fun DetailItem(
+private fun DetailCard(
+    icon: ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
