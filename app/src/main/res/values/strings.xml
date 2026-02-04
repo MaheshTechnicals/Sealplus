@@ -158,6 +158,7 @@
     <string name="status_downloading">Downloading</string>
     <string name="status_canceled">Canceled</string>
     <string name="status_paused">Paused</string>
+    <string name="status_merging">Merging...</string>
     <string name="status_fetching_video_info">Fetching info</string>
     <string name="download_error">Download error</string>
     <string name="open_file">Open file</string>

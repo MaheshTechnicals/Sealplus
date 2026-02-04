@@ -682,8 +682,36 @@ fun ActiveDownloadCard(
         else -> 0f
     }
     
+    // Parse progress text to determine download phase
+    val progressText = if (downloadState is Task.DownloadState.Running) downloadState.progressText else ""
+    val downloadPhase = when {
+        progressText.contains("[Merger]", ignoreCase = true) || 
+        progressText.contains("Merging formats", ignoreCase = true) -> "merging"
+        progressText.contains("Destination:", ignoreCase = true) -> {
+            // Determine if downloading video or audio based on file extension patterns
+            when {
+                progressText.contains(".m4a", ignoreCase = true) || 
+                progressText.contains(".opus", ignoreCase = true) ||
+                progressText.contains(".mp3", ignoreCase = true) ||
+                progressText.contains(".webm", ignoreCase = true) && progressText.contains("audio", ignoreCase = true) -> "audio"
+                progressText.contains(".mp4", ignoreCase = true) || 
+                progressText.contains(".webm", ignoreCase = true) ||
+                progressText.contains(".mkv", ignoreCase = true) -> "video"
+                else -> "downloading"
+            }
+        }
+        else -> "downloading"
+    }
+    
     val statusText = when (downloadState) {
-        is Task.DownloadState.Running -> "Downloading... ${(progress * 100).toInt()}%"
+        is Task.DownloadState.Running -> {
+            when (downloadPhase) {
+                "merging" -> stringResource(R.string.status_merging)
+                "video" -> "Downloading video... ${(progress * 100).toInt()}%"
+                "audio" -> "Downloading audio... ${(progress * 100).toInt()}%"
+                else -> "Downloading... ${(progress * 100).toInt()}%"
+            }
+        }
         is Task.DownloadState.Paused -> stringResource(R.string.status_paused) + " ${(progress * 100).toInt()}%"
         is Task.DownloadState.Canceled -> stringResource(R.string.status_canceled)
         is Task.DownloadState.Error -> stringResource(R.string.download_error)
