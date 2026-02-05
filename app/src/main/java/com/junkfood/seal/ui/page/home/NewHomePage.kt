@@ -237,6 +237,17 @@ fun NewHomePage(
         }
     }
     
+    // Monitor permission state changes to show next dialog when user returns from settings
+    LaunchedEffect(hasNotificationPermission, isBatteryOptimizationDisabled) {
+        if (permissionsChecked) {
+            // If notification dialog was shown and is now dismissed
+            if (!showNotificationPermissionDialog && hasNotificationPermission && !isBatteryOptimizationDisabled) {
+                // Show battery optimization dialog after notification permission is granted
+                showBatteryOptimizationDialog = true
+            }
+        }
+    }
+    
     // Get recent downloads from database - will refresh when lifecycleRefreshTrigger changes
     val recentDownloads by remember(lifecycleRefreshTrigger) {
         DatabaseUtil.getDownloadHistoryFlow()
