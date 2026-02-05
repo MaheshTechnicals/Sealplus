@@ -382,13 +382,13 @@ fun NewHomePage(
                 )
             },
             text = { 
-                Column(spacing = 8.dp) {
+                Column {
                     Text(
                         text = stringResource(R.string.battery_configuration_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(R.string.battery_settings_desc),
                         style = MaterialTheme.typography.bodySmall,
