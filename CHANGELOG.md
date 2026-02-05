@@ -5,6 +5,94 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-05
+
+### 🚀 Major Release - Revolutionary Download Management
+
+**Package Name Changed:** `com.maheshtechnicals.sealplus`
+
+⚠️ **Important Note:** App package name has changed. Please uninstall the old app and install this new version. If using auto-update feature, download the new version from the app, install it, then remove the old app.
+
+### ⏯️ Download Control & Management
+
+* **Pause and Resume Functionality**
+  * **Pause/Resume in three-dot menu** - Control downloads from the overflow menu
+  * **Icon controls on download cards** - Quick pause/resume buttons directly on cards
+  * **Queue support** - Manage multiple downloads with proper queuing
+  * **Progress preservation** - Download progress saved when paused
+  * **Resume from exact position** - Continue downloads from where you left off
+
+* **Concurrent Downloads Control (1-5 simultaneous downloads)**
+  * **Configurable download limits** - Control how many files download at a time
+  * **Queue management** - Automatic queuing of additional downloads
+  * **Settings location** - Available in Settings → Seal Plus Extras
+  * **Performance optimization** - Better resource management with queue system
+
+### 🌐 Advanced Proxy Settings (BETA)
+
+* **Comprehensive Proxy System**
+  * **Auto-fetch proxies** - Automatically fetch proxies by country selection
+  * **Auto-test functionality** - Test proxies sequentially until finding a working one
+  * **Free proxy support** - Access free proxies from multiple countries
+  * **Custom proxy configuration** - Add your own HTTP/HTTPS/SOCKS proxies
+  * **Beta features** - Advanced proxy management marked as experimental
+
+### 📊 Download Details & Information
+
+* **Comprehensive Details Dialog**
+  * **File information** - Name, thumbnail, size, format
+  * **Download metadata** - Path, download date, source URL
+  * **Interactive elements** - Click to copy URLs, view full paths
+  * **Visual improvements** - Better layout with gradient headers
+
+* **Enhanced Download Status Messages**
+  * **Clear status indicators** - "Fetching data", "Downloading video", "Downloading audio", "Merging"
+  * **Real-time progress** - Live updates on download phases
+  * **Better error messages** - More descriptive error information
+
+### 💰 Developer Support Features
+
+* **Payment Integration**
+  * **UPI payment support** - Support developers through UPI donations
+  * **Multiple payment options** - Various ways to contribute
+  * **Support Developer page** - Dedicated page for developer support options
+
+* **Enhanced Sponsors Page**
+  * **Fully redesigned UI** - Modern, engaging layout
+  * **Better organization** - Clear sections for different support methods
+  * **Improved user engagement** - More interactive and informative
+
+### 🔔 Notifications & Permissions
+
+* **Smart Permission Management**
+  * **Notification permissions** - Proper Android 13+ notification permission handling
+  * **Battery optimization** - Smart prompts for battery optimization settings
+  * **Permission dialogs** - Material Design 3 permission request dialogs
+  * **Settings integration** - Direct access to system settings when needed
+
+* **Release Notifications**
+  * **Telegram integration** - Automatic notifications to Telegram for new releases
+  * **Publishing workflow** - Streamlined release publishing to Telegram groups
+
+### ⚙️ Configuration Updates
+
+* **yt-dlp Settings**
+  * **Stable build default** - Changed from nightly to stable build for better reliability
+  * **Settings location** - Settings → General → yt-dlp settings
+  * **Improved stability** - More reliable downloads with stable releases
+
+### 🐛 Bug Fixes & Improvements
+
+* Fixed download progress preservation when pausing/resuming
+* Improved error message handling and display
+* Enhanced download phase detection and status updates
+* Better UI spacing and layout across download cards
+* Fixed permission handling flows
+* Improved proxy connection handling
+* Better resource management with concurrent downloads
+
+---
+
 ## [1.2.8] - 2026-02-02
 
 ### 🎥 Format Selection Screen Improvements

@@ -171,56 +171,51 @@ English
 
 ## ⬇️ Download & Installation
 
-### 🎉 What's New in v1.2.8?
+### 🎉 What's New in v2.0?
 
 <details>
-<summary><b>📱 Click to see latest updates (February 2, 2026)</b></summary>
+<summary><b>📱 Click to see latest updates - MAJOR RELEASE (February 5, 2026)</b></summary>
 
-#### 🎥 Format Selection Screen Improvements
-- ✅ **Valid URLs Only** - Filter and show only valid video/audio formats
-- 🎬 **Maximum Quality Support** - Download at highest resolution available
-- 💎 **Best Quality Merged** - New "video & audio (high)" option in videos section
-- 🐛 **Bug Fixes** - Fixed video info fetch error and format extraction
+#### 🚀 Major Release - Revolutionary Download Management
 
-#### 📥 Recent Downloads Section
-- 🗑️ **Delete Option Moved** - Now available in Downloads page for better organization
-- 🎨 **UI Fixes** - Resolved layout issues for cleaner interface
-- ⚡ **Performance** - Enhanced stability and visual feedback
+**⚠️ IMPORTANT:** Package name changed to `com.maheshtechnicals.sealplus`. Uninstall old app before installing v2.0.
+
+#### ⏯️ Download Control & Management
+- ✅ **Pause and Resume** - Control downloads from menu and cards
+- 🔢 **Concurrent Downloads (1-5)** - Manage multiple downloads with queue
+- 💾 **Progress Preservation** - Resume from exact position
+- 📊 **Enhanced Status** - Clear indicators: "Fetching", "Downloading video/audio", "Merging"
+
+#### 🌐 Advanced Proxy Settings (BETA)
+- 🔄 **Auto-fetch and auto-test** - Find working proxies automatically
+- 🌍 **Free proxy support** - Access proxies by country
+- ⚙️ **Custom configuration** - HTTP/HTTPS/SOCKS proxies
+
+#### 📊 Download Details & Information
+- 🔍 **Comprehensive dialog** - View file info: name, size, format, path, date
+- 🖱️ **Interactive elements** - Click to copy URLs and view full paths
+- 🎨 **Beautiful UI** - Gradient headers and structured layout
+
+#### 💰 Developer Support Features
+- 💳 **UPI Payment Integration** - Support developers through donations
+- 🎨 **Redesigned Sponsors Page** - Enhanced engagement and layout
+- 👨‍💻 **Support Developer Page** - Multiple contribution options
+
+#### 🔔 Smart Permissions
+- 📱 **Notification handling** - Android 13+ permission management
+- 🔋 **Battery optimization** - Smart prompts for settings
+- 📢 **Telegram notifications** - Release announcements to groups
+
+#### ⚙️ Configuration Updates
+- 🛡️ **yt-dlp stable build** - Changed from nightly for better reliability
+- ⚡ **Better performance** - Improved download stability
 
 #### Previous Updates (v1.2.7, v1.2.6, v1.2.5)
 - 🎨 **Redesigned Home Page** - Modern, clutter-free interface
-- 🖼️ **New Navigation Drawer** - Gradient header with premium styling
-- 🎥 **Enhanced Video Merging** - Best video + best audio streams automatically
 - ✨ **Professional Onboarding Screens**
-- 👋 **4 Beautiful Pages** - Welcome, Downloads, Customizable, and Security
-- 🎭 **Smooth Animations** - Spring bounce, fade transitions, morphing indicators
-- 👆 **Swipe Navigation** - Intuitive HorizontalPager with gesture support
-- ⏩ **Skip/Back/Next Controls** - Flexible navigation through onboarding
-- 🎨 **Theme Integration** - Matches Gradient Dark with floating gradient blobs
-- ✨ **Glow Effects** - Beautiful icon animations with blur effects
-- 🎯 **First-Time Detection** - Shows on first launch, then skips automatically
-- ⚙️ **Settings Access** - "View Onboarding" option in About page
-- 📱 **Material Design 3** - Professional UI following latest guidelines
-
-#### 🎨 Elegant Splash Screen
-- 🚀 **Animated Logo** - Spring bounce animation with smooth scaling
-- 🌈 **Gradient Branding** - Pulsing glow effect with app theme colors
-- 🌓 **Theme-Aware** - Adapts to Gradient Dark and light themes
-- ⏱️ **Professional Timing** - 2.4s optimal display duration
-- 💼 **Custom Branding** - Powered by Mahesh Technicals
-
-#### 🐛 Bug Fixes
-- 🌐 **Network Download Fix** - Fixed "Any Network" option not allowing mobile data
-- ✅ **Improved Detection** - Better network availability checks in downloads
-
-#### Previous Updates (v1.2.4, v1.2.3, v1.2.1)
-- 🌐 **Network Type Restrictions** - Download on WiFi/Mobile/Any network
-- 🔔 **Smart Notifications** - Customizable sounds, vibration, and LED
-- ✨ **New App Logo** - Refreshed icon with modern Seal Plus branding
-- 🚀 **Auto-Update System** - Seamless in-app updates enabled by default
-- 🎨 **Gradient Dark Theme** - Premium glassmorphism UI
-- 🎯 **Repository Migration** - All updates from MaheshTechnicals/Sealplus
-- 💬 **Community Links** - YouTube and Telegram channels integrated
+- 🎭 **Elegant Splash Screen** with animations
+- 🔒 **App Lock** with PIN & Biometric
+- 🎥 **Enhanced Video Merging** - Best quality automatically
 
 [View Full Changelog →](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md)
 </details>
@@ -232,13 +227,14 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 ### 🚀 Latest Releases
 
 - **Latest Stable**: [Download from GitHub Releases](https://github.com/MaheshTechnicals/Sealplus/releases/latest)
-  - ✅ **Current Version**: v1.2.8 (February 2026)
-  - 🎥 **Enhanced Format Selection** - Filter valid URLs, maximum quality support
-  - 💎 **Best Quality Merged** - New "video & audio (high)" option
-  - 📥 **Improved Recent Downloads** - Better UI and organization
-  - 🐛 **Bug Fixes** - Fixed video info fetch error
-  - 🎨 **Premium Gradient UI** with redesigned home page
-  - 🔄 **Latest yt-dlp Engine** integration 2025.12.08
+  - ✅ **Current Version**: v2.0.0 (February 2026)
+  - ⏯️ **Pause/Resume Downloads** - Full download control with queue
+  - 🌐 **Advanced Proxy (BETA)** - Auto-fetch and test proxies
+  - 📊 **Download Details** - Comprehensive info dialogs
+  - 💰 **UPI Payment Support** - Donate to support development
+  - 🔢 **Concurrent Downloads** - Control 1-5 simultaneous downloads
+  - 🔔 **Smart Permissions** - Better notification & battery management
+  - ⚠️ **Package Name Changed** - Uninstall old app first
   - 🚀 **Auto-Update System** enabled for seamless updates
 
 - **Preview Builds**: [Download Pre-release Versions](https://github.com/MaheshTechnicals/Sealplus/releases) 
@@ -252,8 +248,8 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 |------------|---------------|
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target Android** | Android 14 (API 36) |
-| **Current Version** | 1.2.8 |
-| **Release Date** | February 2, 2026 |
+| **Current Version** | 2.0.0 |
+| **Release Date** | February 5, 2026 |
 
 ### 🏗️ Architecture Support
 

@@ -89,42 +89,63 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## 🚀 Seal Plus v1.2.8 - Enhanced Format Selection & Quality
+          ## 🚀 Seal Plus v2.0.0 - Major Release: Revolutionary Download Management
           
-          ### 🎥 Format Selection Screen Improvements
+          **Package Name Changed:** `com.maheshtechnicals.sealplus`
           
-          * **Enhanced Format Filtering**
-            * **Valid URLs Only** - Now filters and shows only valid video/audio formats
-            * **Cleaner Interface** - Invalid or unavailable formats automatically hidden
-            * **Improved Reliability** - Better format validation before display
+          ⚠️ **IMPORTANT:** App package name has changed. Uninstall old app and install this new version. If using auto-update, download from app, install, then remove old app.
           
-          * **Maximum Quality Support**
-            * **Highest Resolution Downloads** - Support for maximum resolution available
-            * **No Quality Limits** - Download content at the best quality offered
-            * **Smart Quality Detection** - Automatically identifies highest quality
+          ---
           
-          * **Video & Audio (High) Merged**
-            * **Best Quality Option** - New "video & audio (high)" merged format in videos section
-            * **Optimal Output** - Combines highest video quality with highest audio quality
-            * **Seamless Merging** - Automatic stream combination for best results
+          ### ⏯️ Download Control & Management
           
-          ### 📥 Recent Downloads Section Updates
+          * **Pause and Resume Functionality**
+            * Pause/Resume in three-dot menu and icon on download cards
+            * Queue support for managing multiple downloads
+            * Progress preservation when paused
+            * Resume from exact position
           
-          * **UI/UX Improvements**
-            * **Delete Option Moved** - Now available in Downloads page for better organization
-            * **Fixed UI Issues** - Resolved layout problems and visual inconsistencies
-            * **Cleaner Design** - Streamlined interface for better experience
+          * **Concurrent Downloads Control (1-5 simultaneous)**
+            * Control how many files download at once
+            * Available in Settings → Seal Plus Extras
+            * Automatic queuing system
           
-          ### 🐛 Bug Fixes
+          ### 🌐 Advanced Proxy Settings (BETA)
           
-          * Fixed video info couldn't fetch error
-          * Improved format extraction reliability
-          * Better error handling for unavailable formats
-          * Enhanced performance and stability
+          * **Auto-fetch and auto-test proxies**
+          * Free proxy support by country
+          * Custom HTTP/HTTPS/SOCKS proxy configuration
+          * Automatic proxy testing and connection
+          
+          ### 📊 Download Details & Information
+          
+          * **Comprehensive details dialog** - View file name, thumbnail, size, format, path, date
+          * **Enhanced status messages** - Clear indicators: "Fetching data", "Downloading video/audio", "Merging"
+          * **Interactive elements** - Click to copy URLs and view paths
+          
+          ### 💰 Developer Support
+          
+          * **UPI Payment Integration** - Support developers through donations
+          * **Redesigned Sponsors Page** - Fully enhanced with better engagement
+          * **Support Developer Page** - Multiple ways to contribute
+          
+          ### 🔔 Smart Permissions
+          
+          * Notification permission handling (Android 13+)
+          * Battery optimization management
+          * Telegram release notifications
+          
+          ### ⚙️ Configuration
+          
+          * **yt-dlp stable build** - Changed from nightly to stable (Settings → General → yt-dlp)
+          * Better reliability and download stability
           
           ---
           
           ### 📦 Installation
+          
+          ⚠️ **Package name changed!** Uninstall old version first.
+          
           Download the appropriate APK for your device:
           - **Universal APK**: Works on all devices (recommended)
           - **arm64-v8a**: For 64-bit ARM devices (most modern phones)
@@ -132,20 +153,19 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### 💎 Key Features
-          - ✨ Professional onboarding screens with smooth animations
-          - 🎨 Elegant splash screen with gradient branding
-          - 🔒 App Lock with PIN & Biometric authentication
-          - 🚪 Exit confirmation dialog for Download Queue
-          - 🌐 Network type restrictions (WiFi/Mobile/Any)
-          - 🔔 Smart customizable notifications
+          ### 💎 Key Features (v2.0)
+          - ⏯️ **Pause/Resume downloads** with queue support
+          - 🌐 **Advanced proxy settings** (BETA) with auto-fetch/test
+          - 📊 **Comprehensive download details** dialog
+          - 💰 **Developer support** via UPI payments
+          - 🔢 **Concurrent downloads** control (1-5 simultaneous)
+          - 🔔 **Smart notifications** & permission management
+          - ✨ Professional onboarding screens
           - 🎨 Gradient Dark theme with glassmorphism
-          - 🔄 Auto-update system enabled by default
+          - 🔒 App Lock with PIN & Biometric
           - 📥 Download from 1000+ sites via yt-dlp
-          - 🎨 Material Design 3 with premium UI
           - 🌍 50+ language translations
           - ⚙️ Custom command templates
-          - 📊 Format selection and quality options
           
           ### 📝 Full Changelog
           See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
@@ -189,29 +209,46 @@ jobs:
         
         📝 <b>Changelog:</b>
         
-        <b>🎥 Format Selection Screen Improvements</b>
-        • Enhanced Format Filtering - Valid URLs only
-        • Maximum Quality Support - Highest resolution
-        • Video &amp; Audio (High) Merged format
+        <b>⏯️ Download Control &amp; Management</b>
+        • Pause/Resume downloads in menu and cards
+        • Concurrent downloads control (1-5 simultaneous)
+        • Queue support with progress preservation
         
-        <b>📥 Recent Downloads Section Updates</b>
-        • Delete option moved to Downloads page
-        • Fixed UI layout issues
-        • Cleaner, streamlined design
+        <b>🌐 Advanced Proxy Settings (BETA)</b>
+        • Auto-fetch and auto-test proxies
+        • Free proxy support by country
+        • Custom proxy configuration
         
-        <b>🐛 Bug Fixes</b>
-        • Fixed video info fetch errors
-        • Improved format extraction reliability
-        • Better error handling
-        • Enhanced performance and stability
+        <b>📊 Download Details &amp; Info</b>
+        • Comprehensive details dialog
+        • Enhanced status messages
+        • Interactive copy/view elements
+        
+        <b>💰 Developer Support</b>
+        • UPI Payment Integration
+        • Redesigned Sponsors Page
+        • Support Developer page
+        
+        <b>🔔 Smart Permissions</b>
+        • Notification permission handling
+        • Battery optimization management
+        • Telegram release notifications
+        
+        <b>⚙️ Configuration Updates</b>
+        • yt-dlp stable build (was nightly)
+        • Better download reliability
         
         ━━━━━━━━━━━━━━━━━━━━━
         
         💎 <b>Key Features:</b>
-        ✨ Professional onboarding screens
-        🎨 Gradient Dark theme with glassmorphism
+        ⏯️ Pause/Resume downloads
+        🌐 Advanced proxy settings (BETA)
+        📊 Comprehensive download details
+        💰 UPI payment integration
+        🔢 Concurrent downloads (1-5)
+        🎨 Gradient Dark theme
         🔒 App Lock (PIN &amp; Biometric)
-        📥 Download from 1000+ sites via yt-dlp
+        📥 Download from 1000+ sites
         🌍 50+ language translations
         
         ━━━━━━━━━━━━━━━━━━━━━
@@ -229,14 +266,17 @@ jobs:
         
         ━━━━━━━━━━━━━━━━━━━━━
         
-        ℹ️ <b>Note:</b> This release includes significant improvements to format selection and quality detection. Update recommended for best experience!
+        ℹ️ <b>Note:</b> This is a MAJOR release with package name change. Uninstall old app before installing v${{ steps.version.outputs.VERSION }}. Includes revolutionary download management features: pause/resume, advanced proxy (BETA), concurrent downloads control, and developer support via UPI payments!
         
         📅 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
+        
+        # URL encode the message to avoid HTML parsing issues
+        MESSAGE_ENCODED=$(echo -n "$MESSAGE" | jq -sRr @uri)
         
         # Send to Telegram with HTML parse mode
         curl -s -X POST "https://api.telegram.org/bot${TGTOKEN}/sendMessage" \
           -d "chat_id=${TGID}" \
-          -d "text=${MESSAGE}" \
+          -d "text=${MESSAGE_ENCODED}" \
           -d "parse_mode=HTML" \
           -d "disable_web_page_preview=false" \
           && echo "✅ Telegram notification sent successfully!" \
