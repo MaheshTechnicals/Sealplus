@@ -39,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CalendarToday
@@ -151,6 +152,7 @@ fun NewHomePage(
     modifier: Modifier = Modifier,
     onMenuOpen: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
+    onNavigateToSupport: () -> Unit = {},
     dialogViewModel: DownloadDialogViewModel,
     downloader: DownloaderV2 = koinInject(),
 ) {
@@ -475,6 +477,12 @@ fun NewHomePage(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToSupport) {
+                        Icon(
+                            imageVector = Icons.Outlined.AttachMoney,
+                            contentDescription = "Support Developer"
+                        )
+                    }
                     IconButton(onClick = onNavigateToDownloads) {
                         Icon(
                             imageVector = Icons.Outlined.FileDownload,

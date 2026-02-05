@@ -35,6 +35,7 @@ object Route {
     const val SECURITY_SETTINGS = "security_settings"
     const val PROXY_SETTINGS = "proxy_settings"
     const val ONBOARDING = "onboarding"
+    const val SUPPORT_DEVELOPER = "support_developer"
 
     const val TASK_HASHCODE = "task_hashcode"
     const val TEMPLATE_ID = "template_id"

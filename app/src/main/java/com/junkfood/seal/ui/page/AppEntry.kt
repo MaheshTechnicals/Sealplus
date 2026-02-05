@@ -51,6 +51,7 @@ import com.junkfood.seal.ui.page.settings.SettingsPage
 import com.junkfood.seal.ui.page.settings.about.AboutPage
 import com.junkfood.seal.ui.page.settings.about.CreditsPage
 import com.junkfood.seal.ui.page.settings.about.SponsorsPage
+import com.junkfood.seal.ui.page.settings.about.SupportDeveloperPage
 import com.junkfood.seal.ui.page.settings.about.UpdatePage
 import com.junkfood.seal.ui.page.settings.appearance.AppearancePreferences
 import com.junkfood.seal.ui.page.settings.appearance.DarkThemePreferences
@@ -150,6 +151,12 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                         onNavigateToDownloads = {
                             view.slightHapticFeedback()
                             navController.navigate(Route.DOWNLOADS) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNavigateToSupport = {
+                            view.slightHapticFeedback()
+                            navController.navigate(Route.SUPPORT_DEVELOPER) {
                                 launchSingleTop = true
                             }
                         }
@@ -281,6 +288,9 @@ fun NavGraphBuilder.settingsGraph(
         }
         animatedComposable(Route.ONBOARDING) {
             OnboardingScreen(onFinish = onNavigateBack)
+        }
+        animatedComposable(Route.SUPPORT_DEVELOPER) {
+            SupportDeveloperPage(onNavigateBack = onNavigateBack)
         }
     }
 }
