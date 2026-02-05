@@ -161,8 +161,8 @@ fun SealPlusExtrasPage(
                         onValueChangeFinished = {
                             MAX_CONCURRENT_DOWNLOADS.updateInt(maxConcurrentDownloads)
                         },
-                        valueRange = 0f..10f,
-                        steps = 9,
+                        valueRange = 0f..5f,
+                        steps = 4,
                         modifier = Modifier.fillMaxWidth()
                     )
                     

@@ -284,7 +284,7 @@ private val IntPreferenceDefaults =
         YT_DLP_UPDATE_CHANNEL to YT_DLP_NIGHTLY,
         DOWNLOAD_TYPE to DownloadType.Video.ordinal,
         NETWORK_TYPE_RESTRICTION to NETWORK_ANY,
-        MAX_CONCURRENT_DOWNLOADS to 3,
+        MAX_CONCURRENT_DOWNLOADS to 1,
         PROXY_CUSTOM_PORT to 8080,
     )
 
