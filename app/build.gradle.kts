@@ -44,7 +44,7 @@ android {
     buildFeatures { buildConfig = true }
 
     defaultConfig {
-        applicationId = "com.junkfood.sealplus"
+        applicationId = "com.maheshtechnicals.sealplus"
         minSdk = 24
         targetSdk = 36
         versionCode = 102_080_400
@@ -143,7 +143,7 @@ android {
     }
     androidResources { generateLocaleConfig = true }
 
-    namespace = "com.junkfood.seal"
+    namespace = "com.maheshtechnicals.sealplus"
 }
 
 ktfmt { kotlinLangStyle() }
