@@ -186,12 +186,23 @@ jobs:
       env:
         TGTOKEN: ${{ secrets.TGTOKEN }}
         TGID: ${{ secrets.TGID }}
+        TGCHANNEL: ${{ secrets.TGCHANNEL }}
       run: |
         # Skip if Telegram credentials are not configured
-        if [ -z "$TGTOKEN" ] || [ -z "$TGID" ]; then
-          echo "⚠️ Telegram notification skipped (TGTOKEN or TGID not configured)"
+        if [ -z "$TGTOKEN" ]; then
+          echo "⚠️ Telegram notification skipped (TGTOKEN not configured)"
           exit 0
         fi
+        
+        # Determine the target (channel or user/group)
+        TARGET="${TGCHANNEL:-$TGID}"
+        
+        if [ -z "$TARGET" ]; then
+          echo "⚠️ Telegram notification skipped (neither TGCHANNEL nor TGID configured)"
+          exit 0
+        fi
+        
+        echo "📤 Sending notification to Telegram: $TARGET"
         
         # Prepare the release URL
         RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.VERSION }}"
@@ -275,11 +286,11 @@ jobs:
         
         # Send to Telegram with HTML parse mode
         curl -s -X POST "https://api.telegram.org/bot${TGTOKEN}/sendMessage" \
-          -d "chat_id=${TGID}" \
+          -d "chat_id=${TARGET}" \
           -d "text=${MESSAGE_ENCODED}" \
           -d "parse_mode=HTML" \
           -d "disable_web_page_preview=false" \
-          && echo "✅ Telegram notification sent successfully!" \
+          && echo "✅ Telegram notification sent successfully to ${TARGET}!" \
           || echo "⚠️ Failed to send Telegram notification"
 
     - name: Upload Universal APK as Artifact
