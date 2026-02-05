@@ -213,7 +213,7 @@ fun SealPlusExtrasPage(
             item {
                 PreferenceItem(
                     title = stringResource(R.string.proxy_settings),
-                    description = stringResource(R.string.proxy_toggle_description),
+                    description = "${stringResource(R.string.proxy_toggle_description)} • ${stringResource(R.string.beta_features)}",
                     icon = Icons.Outlined.Public,
                     onClick = { onNavigateToProxySettings() }
                 )
