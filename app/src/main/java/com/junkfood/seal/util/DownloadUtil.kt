@@ -855,6 +855,27 @@ object DownloadUtil {
         if (videoInfo == null)
             return Result.failure(Throwable(context.getString(R.string.fetch_info_error_msg)))
 
+        // Create debug log file in downloads directory
+        val debugLogFile = java.io.File(videoDownloadDir, "sealplus_download_debug.log")
+        val logWriter = java.io.FileWriter(debugLogFile, true) // append mode
+        
+        fun logDebug(message: String) {
+            val timestamp = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(java.util.Date())
+            val logMessage = "[$timestamp] $message\n"
+            try {
+                logWriter.write(logMessage)
+                logWriter.flush()
+                Log.d(TAG, message)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        
+        logDebug("=== DOWNLOAD STARTED ===")
+        logDebug("Video: ${videoInfo.title}")
+        logDebug("URL: ${videoInfo.originalUrl ?: videoInfo.webpageUrl}")
+        logDebug("Task ID: $taskId")
+
         with(downloadPreferences) {
             val url =
                 playlistUrl.ifEmpty {
@@ -995,13 +1016,36 @@ object DownloadUtil {
 
                     addOption("-o", outputBuilder.append(output).toString())
 
-                    for (s in request.buildCommand()) Log.d(TAG, s)
+                    logDebug("=== YT-DLP COMMAND ===")
+                    for (s in request.buildCommand()) {
+                        Log.d(TAG, s)
+                        logDebug("CMD: $s")
+                    }
+                    logDebug("=== STARTING DOWNLOAD ===")
                 }
                 .runCatching {
+                    var lastProgressLog = System.currentTimeMillis()
                     YoutubeDL.getInstance()
-                        .execute(request = this, processId = taskId, callback = progressCallback)
+                        .execute(request = this, processId = taskId, callback = { progress, etaInSeconds, line ->
+                            val now = System.currentTimeMillis()
+                            // Log all lines immediately
+                            logDebug("OUTPUT: $line")
+                            
+                            // Log progress every 2 seconds to avoid too much logging
+                            if (now - lastProgressLog > 2000 || progress.toInt() % 10 == 0) {
+                                logDebug("PROGRESS: ${progress}% | ETA: ${etaInSeconds}s | $line")
+                                lastProgressLog = now
+                            }
+                            
+                            // Call original callback
+                            progressCallback?.invoke(progress, etaInSeconds, line)
+                        })
                 }
                 .onFailure { th ->
+                    logDebug("=== ERROR OCCURRED ===")
+                    logDebug("Error: ${th.message}")
+                    logDebug("Stack: ${th.stackTraceToString()}")
+                    logWriter.close()
                     return if (
                         sponsorBlock &&
                             th.message?.contains("Unable to communicate with SponsorBlock API") ==
@@ -1016,6 +1060,10 @@ object DownloadUtil {
                         )
                     } else Result.failure(th)
                 }
+            
+            logDebug("=== DOWNLOAD COMPLETED SUCCESSFULLY ===")
+            logWriter.close()
+            
             return onFinishDownloading(
                 preferences = this,
                 videoInfo = videoInfo,
