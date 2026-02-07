@@ -161,8 +161,9 @@ object DownloadUtil {
                 // Maximum speed for high-bandwidth WiFi
                 addOption("--socket-timeout", "20")
                 addOption("-R", "15")
-                // Only enable aria2c if user has it enabled in settings
+                // Enable aria2c if available, otherwise use fragments
                 if (preferences.aria2c) {
+                    addOption("--downloader", "libaria2c.so")
                     addOption("--external-downloader-args", 
                         "aria2c:\"--max-connection-per-server=16 " +
                         "--min-split-size=1M " +
@@ -181,28 +182,25 @@ object DownloadUtil {
             }
             
             SpeedProfile.UNLIMITED -> {
-                // Absolute maximum - use with caution
+                // Absolute maximum - FORCE aria2c for maximum speed
                 addOption("--socket-timeout", "30")
                 addOption("-R", "20")
-                // Only enable aria2c if user has it enabled in settings
-                if (preferences.aria2c) {
-                    addOption("--external-downloader-args",
-                        "aria2c:\"--max-connection-per-server=32 " +
-                        "--min-split-size=512K " +
-                        "--split=32 " +
-                        "--max-concurrent-downloads=10 " +
-                        "--max-overall-download-limit=0 " +
-                        "--max-download-limit=0 " +
-                        "--lowest-speed-limit=0 " +
-                        "--max-tries=0 " +
-                        "--retry-wait=1 " +
-                        "--summary-interval=1 " +
-                        "--file-allocation=none " +
-                        "--disk-cache=128M " +
-                        "--enable-http-pipelining=true\"")
-                } else {
-                    addOption("--concurrent-fragments", "32")
-                }
+                // ALWAYS enable aria2c for UNLIMITED mode regardless of user setting
+                addOption("--downloader", "libaria2c.so")
+                addOption("--external-downloader-args",
+                    "aria2c:\"--max-connection-per-server=32 " +
+                    "--min-split-size=512K " +
+                    "--split=32 " +
+                    "--max-concurrent-downloads=10 " +
+                    "--max-overall-download-limit=0 " +
+                    "--max-download-limit=0 " +
+                    "--lowest-speed-limit=0 " +
+                    "--max-tries=0 " +
+                    "--retry-wait=1 " +
+                    "--summary-interval=1 " +
+                    "--file-allocation=none " +
+                    "--disk-cache=128M " +
+                    "--enable-http-pipelining=true\"")
                 addOption("--http-chunk-size", "100M")
                 addOption("--buffer-size", "512K")
                 addOption("--no-part")
