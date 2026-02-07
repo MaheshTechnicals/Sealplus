@@ -1,8 +1,11 @@
 package com.junkfood.seal.util
 
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.media.MediaCodecList
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
 import android.webkit.CookieManager
@@ -47,6 +50,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.Locale
 
+/**
+ * Download Speed Profile Configuration
+ * Optimizes for maximum throughput across different network conditions
+ */
+enum class SpeedProfile {
+    MOBILE_DATA,      // Conservative: 1-2 concurrent, moderate fragments
+    WIFI_NORMAL,      // Balanced: 3 concurrent, high fragments
+    WIFI_AGGRESSIVE,  // Maximum: 5 concurrent, max fragments + aria2c
+    UNLIMITED         // No limits: aria2c + max everything
+}
+
 object DownloadUtil {
 
     object CookieScheme {
@@ -85,6 +99,132 @@ object DownloadUtil {
 
     private const val CROP_ARTWORK_COMMAND =
         """--ppa "ffmpeg: -c:v mjpeg -vf crop=\"'if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'\"""""
+
+    /**
+     * Detects optimal speed profile based on network type and bandwidth
+     */
+    fun detectOptimalSpeedProfile(context: Context): SpeedProfile {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return SpeedProfile.MOBILE_DATA
+        val network = connectivityManager.activeNetwork ?: return SpeedProfile.MOBILE_DATA
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return SpeedProfile.MOBILE_DATA
+        
+        return when {
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                val linkDownstreamBandwidth = capabilities.linkDownstreamBandwidthKbps
+                when {
+                    linkDownstreamBandwidth > 100_000 -> SpeedProfile.WIFI_AGGRESSIVE  // >100 Mbps
+                    linkDownstreamBandwidth > 25_000 -> SpeedProfile.WIFI_NORMAL       // >25 Mbps
+                    else -> SpeedProfile.MOBILE_DATA
+                }
+            }
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> SpeedProfile.UNLIMITED
+            else -> SpeedProfile.MOBILE_DATA  // Mobile data or unknown
+        }
+    }
+
+    /**
+     * Applies speed optimizations based on the selected profile
+     */
+    private fun YoutubeDLRequest.applySpeedOptimizations(
+        profile: SpeedProfile,
+        preferences: DownloadPreferences
+    ): YoutubeDLRequest = this.apply {
+        when (profile) {
+            SpeedProfile.MOBILE_DATA -> {
+                // Conservative for mobile data
+                addOption("--socket-timeout", "10")
+                addOption("-R", "5")  // More retries for unstable connections
+                if (!preferences.aria2c) {
+                    addOption("--concurrent-fragments", "4")
+                }
+                addOption("--http-chunk-size", "1M")  // Smaller chunks
+                addOption("--buffer-size", "16K")
+            }
+            
+            SpeedProfile.WIFI_NORMAL -> {
+                // Balanced for stable WiFi
+                addOption("--socket-timeout", "15")
+                addOption("-R", "10")
+                if (!preferences.aria2c) {
+                    addOption("--concurrent-fragments", "8")
+                }
+                addOption("--http-chunk-size", "10M")
+                addOption("--buffer-size", "64K")
+            }
+            
+            SpeedProfile.WIFI_AGGRESSIVE -> {
+                // Maximum speed for high-bandwidth WiFi
+                addOption("--socket-timeout", "20")
+                addOption("-R", "15")
+                // Force aria2c for maximum parallel connections
+                addOption("--downloader", "libaria2c.so")
+                addOption("--external-downloader-args", 
+                    "aria2c:\"--max-connection-per-server=16 " +
+                    "--min-split-size=1M " +
+                    "--split=16 " +
+                    "--max-concurrent-downloads=5 " +
+                    "--summary-interval=1 " +
+                    "--file-allocation=none " +
+                    "--allow-overwrite=true " +
+                    "--auto-file-renaming=false\"")
+                addOption("--http-chunk-size", "50M")
+                addOption("--buffer-size", "256K")
+                addOption("--no-part")  // Don't use .part files for faster writes
+            }
+            
+            SpeedProfile.UNLIMITED -> {
+                // Absolute maximum - use with caution
+                addOption("--socket-timeout", "30")
+                addOption("-R", "20")
+                addOption("--downloader", "libaria2c.so")
+                addOption("--external-downloader-args",
+                    "aria2c:\"--max-connection-per-server=32 " +
+                    "--min-split-size=512K " +
+                    "--split=32 " +
+                    "--max-concurrent-downloads=10 " +
+                    "--max-overall-download-limit=0 " +
+                    "--max-download-limit=0 " +
+                    "--lowest-speed-limit=0 " +
+                    "--max-tries=0 " +
+                    "--retry-wait=1 " +
+                    "--summary-interval=1 " +
+                    "--file-allocation=none " +
+                    "--disk-cache=128M " +
+                    "--enable-http-pipelining=true\"")
+                addOption("--http-chunk-size", "100M")
+                addOption("--buffer-size", "512K")
+                addOption("--no-part")
+                addOption("--no-mtime")
+                addOption("--no-continue")  // Fresh start if interrupted
+            }
+        }
+        
+        // Universal optimizations for all profiles
+        addOption("--no-check-certificate")  // Skip SSL verification (faster handshake)
+        addOption("--prefer-free-formats")    // Avoid DRM-protected formats
+    }
+
+    /**
+     * Enhanced aria2c configuration for maximum parallel downloads
+     */
+    private fun YoutubeDLRequest.enableAria2cMaxSpeed(): YoutubeDLRequest =
+        this.addOption("--downloader", "libaria2c.so")
+            .addOption("--external-downloader-args",
+                "aria2c:\"" +
+                "--max-connection-per-server=16 " +      // 16 connections per file
+                "--min-split-size=1M " +                  // Split at 1MB boundaries
+                "--split=16 " +                           // 16 parallel streams
+                "--max-concurrent-downloads=5 " +         // 5 files at once
+                "--connect-timeout=10 " +                 // 10s connection timeout
+                "--timeout=10 " +                         // 10s read timeout
+                "--max-tries=5 " +                        // 5 retry attempts
+                "--retry-wait=2 " +                       // 2s between retries
+                "--stream-piece-selector=inorder " +      // Sequential piece selection
+                "--file-allocation=none " +               // Faster file creation
+                "--disk-cache=64M " +                     // 64MB disk cache
+                "--enable-http-pipelining=true " +        // HTTP/1.1 pipelining
+                "--summary-interval=1\"")
 
     @CheckResult
     fun getPlaylistOrVideoInfo(
@@ -763,6 +903,17 @@ object DownloadUtil {
                         enableAria2c()
                     } else if (concurrentFragments > 1) {
                         addOption("--concurrent-fragments", concurrentFragments)
+                    }
+
+                    // Apply automatic speed optimizations
+                    if (PreferenceUtil.AUTO_SPEED_DETECTION.getBoolean()) {
+                        val speedProfile = when {
+                            aria2c && !rateLimit -> SpeedProfile.WIFI_AGGRESSIVE
+                            PreferenceUtil.MAX_CONCURRENT_DOWNLOADS.getInt() >= 5 -> SpeedProfile.WIFI_NORMAL
+                            else -> detectOptimalSpeedProfile(context)
+                        }
+                        Log.d(TAG, "Applying speed profile: $speedProfile")
+                        applySpeedOptimizations(speedProfile, downloadPreferences)
                     }
 
                     if (extractAudio || (videoInfo.vcodec == "none")) {

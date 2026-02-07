@@ -132,6 +132,10 @@ const val NETWORK_TYPE_RESTRICTION = "network_type_restriction"
 // Download Control
 const val MAX_CONCURRENT_DOWNLOADS = "max_concurrent_downloads"
 
+// Speed Optimization
+const val SPEED_PROFILE = "speed_profile"
+const val AUTO_SPEED_DETECTION = "auto_speed_detection"
+
 // Smart Notifications
 const val NOTIFICATION_SOUND = "notification_sound"
 const val NOTIFICATION_VIBRATE = "notification_vibrate"
@@ -261,6 +265,7 @@ private val BooleanPreferenceDefaults =
         NOTIFICATION_SUCCESS_SOUND to true,
         NOTIFICATION_ERROR_SOUND to true,
         ONBOARDING_COMPLETED to false,
+        AUTO_SPEED_DETECTION to true,
         PROXY_ENABLED to false,
         PROXY_USE_FREE to true,
         PROXY_IS_WORKING to false,

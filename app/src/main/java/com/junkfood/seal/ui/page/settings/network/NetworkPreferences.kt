@@ -34,6 +34,7 @@ import com.junkfood.seal.ui.component.PreferenceSubtitle
 import com.junkfood.seal.ui.component.PreferenceSwitch
 import com.junkfood.seal.ui.component.PreferenceSwitchWithDivider
 import com.junkfood.seal.util.ARIA2C
+import com.junkfood.seal.util.AUTO_SPEED_DETECTION
 import com.junkfood.seal.util.CELLULAR_DOWNLOAD
 import com.junkfood.seal.util.COOKIES
 import com.junkfood.seal.util.CUSTOM_COMMAND
@@ -114,6 +115,19 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
 
                 item { PreferenceSubtitle(text = stringResource(id = R.string.advanced_settings)) }
 
+                item {
+                    var isAutoSpeedEnabled by remember { mutableStateOf(AUTO_SPEED_DETECTION.getBoolean()) }
+                    PreferenceSwitch(
+                        title = stringResource(R.string.auto_speed_optimization),
+                        description = stringResource(R.string.auto_speed_optimization_desc),
+                        icon = Icons.Outlined.Speed,
+                        isChecked = isAutoSpeedEnabled,
+                        onClick = {
+                            isAutoSpeedEnabled = !isAutoSpeedEnabled
+                            AUTO_SPEED_DETECTION.updateBoolean(isAutoSpeedEnabled)
+                        }
+                    )
+                }
                 item {
                     PreferenceSwitch(
                         title = stringResource(R.string.aria2),

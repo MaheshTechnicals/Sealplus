@@ -110,6 +110,8 @@
     <string name="concurrent_download">Multi-threaded download</string>
     <string name="concurrent_download_desc">Download more parts of M3U8/MPD videos in parallel</string>
     <string name="concurrent_download_num">%d thread(s) would be used to download DASH/HLS native video concurrently.</string>
+    <string name="auto_speed_optimization">Automatic speed optimization</string>
+    <string name="auto_speed_optimization_desc">Automatically optimize download speed based on network type and bandwidth</string>
     <string name="options">Options</string>
     <string name="additional_settings">Additional settings</string>
     <string name="share_fail_msg">Unable to match URL from shared content</string>
