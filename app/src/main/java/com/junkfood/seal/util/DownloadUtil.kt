@@ -620,17 +620,18 @@ object DownloadUtil {
                         // Prefer original audio language, fallback to English
                         addOption("--audio-langs", "orig,en")
                     }
-                    // Always ensure MP4 output for video downloads (unless user wants MKV)
-                    // This handles WebM, FLV, and other formats that should be in MP4 container
-                    if (!mergeToMkv) {
-                        addOption("--remux-video", "mp4")
-                        // Only set merge-output-format when actually merging streams
-                        if (formatIdString.contains("+")) {
-                            addOption("--merge-output-format", "mp4")
-                        }
-                    }
                 } else {
                     applyFormatSorter(this, toFormatSorter())
+                }
+                
+                // Always ensure MP4 output for video downloads (unless user wants MKV)
+                // This handles WebM, FLV, and other formats that should be in MP4 container
+                if (!mergeToMkv) {
+                    addOption("--remux-video", "mp4")
+                    // Set merge-output-format when merging streams (specific format with +) or using automatic selection
+                    if (formatIdString.contains("+") || formatIdString.isEmpty()) {
+                        addOption("--merge-output-format", "mp4")
+                    }
                 }
                 if (downloadSubtitle) {
                     if (autoSubtitle) {
