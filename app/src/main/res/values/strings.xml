@@ -508,6 +508,7 @@
     
     <!-- Security and Authentication strings -->
     <string name="security_settings">Security Settings</string>
+    <string name="network_optimization">Network Optimization</string>
     <string name="security_and_privacy">Security &amp; Privacy</string>
     <string name="app_lock">App Lock</string>
     <string name="enable_app_lock">Enable App Lock</string>

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.SignalCellular4Bar
 import androidx.compose.material.icons.outlined.SignalWifi4Bar
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.rounded.NetworkCheck
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,6 +51,7 @@ import com.junkfood.seal.ui.component.PreferenceSingleChoiceItem
 import com.junkfood.seal.ui.component.PreferenceSwitch
 import com.junkfood.seal.ui.page.security.LockScreen
 import com.junkfood.seal.util.AuthenticationManager
+import com.junkfood.seal.util.AUTO_SPEED_DETECTION
 import com.junkfood.seal.util.MAX_CONCURRENT_DOWNLOADS
 import com.junkfood.seal.util.NETWORK_ANY
 import com.junkfood.seal.util.NETWORK_MOBILE_ONLY
@@ -191,8 +193,24 @@ fun SealPlusExtrasPage(
                 }
             }
             
+            item {                PreferenceSubtitle(text = stringResource(R.string.network_optimization))
+            }
+            
             item {
-                PreferenceSubtitle(text = stringResource(R.string.security_and_privacy))
+                var isAutoSpeedEnabled by remember { mutableStateOf(AUTO_SPEED_DETECTION.getBoolean()) }
+                PreferenceSwitch(
+                    title = stringResource(R.string.auto_speed_optimization),
+                    description = stringResource(R.string.auto_speed_optimization_desc),
+                    icon = Icons.Outlined.Speed,
+                    isChecked = isAutoSpeedEnabled,
+                    onClick = {
+                        isAutoSpeedEnabled = !isAutoSpeedEnabled
+                        AUTO_SPEED_DETECTION.updateBoolean(isAutoSpeedEnabled)
+                    }
+                )
+            }
+            
+            item {                PreferenceSubtitle(text = stringResource(R.string.security_and_privacy))
             }
             
             item {
