@@ -103,26 +103,13 @@ object DownloadUtil {
         """--ppa "ffmpeg: -c:v mjpeg -vf crop=\"'if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'\"""""
 
     /**
-     * Detects optimal speed profile based on network type and bandwidth
+     * Always returns UNLIMITED profile for maximum speed on any network
+     * User priority: Speed over battery/data consumption
      */
     fun detectOptimalSpeedProfile(context: Context): SpeedProfile {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-            ?: return SpeedProfile.MOBILE_DATA
-        val network = connectivityManager.activeNetwork ?: return SpeedProfile.MOBILE_DATA
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return SpeedProfile.MOBILE_DATA
-        
-        return when {
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
-                val linkDownstreamBandwidth = capabilities.linkDownstreamBandwidthKbps
-                when {
-                    linkDownstreamBandwidth > 100_000 -> SpeedProfile.WIFI_AGGRESSIVE  // >100 Mbps
-                    linkDownstreamBandwidth > 25_000 -> SpeedProfile.WIFI_NORMAL       // >25 Mbps
-                    else -> SpeedProfile.MOBILE_DATA
-                }
-            }
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> SpeedProfile.UNLIMITED
-            else -> SpeedProfile.MOBILE_DATA  // Mobile data or unknown
-        }
+        // Always use maximum speed settings regardless of network type
+        // User wants highest possible download speeds without compromises
+        return SpeedProfile.UNLIMITED
     }
 
     /**
@@ -916,10 +903,10 @@ object DownloadUtil {
                         addOption("--no-playlist")
                     }
 
-                    // Apply automatic speed optimizations BEFORE aria2c to avoid conflicts
+                    // Apply automatic speed optimizations for MAXIMUM speed
                     if (AUTO_SPEED_DETECTION.getBoolean()) {
                         val speedProfile = detectOptimalSpeedProfile(context)
-                        Log.d(TAG, "Auto-detected speed profile: $speedProfile (Network-based)")
+                        Log.d(TAG, "Auto-speed enabled: Using $speedProfile for maximum download speed")
                         applySpeedOptimizations(speedProfile, downloadPreferences)
                     } else if (aria2c) {
                         // Manual aria2c setting only applied if auto-optimization is OFF
