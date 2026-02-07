@@ -266,6 +266,7 @@ private val BooleanPreferenceDefaults =
         NOTIFICATION_ERROR_SOUND to true,
         ONBOARDING_COMPLETED to false,
         AUTO_SPEED_DETECTION to true,
+        ARIA2C to true,  // Always enabled - controlled by automatic speed optimization
         PROXY_ENABLED to false,
         PROXY_USE_FREE to true,
         PROXY_IS_WORKING to false,

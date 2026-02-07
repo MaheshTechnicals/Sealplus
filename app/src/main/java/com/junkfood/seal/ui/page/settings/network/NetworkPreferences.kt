@@ -33,7 +33,6 @@ import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferenceSubtitle
 import com.junkfood.seal.ui.component.PreferenceSwitch
 import com.junkfood.seal.ui.component.PreferenceSwitchWithDivider
-import com.junkfood.seal.util.ARIA2C
 import com.junkfood.seal.util.CELLULAR_DOWNLOAD
 import com.junkfood.seal.util.COOKIES
 import com.junkfood.seal.util.CUSTOM_COMMAND
@@ -54,7 +53,6 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
 
     var showConcurrentDownloadDialog by remember { mutableStateOf(false) }
     var showRateLimitDialog by remember { mutableStateOf(false) }
-    var aria2c by remember { mutableStateOf(ARIA2C.getBoolean()) }
     var isCookiesEnabled by COOKIES.booleanState
     var forceIpv4 by FORCE_IPV4.booleanState
 
@@ -115,23 +113,11 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
                 item { PreferenceSubtitle(text = stringResource(id = R.string.advanced_settings)) }
 
                 item {
-                    PreferenceSwitch(
-                        title = stringResource(R.string.aria2),
-                        icon = Icons.Outlined.Bolt,
-                        description = stringResource(R.string.aria2_desc),
-                        isChecked = aria2c,
-                        onClick = {
-                            aria2c = !aria2c
-                            updateValue(ARIA2C, aria2c)
-                        },
-                    )
-                }
-                item {
                     PreferenceItem(
                         title = stringResource(id = R.string.concurrent_download),
                         description = stringResource(R.string.concurrent_download_desc),
                         icon = Icons.Outlined.OfflineBolt,
-                        enabled = !aria2c && !isCustomCommandEnabled,
+                        enabled = !isCustomCommandEnabled,
                     ) {
                         showConcurrentDownloadDialog = true
                     }
