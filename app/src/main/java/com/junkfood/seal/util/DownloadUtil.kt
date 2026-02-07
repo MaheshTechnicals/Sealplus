@@ -1025,6 +1025,7 @@ object DownloadUtil {
                 }
                 .runCatching {
                     var lastProgressLog = System.currentTimeMillis()
+                    var lastValidProgress = -1f
                     YoutubeDL.getInstance()
                         .execute(request = this, processId = taskId, callback = { progress, etaInSeconds, line ->
                             val now = System.currentTimeMillis()
@@ -1037,8 +1038,21 @@ object DownloadUtil {
                                 lastProgressLog = now
                             }
                             
-                            // Call original callback
-                            progressCallback?.invoke(progress, etaInSeconds, line)
+                            // Handle progress properly
+                            val actualProgress = when {
+                                progress < 0 -> {
+                                    // During initialization, use last valid progress or 0
+                                    if (lastValidProgress < 0) 0f else lastValidProgress
+                                }
+                                progress > 0 -> {
+                                    lastValidProgress = progress
+                                    progress
+                                }
+                                else -> 0f
+                            }
+                            
+                            // Call original callback with corrected progress
+                            progressCallback?.invoke(actualProgress, etaInSeconds, line)
                         })
                 }
                 .onFailure { th ->
