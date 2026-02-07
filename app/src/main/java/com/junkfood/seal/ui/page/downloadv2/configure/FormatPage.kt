@@ -361,6 +361,13 @@ private fun FormatPageImpl(
     var validatedVideoOnlyFormats by remember { mutableStateOf<List<Format>>(emptyList()) }
     var validatedAudioOnlyFormats by remember { mutableStateOf<List<Format>>(emptyList()) }
     var validatedVideoAudioFormats by remember { mutableStateOf<List<Format>>(emptyList()) }
+    
+    // Check if this is a YouTube video - merged formats are primarily for YouTube
+    val isYouTube = remember(videoInfo) {
+        videoInfo.extractorKey.equals("Youtube", ignoreCase = true) ||
+        videoInfo.webpageUrl?.contains("youtube.com", ignoreCase = true) == true ||
+        videoInfo.webpageUrl?.contains("youtu.be", ignoreCase = true) == true
+    }
 
     if (videoInfo.formats.isNullOrEmpty()) return
     
@@ -408,9 +415,10 @@ private fun FormatPageImpl(
     val bestAudioFormat = remember(audioOnlyFormats) { audioOnlyFormats.firstOrNull() }
     
     // Create merged video formats: video-only + best audio
-    // This allows high-quality videos (720p, 1080p, 4K) to appear in Video section
-    val mergedVideoFormats = remember(audioOnly, bestAudioFormat, videoOnlyFormats) {
-        if (!audioOnly && bestAudioFormat != null) {
+    // This is primarily for YouTube where high-quality videos (720p+) need separate audio
+    // Other websites typically have video+audio already combined
+    val mergedVideoFormats = remember(audioOnly, bestAudioFormat, videoOnlyFormats, isYouTube) {
+        if (!audioOnly && bestAudioFormat != null && isYouTube) {
             videoOnlyFormats.map { videoFormat ->
                 // Store reference to both formats for later merging
                 videoFormat.copy(
@@ -423,13 +431,21 @@ private fun FormatPageImpl(
         } else emptyList()
     }
     
-    // Combine original video+audio formats with new merged formats
+    // Combine formats based on platform:
+    // - YouTube: Show merged formats (video-only + audio) for high quality
+    // - Other sites: Show only original video+audio combined formats
     // Sort ALL video formats by quality score (highest resolution first)
-    val allVideoFormats = remember(audioOnly, mergedVideoFormats, videoAudioFormats) {
+    val allVideoFormats = remember(audioOnly, mergedVideoFormats, videoAudioFormats, isYouTube) {
         if (audioOnly) {
             emptyList()
         } else {
-            val combined = (mergedVideoFormats + videoAudioFormats).distinctBy { it.formatId }
+            val combined = if (isYouTube) {
+                // YouTube: Include both merged formats and original combined formats
+                (mergedVideoFormats + videoAudioFormats).distinctBy { it.formatId }
+            } else {
+                // Other sites: Only use original video+audio combined formats
+                videoAudioFormats
+            }
             // Sort by quality score (highest first) - this ensures best quality appears first
             combined.sortedByDescending { getQualityScore(it) }
         }
@@ -924,7 +940,9 @@ private fun FormatPageImpl(
                 }
             }
 
-            // SECTION 1: Video (with audio) - Now includes high-quality merged formats
+            // SECTION 1: Video formats
+            // YouTube: "Videos (Video + Audio)" - Shows merged high-quality formats
+            // Other sites: "Videos" - Shows regular video+audio combined formats
             if (allVideoFormats.isNotEmpty() && !isValidatingFormats) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Row(
@@ -932,7 +950,11 @@ private fun FormatPageImpl(
                         modifier = Modifier.padding(top = 20.dp).padding(horizontal = 12.dp),
                     ) {
                         FormatSubtitle(
-                            text = stringResource(R.string.video),
+                            text = if (isYouTube) {
+                                "${stringResource(R.string.video)} (Video + Audio)"
+                            } else {
+                                stringResource(R.string.video)
+                            },
                             modifier = Modifier.weight(1f).padding(vertical = 8.dp),
                             showDivider = true,
                         )
