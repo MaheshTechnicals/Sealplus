@@ -226,7 +226,8 @@ fun SuggestedFormatItem(
                 (format.fileSize ?: format.fileSizeApprox ?: (duration * (format.tbr ?: 0.0) * 125))
             // kbps -> bytes 1000/8
         }
-    val fileSizeText = totalFileSize.toFileSizeText()
+    // Add ~ prefix to indicate approximate size (may change after format conversion)
+    val fileSizeText = if (totalFileSize > 0) "~${totalFileSize.toFileSizeText()}" else totalFileSize.toFileSizeText()
 
     val totalTbr =
         requestedFormats.fold(initial = 0.0) { acc: Double, format: Format ->
@@ -289,7 +290,8 @@ fun FormatItem(
             }
 
         val fileSize = fileSize ?: fileSizeApprox ?: (tbr?.times(duration * 125))
-        val fileSizeText = fileSize.toFileSizeText()
+        // Add ~ prefix to indicate approximate size (may change after format conversion)
+        val fileSizeText = if (fileSize != null && fileSize > 0) "~${fileSize.toFileSizeText()}" else fileSize.toFileSizeText()
 
         val firstLineText = connectWithDelimiter(fileSizeText, tbrText, delimiter = " ")
 

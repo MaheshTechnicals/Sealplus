@@ -203,8 +203,16 @@ object DownloadUtil {
         }
         
         // Universal optimizations for all profiles
-        addOption("--no-check-certificate")  // Skip SSL verification (faster handshake)
-        addOption("--prefer-free-formats")    // Avoid DRM-protected formats
+        // Only skip certificate check if not downloading from format selection
+        // to avoid interfering with user's explicit format choice
+        if (preferences.formatIdString.isEmpty()) {
+            addOption("--no-check-certificate")  // Skip SSL verification (faster handshake)
+        }
+        // Prefer free formats only when using automatic format selection
+        // Don't use when user has selected specific format to avoid conflicts
+        if (preferences.formatIdString.isEmpty()) {
+            addOption("--prefer-free-formats")    // Avoid DRM-protected formats
+        }
     }
 
     /**
