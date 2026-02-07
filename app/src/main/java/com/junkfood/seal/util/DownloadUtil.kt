@@ -192,15 +192,15 @@ object DownloadUtil {
                     "--min-split-size=512K " +
                     "--split=32 " +
                     "--max-concurrent-downloads=10 " +
+                    "--summary-interval=1 " +
+                    "--file-allocation=none " +
+                    "--disk-cache=128M " +
+                    "--enable-http-pipelining=true " +
                     "--max-overall-download-limit=0 " +
                     "--max-download-limit=0 " +
                     "--lowest-speed-limit=0 " +
                     "--max-tries=0 " +
-                    "--retry-wait=1 " +
-                    "--summary-interval=1 " +
-                    "--file-allocation=none " +
-                    "--disk-cache=128M " +
-                    "--enable-http-pipelining=true\"")
+                    "--retry-wait=1\"")
                 addOption("--http-chunk-size", "100M")
                 addOption("--buffer-size", "512K")
                 addOption("--no-part")
@@ -871,6 +871,8 @@ object DownloadUtil {
             request
                 .apply {
                     addOption("--no-mtime")
+                    addOption("--newline")  // Force progress on new lines for better parsing
+                    addOption("--progress")  // Force progress output even with external downloaders
                     //                addOption("-v")
                     if (cookies) {
                         enableCookies(userAgentString)
