@@ -463,16 +463,13 @@ object DownloadUtil {
                         // Prefer original audio language, fallback to English
                         addOption("--audio-langs", "orig,en")
                     }
-                    // When merging video+audio formats or when not using MKV, ensure MP4 output
-                    // This handles high-quality downloads and forces MP4 container format
+                    // Always ensure MP4 output for video downloads (unless user wants MKV)
+                    // This handles WebM, FLV, and other formats that should be in MP4 container
                     if (!mergeToMkv) {
+                        addOption("--remux-video", "mp4")
+                        // Only set merge-output-format when actually merging streams
                         if (formatIdString.contains("+")) {
-                            // Multiple formats means we're merging - ensure MP4 output
-                            addOption("--remux-video", "mp4")
                             addOption("--merge-output-format", "mp4")
-                        } else if (videoFormat == FORMAT_COMPATIBILITY) {
-                            // For compatibility mode, always prefer MP4 container
-                            addOption("--remux-video", "mp4")
                         }
                     }
                 } else {
