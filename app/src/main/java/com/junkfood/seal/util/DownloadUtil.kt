@@ -34,6 +34,8 @@ import com.junkfood.seal.util.FileUtil.getFileName
 import com.junkfood.seal.util.FileUtil.getSdcardTempDir
 import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.FileUtil.moveFilesToSdcard
+import com.junkfood.seal.util.AUTO_SPEED_DETECTION
+import com.junkfood.seal.util.MAX_CONCURRENT_DOWNLOADS
 import com.junkfood.seal.util.PreferenceUtil.COOKIE_HEADER
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getInt
@@ -906,10 +908,10 @@ object DownloadUtil {
                     }
 
                     // Apply automatic speed optimizations
-                    if (PreferenceUtil.AUTO_SPEED_DETECTION.getBoolean()) {
+                    if (AUTO_SPEED_DETECTION.getBoolean()) {
                         val speedProfile = when {
                             aria2c && !rateLimit -> SpeedProfile.WIFI_AGGRESSIVE
-                            PreferenceUtil.MAX_CONCURRENT_DOWNLOADS.getInt() >= 5 -> SpeedProfile.WIFI_NORMAL
+                            MAX_CONCURRENT_DOWNLOADS.getInt() >= 5 -> SpeedProfile.WIFI_NORMAL
                             else -> detectOptimalSpeedProfile(context)
                         }
                         Log.d(TAG, "Applying speed profile: $speedProfile")
