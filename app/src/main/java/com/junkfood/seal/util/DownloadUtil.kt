@@ -460,15 +460,19 @@ object DownloadUtil {
                     addOption("-f", formatIdString)
                     if (mergeAudioStream) {
                         addOption("--audio-multistreams")
+                        // Prefer original audio language, fallback to English
+                        addOption("--audio-langs", "orig,en")
                     }
-                    // When merging video+audio formats (e.g., 303+251), ensure MP4 output
-                    // This handles high-quality downloads that need audio merged
-                    if (!mergeToMkv && formatIdString.contains("+")) {
-                        val formatParts = formatIdString.split("+")
-                        if (formatParts.size >= 2) {
+                    // When merging video+audio formats or when not using MKV, ensure MP4 output
+                    // This handles high-quality downloads and forces MP4 container format
+                    if (!mergeToMkv) {
+                        if (formatIdString.contains("+")) {
                             // Multiple formats means we're merging - ensure MP4 output
                             addOption("--remux-video", "mp4")
                             addOption("--merge-output-format", "mp4")
+                        } else if (videoFormat == FORMAT_COMPATIBILITY) {
+                            // For compatibility mode, always prefer MP4 container
+                            addOption("--remux-video", "mp4")
                         }
                     }
                 } else {
@@ -536,7 +540,7 @@ object DownloadUtil {
         this.run {
             val format =
                 when (videoFormat) {
-                    FORMAT_COMPATIBILITY -> "proto,vcodec:h264,ext"
+                    FORMAT_COMPATIBILITY -> "proto,vcodec:h264,ext:mp4"
                     FORMAT_QUALITY ->
                         if (supportAv1HardwareDecoding) {
                             "vcodec:av01"
@@ -614,6 +618,8 @@ object DownloadUtil {
                     addOption("-f", formatIdString)
                     if (mergeAudioStream) {
                         addOption("--audio-multistreams")
+                        // Prefer original audio language, fallback to English
+                        addOption("--audio-langs", "orig,en")
                     }
                 } else if (convertAudio) {
                     when (audioConvertFormat) {
@@ -672,6 +678,7 @@ object DownloadUtil {
                 thumbnailUrl = thumbnail.toHttpsUrl(),
                 videoPath = videoPath,
                 extractor = extractorKey,
+                downloadDate = System.currentTimeMillis(),
             )
         }
 

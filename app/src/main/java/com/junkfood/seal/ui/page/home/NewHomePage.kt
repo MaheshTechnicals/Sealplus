@@ -1740,9 +1740,9 @@ fun RecentDownloadDetailsDialog(
                         onClick = { showFilePathDialog = true }
                     )
                     
-                    val downloadDate = if (file.exists()) {
+                    val downloadDate = if (downloadInfo.downloadDate > 0) {
                         java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
-                            .format(java.util.Date(file.lastModified()))
+                            .format(java.util.Date(downloadInfo.downloadDate))
                     } else {
                         "N/A"
                     }
