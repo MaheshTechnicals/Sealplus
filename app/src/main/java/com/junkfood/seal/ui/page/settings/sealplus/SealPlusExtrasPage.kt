@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.NetworkCell
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.RocketLaunch
 import androidx.compose.material.icons.outlined.SignalCellular4Bar
 import androidx.compose.material.icons.outlined.SignalWifi4Bar
 import androidx.compose.material.icons.outlined.Speed
@@ -51,6 +52,7 @@ import com.junkfood.seal.ui.component.PreferenceSingleChoiceItem
 import com.junkfood.seal.ui.component.PreferenceSwitch
 import com.junkfood.seal.ui.page.security.LockScreen
 import com.junkfood.seal.util.AuthenticationManager
+import com.junkfood.seal.util.AGGRESSIVE_DOWNLOAD
 import com.junkfood.seal.util.AUTO_SPEED_DETECTION
 import com.junkfood.seal.util.MAX_CONCURRENT_DOWNLOADS
 import com.junkfood.seal.util.NETWORK_ANY
@@ -208,6 +210,45 @@ fun SealPlusExtrasPage(
                         AUTO_SPEED_DETECTION.updateBoolean(isAutoSpeedEnabled)
                     }
                 )
+            }
+            
+            item {
+                var isAggressiveEnabled by remember { mutableStateOf(AGGRESSIVE_DOWNLOAD.getBoolean()) }
+                Column {
+                    PreferenceSwitch(
+                        title = stringResource(R.string.aggressive_download),
+                        description = stringResource(R.string.aggressive_download_desc),
+                        icon = Icons.Outlined.RocketLaunch,
+                        isChecked = isAggressiveEnabled,
+                        onClick = {
+                            isAggressiveEnabled = !isAggressiveEnabled
+                            AGGRESSIVE_DOWNLOAD.updateBoolean(isAggressiveEnabled)
+                        }
+                    )
+                    if (isAggressiveEnabled) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "⚠️",
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.aggressive_download_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
             }
             
             item {                PreferenceSubtitle(text = stringResource(R.string.security_and_privacy))

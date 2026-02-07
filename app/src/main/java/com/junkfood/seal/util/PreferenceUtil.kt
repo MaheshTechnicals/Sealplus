@@ -78,6 +78,7 @@ const val MAX_FILE_SIZE = "max_file_size"
 const val SPONSORBLOCK = "sponsorblock"
 const val SPONSORBLOCK_CATEGORIES = "sponsorblock_categories"
 const val ARIA2C = "aria2c"
+const val AGGRESSIVE_DOWNLOAD = "aggressive_download"
 const val COOKIES = "cookies"
 const val USER_AGENT = "user_agent"
 const val USER_AGENT_STRING = "user_agent_string"
@@ -267,6 +268,7 @@ private val BooleanPreferenceDefaults =
         ONBOARDING_COMPLETED to false,
         AUTO_SPEED_DETECTION to true,
         ARIA2C to true,  // Always enabled - controlled by automatic speed optimization
+        AGGRESSIVE_DOWNLOAD to false,  // Opt-in for maximum speed on all networks
         PROXY_ENABLED to false,
         PROXY_USE_FREE to true,
         PROXY_IS_WORKING to false,

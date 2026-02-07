@@ -34,6 +34,7 @@ import com.junkfood.seal.util.FileUtil.getFileName
 import com.junkfood.seal.util.FileUtil.getSdcardTempDir
 import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.FileUtil.moveFilesToSdcard
+import com.junkfood.seal.util.AGGRESSIVE_DOWNLOAD
 import com.junkfood.seal.util.AUTO_SPEED_DETECTION
 import com.junkfood.seal.util.MAX_CONCURRENT_DOWNLOADS
 import com.junkfood.seal.util.PreferenceUtil.COOKIE_HEADER
@@ -103,13 +104,27 @@ object DownloadUtil {
         """--ppa "ffmpeg: -c:v mjpeg -vf crop=\"'if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'\"""""
 
     /**
-     * Always returns UNLIMITED profile for maximum speed on any network
-     * User priority: Speed over battery/data consumption
+     * Detects optimal speed profile based on network type and bandwidth
+     * Can be overridden by AGGRESSIVE_DOWNLOAD preference for maximum speed
      */
     fun detectOptimalSpeedProfile(context: Context): SpeedProfile {
-        // Always use maximum speed settings regardless of network type
-        // User wants highest possible download speeds without compromises
-        return SpeedProfile.UNLIMITED
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return SpeedProfile.MOBILE_DATA
+        val network = connectivityManager.activeNetwork ?: return SpeedProfile.MOBILE_DATA
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return SpeedProfile.MOBILE_DATA
+        
+        return when {
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                val linkDownstreamBandwidth = capabilities.linkDownstreamBandwidthKbps
+                when {
+                    linkDownstreamBandwidth > 100_000 -> SpeedProfile.WIFI_AGGRESSIVE  // >100 Mbps
+                    linkDownstreamBandwidth > 25_000 -> SpeedProfile.WIFI_NORMAL       // >25 Mbps
+                    else -> SpeedProfile.MOBILE_DATA
+                }
+            }
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> SpeedProfile.UNLIMITED
+            else -> SpeedProfile.MOBILE_DATA  // Mobile data or unknown
+        }
     }
 
     /**
@@ -903,10 +918,16 @@ object DownloadUtil {
                         addOption("--no-playlist")
                     }
 
-                    // Apply automatic speed optimizations for MAXIMUM speed
+                    // Apply automatic speed optimizations
                     if (AUTO_SPEED_DETECTION.getBoolean()) {
-                        val speedProfile = detectOptimalSpeedProfile(context)
-                        Log.d(TAG, "Auto-speed enabled: Using $speedProfile for maximum download speed")
+                        val speedProfile = if (AGGRESSIVE_DOWNLOAD.getBoolean()) {
+                            Log.d(TAG, "Aggressive mode ON: Forcing UNLIMITED speed profile")
+                            SpeedProfile.UNLIMITED
+                        } else {
+                            val detected = detectOptimalSpeedProfile(context)
+                            Log.d(TAG, "Network-based detection: Using $detected profile")
+                            detected
+                        }
                         applySpeedOptimizations(speedProfile, downloadPreferences)
                     } else if (aria2c) {
                         // Manual aria2c setting only applied if auto-optimization is OFF

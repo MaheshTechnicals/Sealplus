@@ -112,6 +112,9 @@
     <string name="concurrent_download_num">%d thread(s) would be used to download DASH/HLS native video concurrently.</string>
     <string name="auto_speed_optimization">Automatic speed optimization</string>
     <string name="auto_speed_optimization_desc">Automatically optimize download speed based on network type and bandwidth</string>
+    <string name="aggressive_download">Aggressive download mode</string>
+    <string name="aggressive_download_desc">Force maximum speed on all networks (WiFi, Mobile Data, Ethernet)</string>
+    <string name="aggressive_download_warning">High battery and data usage. Uses 32 parallel connections and maximum buffer sizes.</string>
     <string name="options">Options</string>
     <string name="additional_settings">Additional settings</string>
     <string name="share_fail_msg">Unable to match URL from shared content</string>
