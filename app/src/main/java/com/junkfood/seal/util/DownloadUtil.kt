@@ -159,17 +159,20 @@ object DownloadUtil {
                 // Maximum speed for high-bandwidth WiFi
                 addOption("--socket-timeout", "20")
                 addOption("-R", "15")
-                // Force aria2c for maximum parallel connections
-                addOption("--downloader", "libaria2c.so")
-                addOption("--external-downloader-args", 
-                    "aria2c:\"--max-connection-per-server=16 " +
-                    "--min-split-size=1M " +
-                    "--split=16 " +
-                    "--max-concurrent-downloads=5 " +
-                    "--summary-interval=1 " +
-                    "--file-allocation=none " +
-                    "--allow-overwrite=true " +
-                    "--auto-file-renaming=false\"")
+                // Only enable aria2c if user has it enabled in settings
+                if (preferences.aria2c) {
+                    addOption("--external-downloader-args", 
+                        "aria2c:\"--max-connection-per-server=16 " +
+                        "--min-split-size=1M " +
+                        "--split=16 " +
+                        "--max-concurrent-downloads=5 " +
+                        "--summary-interval=1 " +
+                        "--file-allocation=none " +
+                        "--allow-overwrite=true " +
+                        "--auto-file-renaming=false\"")
+                } else {
+                    addOption("--concurrent-fragments", "16")
+                }
                 addOption("--http-chunk-size", "50M")
                 addOption("--buffer-size", "256K")
                 addOption("--no-part")  // Don't use .part files for faster writes
@@ -179,21 +182,25 @@ object DownloadUtil {
                 // Absolute maximum - use with caution
                 addOption("--socket-timeout", "30")
                 addOption("-R", "20")
-                addOption("--downloader", "libaria2c.so")
-                addOption("--external-downloader-args",
-                    "aria2c:\"--max-connection-per-server=32 " +
-                    "--min-split-size=512K " +
-                    "--split=32 " +
-                    "--max-concurrent-downloads=10 " +
-                    "--max-overall-download-limit=0 " +
-                    "--max-download-limit=0 " +
-                    "--lowest-speed-limit=0 " +
-                    "--max-tries=0 " +
-                    "--retry-wait=1 " +
-                    "--summary-interval=1 " +
-                    "--file-allocation=none " +
-                    "--disk-cache=128M " +
-                    "--enable-http-pipelining=true\"")
+                // Only enable aria2c if user has it enabled in settings
+                if (preferences.aria2c) {
+                    addOption("--external-downloader-args",
+                        "aria2c:\"--max-connection-per-server=32 " +
+                        "--min-split-size=512K " +
+                        "--split=32 " +
+                        "--max-concurrent-downloads=10 " +
+                        "--max-overall-download-limit=0 " +
+                        "--max-download-limit=0 " +
+                        "--lowest-speed-limit=0 " +
+                        "--max-tries=0 " +
+                        "--retry-wait=1 " +
+                        "--summary-interval=1 " +
+                        "--file-allocation=none " +
+                        "--disk-cache=128M " +
+                        "--enable-http-pipelining=true\"")
+                } else {
+                    addOption("--concurrent-fragments", "32")
+                }
                 addOption("--http-chunk-size", "100M")
                 addOption("--buffer-size", "512K")
                 addOption("--no-part")
@@ -909,21 +916,16 @@ object DownloadUtil {
                         addOption("--no-playlist")
                     }
 
-                    if (aria2c) {
+                    // Apply automatic speed optimizations BEFORE aria2c to avoid conflicts
+                    if (AUTO_SPEED_DETECTION.getBoolean()) {
+                        val speedProfile = detectOptimalSpeedProfile(context)
+                        Log.d(TAG, "Auto-detected speed profile: $speedProfile (Network-based)")
+                        applySpeedOptimizations(speedProfile, downloadPreferences)
+                    } else if (aria2c) {
+                        // Manual aria2c setting only applied if auto-optimization is OFF
                         enableAria2c()
                     } else if (concurrentFragments > 1) {
                         addOption("--concurrent-fragments", concurrentFragments)
-                    }
-
-                    // Apply automatic speed optimizations
-                    if (AUTO_SPEED_DETECTION.getBoolean()) {
-                        val speedProfile = when {
-                            aria2c && !rateLimit -> SpeedProfile.WIFI_AGGRESSIVE
-                            MAX_CONCURRENT_DOWNLOADS.getInt() >= 5 -> SpeedProfile.WIFI_NORMAL
-                            else -> detectOptimalSpeedProfile(context)
-                        }
-                        Log.d(TAG, "Applying speed profile: $speedProfile")
-                        applySpeedOptimizations(speedProfile, downloadPreferences)
                     }
 
                     if (extractAudio || (videoInfo.vcodec == "none")) {
