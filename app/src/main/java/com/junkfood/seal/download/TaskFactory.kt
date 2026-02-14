@@ -42,8 +42,11 @@ object TaskFactory {
         val mergeAudioStream = audioOnlyFormats.size > 1
         val formatId = formatList.joinToString(separator = "+") { it.formatId.toString() }
         
-        // Check if we're merging video and audio (common for high-quality downloads)
+        // Check if we're merging video and audio (common for YouTube high-quality downloads)
         val isMergingVideoAudio = videoFormats.isNotEmpty() && audioOnlyFormats.isNotEmpty()
+        
+        // Check if this is YouTube to apply YouTube-specific merging logic
+        val isYouTube = videoInfo.extractorKey.equals("Youtube", ignoreCase = true)
         
         // Get the video format extension and codec to determine desired output container
         val firstVideoFormat = videoFormats.firstOrNull()
@@ -52,13 +55,14 @@ object TaskFactory {
         val audioCodec = audioOnlyFormats.firstOrNull()?.acodec?.lowercase() ?: ""
         
         // Determine output format based on codec compatibility
-        // H.264/AVC1 video can go in MP4, but VP9/AV1 should stay in WEBM
-        // Also consider audio codec: OPUS audio is better in WEBM
-        // IMPORTANT: Only specify output format if we need to change the container
+        // IMPORTANT: Only apply format merging/remuxing logic for YouTube
+        // Other platforms typically provide pre-combined formats that should be used as-is
         val determineOutputFormat: () -> String = {
             when {
                 videoExtension.isEmpty() -> ""
-                // If format already has correct extension, no need to remux
+                // Only apply merging/remuxing logic for YouTube
+                !isYouTube -> "" // For non-YouTube sites, don't remux - use format as-is
+                // YouTube-specific logic: merging separate video+audio streams
                 isMergingVideoAudio -> {
                     // When merging separate streams, we need to specify output container
                     when {
@@ -80,7 +84,7 @@ object TaskFactory {
                     // WEBM container with VP9 video - keep as WEBM
                     when {
                         (videoCodec.contains("avc") || videoCodec.contains("h264")) && videoExtension == "webm" -> "mp4"
-                        (videoCodec.contains("vp9") || videoCodec.contains("vp09") || videoCodec.contains("av01")) && videoExtension == "mp4" -> "webm"
+                        (videoCodec.contains("vp9") || videoCodec.contains("vp09") || videoCodec.contains("av01")) && videoExtension == "mp4") -> "webm"
                         else -> "" // Format is already correct, don't remux
                     }
                 }
