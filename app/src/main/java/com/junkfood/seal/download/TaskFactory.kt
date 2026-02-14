@@ -4,6 +4,7 @@ import androidx.annotation.CheckResult
 import com.junkfood.seal.download.Task.DownloadState.Idle
 import com.junkfood.seal.download.Task.DownloadState.ReadyWithInfo
 import com.junkfood.seal.util.DownloadUtil.DownloadPreferences
+import com.junkfood.seal.util.FORMAT_COMPATIBILITY
 import com.junkfood.seal.util.Format
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.VideoClip
@@ -43,6 +44,50 @@ object TaskFactory {
         
         // Check if we're merging video and audio (common for high-quality downloads)
         val isMergingVideoAudio = videoFormats.isNotEmpty() && audioOnlyFormats.isNotEmpty()
+        
+        // Get the video format extension and codec to determine desired output container
+        val firstVideoFormat = videoFormats.firstOrNull()
+        val videoExtension = firstVideoFormat?.ext?.lowercase() ?: ""
+        val videoCodec = firstVideoFormat?.vcodec?.lowercase() ?: ""
+        val audioCodec = audioOnlyFormats.firstOrNull()?.acodec?.lowercase() ?: ""
+        
+        // Determine output format based on codec compatibility
+        // H.264/AVC1 video can go in MP4, but VP9/AV1 should stay in WEBM
+        // Also consider audio codec: OPUS audio is better in WEBM
+        // IMPORTANT: Only specify output format if we need to change the container
+        val determineOutputFormat: () -> String = {
+            when {
+                videoExtension.isEmpty() -> ""
+                // If format already has correct extension, no need to remux
+                isMergingVideoAudio -> {
+                    // When merging separate streams, we need to specify output container
+                    when {
+                        videoCodec.contains("avc") || videoCodec.contains("h264") -> {
+                            if (audioCodec.contains("opus") && videoExtension != "mp4") {
+                                videoExtension // Keep original if not MP4
+                            } else {
+                                videoExtension // Use video format's extension
+                            }
+                        }
+                        videoCodec.contains("vp9") || videoCodec.contains("vp09") || videoCodec.contains("av01") -> "webm"
+                        else -> videoExtension
+                    }
+                }
+                // Single format with video+audio already combined - check if extension matches codec
+                else -> {
+                    // For pre-combined formats, only remux if absolutely necessary
+                    // MP4 container with AVC1 video - keep as MP4
+                    // WEBM container with VP9 video - keep as WEBM
+                    when {
+                        (videoCodec.contains("avc") || videoCodec.contains("h264")) && videoExtension == "webm" -> "mp4"
+                        (videoCodec.contains("vp9") || videoCodec.contains("vp09") || videoCodec.contains("av01")) && videoExtension == "mp4" -> "webm"
+                        else -> "" // Format is already correct, don't remux
+                    }
+                }
+            }
+        }
+        
+        val outputFormat = determineOutputFormat()
 
         val subtitleLanguage =
             (selectedSubtitles + selectedAutoCaptions).joinToString(separator = ",")
@@ -50,9 +95,10 @@ object TaskFactory {
         val preferences =
             DownloadPreferences.createFromPreferences()
                 .run {
-                    // When merging video+audio, force MP4 output (not MKV)
-                    // This ensures high-quality merged videos are in MP4 container
-                    val shouldUseMp4 = if (isMergingVideoAudio) false else this.mergeToMkv
+                    // Use the determined output format (considering codec compatibility)
+                    val finalOutputFormat = if (!this.mergeToMkv && outputFormat.isNotEmpty()) {
+                        outputFormat
+                    } else ""
                     
                     copy(
                         formatIdString = formatId,
@@ -61,7 +107,8 @@ object TaskFactory {
                         newTitle = newTitle,
                         mergeAudioStream = mergeAudioStream,
                         extractAudio = extractAudio || audioOnly,
-                        mergeToMkv = shouldUseMp4,
+                        mergeToMkv = this.mergeToMkv,
+                        mergeOutputFormat = finalOutputFormat,
                     )
                 }
                 .run {

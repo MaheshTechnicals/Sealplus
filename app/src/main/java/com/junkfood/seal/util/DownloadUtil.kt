@@ -244,6 +244,7 @@ object DownloadUtil {
         val forceIpv4: Boolean,
         val mergeAudioStream: Boolean,
         val mergeToMkv: Boolean,
+        val mergeOutputFormat: String = "",
     ) {
         companion object {
             val EMPTY =
@@ -461,14 +462,16 @@ object DownloadUtil {
                     if (mergeAudioStream) {
                         addOption("--audio-multistreams")
                     }
-                    // When merging video+audio formats (e.g., 303+251), ensure MP4 output
-                    // This handles high-quality downloads that need audio merged
+                    // When merging video+audio formats (e.g., 303+251), determine output format
+                    // based on the video format's container to respect user's format selection
                     if (!mergeToMkv && formatIdString.contains("+")) {
                         val formatParts = formatIdString.split("+")
                         if (formatParts.size >= 2) {
-                            // Multiple formats means we're merging - ensure MP4 output
-                            addOption("--remux-video", "mp4")
-                            addOption("--merge-output-format", "mp4")
+                            // Extract format IDs to determine the output container
+                            // Note: yt-dlp will automatically choose the best container
+                            // based on codecs, but we can guide it
+                            // Let yt-dlp auto-determine the best merge format
+                            // It will use mp4 for h264/avc1 and webm for vp9/av1
                         }
                     }
                 } else {
@@ -503,6 +506,17 @@ object DownloadUtil {
                 if (mergeToMkv) {
                     addOption("--remux-video", "mkv")
                     addOption("--merge-output-format", "mkv")
+                } else if (mergeOutputFormat.isNotEmpty()) {
+                    // Use the specified output format (mp4, webm, etc.)
+                    // This respects the user's format selection
+                    // Works for both merged formats and single formats that need remuxing
+                    if (formatIdString.contains("+")) {
+                        // Multiple formats being merged - use merge-output-format
+                        addOption("--merge-output-format", mergeOutputFormat)
+                    } else {
+                        // Single format that needs container change - use remux-video
+                        addOption("--remux-video", mergeOutputFormat)
+                    }
                 }
                 if (embedThumbnail) {
                     addOption("--embed-thumbnail")

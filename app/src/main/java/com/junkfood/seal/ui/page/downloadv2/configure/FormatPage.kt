@@ -404,13 +404,18 @@ private fun FormatPageImpl(
     val audioOnlyFormats = validatedAudioOnlyFormats
     val videoAudioFormats = validatedVideoAudioFormats
     
+    // Check if this is a YouTube video
+    val isYouTube = remember(videoInfo.extractorKey) {
+        videoInfo.extractorKey.equals("Youtube", ignoreCase = true)
+    }
+    
     // Get the best audio format to auto-merge with video-only formats
     val bestAudioFormat = remember(audioOnlyFormats) { audioOnlyFormats.firstOrNull() }
     
     // Create merged video formats: video-only + best audio
-    // This allows high-quality videos (720p, 1080p, 4K) to appear in Video section
-    val mergedVideoFormats = remember(audioOnly, bestAudioFormat, videoOnlyFormats) {
-        if (!audioOnly && bestAudioFormat != null) {
+    // Only for YouTube - other sites typically have video+audio combined already
+    val mergedVideoFormats = remember(audioOnly, bestAudioFormat, videoOnlyFormats, isYouTube) {
+        if (!audioOnly && bestAudioFormat != null && isYouTube) {
             videoOnlyFormats.map { videoFormat ->
                 // Store reference to both formats for later merging
                 videoFormat.copy(
@@ -522,62 +527,79 @@ private fun FormatPageImpl(
 
     val lazyGridState = rememberLazyGridState()
 
-    val formatList: List<Format> by remember {
-        derivedStateOf {
-            mutableListOf<Format>().apply {
-                if (isSuggestedFormatSelected) {
-                    // Use highest format from allVideoFormats (merged format with audio)
-                    if (highestVideoFormat != null && !audioOnly) {
-                        // Check if it's a merged format
-                        val isMergedFormat = mergedVideoFormats.any { it.formatId == highestVideoFormat.formatId }
+    val formatList: List<Format> = remember(
+        isSuggestedFormatSelected,
+        selectedVideoAudioFormat,
+        selectedVideoOnlyFormat,
+        selectedAudioOnlyFormats.size,
+        allVideoFormats.size,
+        videoOnlyFormats.size,
+        audioOnlyFormats.size,
+        mergedVideoFormats.size,
+        bestAudioFormat?.formatId
+    ) {
+        mutableListOf<Format>().apply {
+            if (isSuggestedFormatSelected) {
+                // Use highest format from allVideoFormats (merged format with audio)
+                if (highestVideoFormat != null && !audioOnly) {
+                    // Check if it's a merged format
+                    val isMergedFormat = mergedVideoFormats.any { it.formatId == highestVideoFormat.formatId }
                         
-                        if (isMergedFormat && bestAudioFormat != null) {
-                            // It's a merged format - add video-only + audio
-                            val originalVideoFormat = videoOnlyFormats.find { 
-                                it.formatId == highestVideoFormat.formatId 
-                            }
-                            if (originalVideoFormat != null) {
-                                add(originalVideoFormat)
-                                add(bestAudioFormat)
-                            }
-                        } else {
-                            // It's an original combined format, add as-is
-                            add(highestVideoFormat)
+                    if (isMergedFormat && bestAudioFormat != null) {
+                        // It's a merged format - add video-only + audio
+                        val originalVideoFormat = videoOnlyFormats.find { 
+                            it.formatId == highestVideoFormat.formatId 
+                        }
+                        if (originalVideoFormat != null) {
+                            add(originalVideoFormat)
+                            add(bestAudioFormat)
                         }
                     } else {
-                        // Fallback to original requested formats
-                        videoInfo.requestedFormats?.let { addAll(it) }
-                            ?: videoInfo.requestedDownloads?.forEach {
-                                it.requestedFormats?.let { addAll(it) }
-                            }
+                        // It's an original combined format, add as-is
+                        add(highestVideoFormat)
                     }
                 } else {
-                    selectedAudioOnlyFormats.forEach { index ->
-                        audioOnlyFormats.getOrNull(index)?.let { add(it) }
-                    }
-                    // Handle merged video formats (video-only + audio)
-                    allVideoFormats.getOrNull(selectedVideoAudioFormat)?.let { selectedFormat ->
-                        // Check if this is a merged format by checking if it exists in mergedVideoFormats
-                        val isMergedFormat = mergedVideoFormats.any { it.formatId == selectedFormat.formatId }
-                        
-                        if (isMergedFormat && bestAudioFormat != null) {
-                            // This is a merged format - add original video-only + best audio
-                            val originalVideoFormat = videoOnlyFormats.find { 
-                                it.formatId == selectedFormat.formatId 
+                    // Fallback to original requested formats
+                    videoInfo.requestedFormats?.let { addAll(it) }
+                        ?: videoInfo.requestedDownloads?.forEach {
+                            it.requestedFormats?.let { formats ->
+                                addAll(formats)
                             }
-                            if (originalVideoFormat != null) {
-                                // Add original video-only format
-                                add(originalVideoFormat)
-                                // Add best audio format for merging
-                                add(bestAudioFormat)
-                            }
-                        } else {
-                            // This is an original combined format, add as-is
-                            add(selectedFormat)
                         }
-                    }
-                    videoOnlyFormats.getOrNull(selectedVideoOnlyFormat)?.let { add(it) }
                 }
+            } else {
+                selectedAudioOnlyFormats.forEach { index ->
+                    audioOnlyFormats.getOrNull(index)?.let { add(it) }
+                }
+                // Handle merged video formats (video-only + audio)
+                allVideoFormats.getOrNull(selectedVideoAudioFormat)?.let { selectedFormat ->
+                    // Check if this is a merged format by checking if it exists in mergedVideoFormats
+                    val isMergedFormat = mergedVideoFormats.any { it.formatId == selectedFormat.formatId }
+                        
+                    if (isMergedFormat && bestAudioFormat != null) {
+                        // This is a merged format - add original video-only + best audio
+                        val originalVideoFormat = videoOnlyFormats.find { 
+                            it.formatId == selectedFormat.formatId 
+                        }
+                        if (originalVideoFormat != null) {
+                            // Add original video-only format
+                            add(originalVideoFormat)
+                            // Add best audio format for merging
+                            add(bestAudioFormat)
+                        }
+                    } else {
+                        // This is an original combined format, add as-is
+                        add(selectedFormat)
+                    }
+                }
+                videoOnlyFormats.getOrNull(selectedVideoOnlyFormat)?.let { add(it) }
+            }
+            
+            // CRITICAL: If format list is empty, yt-dlp will use default selection
+            // which may not respect user's preference. Let's ensure we always have formats.
+            if (isEmpty()) {
+                // Use the best available format as fallback
+                highestVideoFormat?.let { add(it) }
             }
         }
     }
