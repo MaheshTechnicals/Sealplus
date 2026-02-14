@@ -84,7 +84,7 @@ object TaskFactory {
                     // WEBM container with VP9 video - keep as WEBM
                     when {
                         (videoCodec.contains("avc") || videoCodec.contains("h264")) && videoExtension == "webm" -> "mp4"
-                        (videoCodec.contains("vp9") || videoCodec.contains("vp09") || videoCodec.contains("av01")) && videoExtension == "mp4") -> "webm"
+                        (videoCodec.contains("vp9") || videoCodec.contains("vp09") || videoCodec.contains("av01")) && videoExtension == "mp4" -> "webm"
                         else -> "" // Format is already correct, don't remux
                     }
                 }
