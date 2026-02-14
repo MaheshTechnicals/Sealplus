@@ -186,10 +186,25 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                     )
                     .onSuccess { info ->
                         withContext(Dispatchers.Main) {
-                            mSelectionStateFlow.update {
-                                SelectionState.FormatSelection(info = info)
+                            // Format selection is only supported for YouTube
+                            val isYouTube = info.extractorKey.equals("Youtube", ignoreCase = true)
+                            
+                            if (isYouTube) {
+                                mSelectionStateFlow.update {
+                                    SelectionState.FormatSelection(info = info)
+                                }
+                                hideDialog()
+                            } else {
+                                // For non-YouTube sites, download with default format
+                                downloader.enqueue(
+                                    Task(
+                                        url = url,
+                                        preferences = preferences.copy(extractAudio = audioOnly)
+                                    )
+                                )
+                                hideDialog()
+                                App.context.makeToast(R.string.format_selection_youtube_only)
                             }
-                            hideDialog()
                         }
                     }
                     .onFailure { th ->

@@ -232,6 +232,7 @@
     <string name="suggested">Suggested</string>
     <string name="format_selection">Format selection</string>
     <string name="format_selection_desc">Select the format to download before starting the download</string>
+    <string name="format_selection_youtube_only">Format selection is only available for YouTube. Downloading with default settings…</string>
     <string name="generate_new_cookies">Generate new cookies</string>
     <string name="use_cookies">Use Cookies</string>
     <string name="remove_cookie_profile_desc">Remove this entry for \"%1$s\"? Please note that the cookies stored for this site will not be cleared.</string>

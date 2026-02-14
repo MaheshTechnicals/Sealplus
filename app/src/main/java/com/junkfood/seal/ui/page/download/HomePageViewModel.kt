@@ -120,8 +120,13 @@ class HomePageViewModel : ViewModel() {
     }
 
     private fun showFormatSelectionPageOrDownload(info: VideoInfo) {
-        if (info.format.isNullOrEmpty()) Downloader.downloadVideoWithInfo(info)
-        else {
+        // Format selection is only supported for YouTube due to platform-specific format IDs
+        val isYouTube = info.extractorKey.equals("Youtube", ignoreCase = true)
+        
+        if (info.format.isNullOrEmpty() || !isYouTube) {
+            // For non-YouTube sites or when no formats available, download with default settings
+            Downloader.downloadVideoWithInfo(info)
+        } else {
             videoInfoFlow.update { info }
             mutableViewStateFlow.update { it.copy(showFormatSelectionPage = true) }
         }
