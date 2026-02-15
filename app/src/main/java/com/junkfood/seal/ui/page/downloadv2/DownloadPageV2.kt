@@ -198,6 +198,8 @@ sealed interface UiAction {
 
     data object Resume : UiAction
 
+    data object Retry : UiAction
+
     data class CopyErrorReport(val throwable: Throwable) : UiAction
 
     data object ShowDetails : UiAction
@@ -248,6 +250,7 @@ fun DownloadPageV2(
         when (action) {
             UiAction.Pause -> downloader.pause(task)
             UiAction.Cancel -> downloader.cancel(task)
+            UiAction.Retry -> downloader.restart(task)
             UiAction.Delete -> downloader.remove(task)
             UiAction.Resume -> downloader.resume(task)
             is UiAction.CopyErrorReport -> {

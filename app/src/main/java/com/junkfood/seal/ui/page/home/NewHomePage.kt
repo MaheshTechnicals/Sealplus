@@ -589,6 +589,7 @@ fun NewHomePage(
                                 UiAction.Cancel -> downloader.cancel(task)
                                 UiAction.Delete -> downloader.remove(task)
                                 UiAction.Resume -> downloader.resume(task)
+                                UiAction.Retry -> downloader.restart(task)
                                 is UiAction.CopyErrorReport -> {
                                     clipboardManager.setText(
                                         AnnotatedString(getErrorReport(action.throwable, task.url))
@@ -1223,6 +1224,23 @@ fun ActiveDownloadCard(
                                 text = { Text(stringResource(R.string.resume)) },
                                 onClick = {
                                     onAction(UiAction.Resume)
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.PlayArrow,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        }
+                        
+                        // Retry option for canceled or failed downloads
+                        if (downloadState is Task.DownloadState.Canceled || downloadState is Task.DownloadState.Error) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.retry)) },
+                                onClick = {
+                                    onAction(UiAction.Retry)
                                     showMenu = false
                                 },
                                 leadingIcon = {

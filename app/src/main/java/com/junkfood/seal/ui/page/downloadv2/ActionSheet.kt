@@ -115,6 +115,18 @@ private fun ResumeButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 }
 
 @Composable
+private fun RetryButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    ActionSheetPrimaryButton(
+        modifier = modifier,
+        containerColor = LocalFixedColorRoles.current.tertiaryFixed,
+        contentColor = LocalFixedColorRoles.current.onTertiaryFixedVariant,
+        imageVector = Icons.Outlined.RestartAlt,
+        text = stringResource(R.string.retry),
+        onClick = onClick,
+    )
+}
+
+@Composable
 private fun PauseButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     ActionSheetPrimaryButton(
         modifier = modifier,
@@ -295,9 +307,9 @@ fun LazyListScope.ActionButtons(
 ) {
     when (downloadState) {
         is Canceled -> {
-            item(key = "ResumeButton") {
-                ResumeButton(modifier = Modifier.animateItem()) {
-                    onActionPost(task, UiAction.Resume)
+            item(key = "RetryButton") {
+                RetryButton(modifier = Modifier.animateItem()) {
+                    onActionPost(task, UiAction.Retry)
                     onDismissRequest()
                 }
             }
@@ -316,9 +328,9 @@ fun LazyListScope.ActionButtons(
             }
         }
         is Error -> {
-            item(key = "ResumeButton") {
-                ResumeButton(modifier = Modifier.animateItem()) {
-                    onActionPost(task, UiAction.Resume)
+            item(key = "RetryButton") {
+                RetryButton(modifier = Modifier.animateItem()) {
+                    onActionPost(task, UiAction.Retry)
                     onDismissRequest()
                 }
             }
