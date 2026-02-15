@@ -121,8 +121,8 @@ object DownloadUtil {
                         addOption("--restrict-filenames")
                     }
                     
-                    // Let yt-dlp automatically choose best player client for playlists
-                    // Avoids PO Token issues and ensures compatibility
+                    // Use ios,android fallback for consistent format IDs
+                    addOption("--extractor-args", "youtube:player_client=ios,android")
                 }
             }
             execute(request, playlistURL).out.run {
@@ -178,12 +178,15 @@ object DownloadUtil {
                         addOption("--write-auto-subs")
                     }
                     
-                    // Let yt-dlp automatically choose best player client
-                    // Default behavior tries multiple clients (ios, tv, etc) and picks what works
-                    // This avoids PO Token requirements and ensures all formats are available
-                    if (autoSubtitle && !autoTranslatedSubtitles) {
-                        addOption("--extractor-args", "youtube:skip=translated_subs")
-                    }
+                    // Use ios,android fallback chain for consistent format IDs and all quality options
+                    // ios = primary (all formats), android = fallback (for speed)
+                    val extractorArgs = buildList {
+                        if (autoSubtitle && !autoTranslatedSubtitles) {
+                            add("skip=translated_subs")
+                        }
+                        add("player_client=ios,android")
+                    }.joinToString(";")
+                    addOption("--extractor-args", "youtube:$extractorArgs")
                     
                     if (playlistIndex != null) {
                         addOption("--playlist-items", playlistIndex)
@@ -455,7 +458,7 @@ object DownloadUtil {
 
     private fun YoutubeDLRequest.enableAria2c(): YoutubeDLRequest =
         this.addOption("--downloader", "libaria2c.so")
-            .addOption("--external-downloader-args", "aria2c:\"--summary-interval=1\"")
+            .addOption("--external-downloader-args", "aria2c:\"-x 8 -s 8 -k 1M --summary-interval=1\"")
 
     private fun YoutubeDLRequest.addOptionsForVideoDownloads(
         downloadPreferences: DownloadPreferences
@@ -483,11 +486,15 @@ object DownloadUtil {
                     applyFormatSorter(this, toFormatSorter())
                 }
                 
-                // Let yt-dlp automatically choose best player client for downloads
-                // Default behavior ensures format ID consistency and avoids PO Token issues
-                if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
-                    addOption("--extractor-args", "youtube:skip=translated_subs")
-                }
+                // Use ios,android fallback chain for consistent format IDs between fetch and download
+                // This ensures selected format matches downloaded format
+                val extractorArgs = buildList {
+                    if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
+                        add("skip=translated_subs")
+                    }
+                    add("player_client=ios,android")
+                }.joinToString(";")
+                addOption("--extractor-args", "youtube:$extractorArgs")
                 
                 if (downloadSubtitle) {
                     if (autoSubtitle) {
@@ -603,10 +610,14 @@ object DownloadUtil {
             with(preferences) {
                 addOption("-x")
                 
-                // Let yt-dlp automatically choose best player client for audio downloads
-                if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
-                    addOption("--extractor-args", "youtube:skip=translated_subs")
-                }
+                // Use ios,android fallback for format ID consistency
+                val extractorArgs = buildList {
+                    if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
+                        add("skip=translated_subs")
+                    }
+                    add("player_client=ios,android")
+                }.joinToString(";")
+                addOption("--extractor-args", "youtube:$extractorArgs")
                 
                 if (downloadSubtitle) {
                     addOption("--write-subs")
@@ -775,10 +786,6 @@ object DownloadUtil {
                     } else if (concurrentFragments > 1) {
                         addOption("--concurrent-fragments", concurrentFragments)
                     }
-
-                    // Note: Android player client extractor-args are now applied in
-                    // addOptionsForVideoDownloads() and addOptionsForAudioDownloads()
-                    // to properly combine with subtitle extractor-args
 
                     if (extractAudio || (videoInfo.vcodec == "none")) {
                         if (privateDirectory) pathBuilder.append(App.privateDownloadDir)
