@@ -121,9 +121,8 @@ object DownloadUtil {
                         addOption("--restrict-filenames")
                     }
                     
-                    // Use iOS player client for playlist info
-                    // Provides all quality options without PO Token and maintains good speed
-                    addOption("--extractor-args", "youtube:player_client=ios")
+                    // Let yt-dlp automatically choose best player client for playlists
+                    // Avoids PO Token issues and ensures compatibility
                 }
             }
             execute(request, playlistURL).out.run {
@@ -179,16 +178,12 @@ object DownloadUtil {
                         addOption("--write-auto-subs")
                     }
                     
-                    // Use iOS player client for format fetching
-                    // iOS client provides all quality formats without PO Token requirement
-                    // and maintains good download speeds
-                    val extractorArgs = buildList {
-                        if (autoSubtitle && !autoTranslatedSubtitles) {
-                            add("skip=translated_subs")
-                        }
-                        add("player_client=ios")
-                    }.joinToString(";")
-                    addOption("--extractor-args", "youtube:$extractorArgs")
+                    // Let yt-dlp automatically choose best player client
+                    // Default behavior tries multiple clients (ios, tv, etc) and picks what works
+                    // This avoids PO Token requirements and ensures all formats are available
+                    if (autoSubtitle && !autoTranslatedSubtitles) {
+                        addOption("--extractor-args", "youtube:skip=translated_subs")
+                    }
                     
                     if (playlistIndex != null) {
                         addOption("--playlist-items", playlistIndex)
@@ -488,15 +483,11 @@ object DownloadUtil {
                     applyFormatSorter(this, toFormatSorter())
                 }
                 
-                // Use iOS player client for downloads - maintains speed while ensuring format ID consistency
-                // iOS client: fast downloads + all quality formats + no PO Token needed + consistent format IDs
-                val extractorArgs = buildList {
-                    if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
-                        add("skip=translated_subs")
-                    }
-                    add("player_client=ios")
-                }.joinToString(";")
-                addOption("--extractor-args", "youtube:$extractorArgs")
+                // Let yt-dlp automatically choose best player client for downloads
+                // Default behavior ensures format ID consistency and avoids PO Token issues
+                if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
+                    addOption("--extractor-args", "youtube:skip=translated_subs")
+                }
                 
                 if (downloadSubtitle) {
                     if (autoSubtitle) {
@@ -612,14 +603,10 @@ object DownloadUtil {
             with(preferences) {
                 addOption("-x")
                 
-                // Use iOS player client for audio downloads - maintains speed and format ID consistency
-                val extractorArgs = buildList {
-                    if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
-                        add("skip=translated_subs")
-                    }
-                    add("player_client=ios")
-                }.joinToString(";")
-                addOption("--extractor-args", "youtube:$extractorArgs")
+                // Let yt-dlp automatically choose best player client for audio downloads
+                if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
+                    addOption("--extractor-args", "youtube:skip=translated_subs")
+                }
                 
                 if (downloadSubtitle) {
                     addOption("--write-subs")
