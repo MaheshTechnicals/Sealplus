@@ -1723,16 +1723,39 @@ fun RecentDownloadDetailsDialog(
                     }
                 }
                 
-                // Row 2: Creator and Platform
+                // Row 2: Resolution and Platform
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (downloadInfo.videoAuthor.isNotEmpty()) {
+                    // Extract resolution from video file
+                    val resolution = remember(downloadInfo.videoPath) {
+                        try {
+                            if (file.exists()) {
+                                val retriever = android.media.MediaMetadataRetriever()
+                                retriever.setDataSource(downloadInfo.videoPath)
+                                val width = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                                val height = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                                retriever.release()
+                                
+                                if (width != null && height != null) {
+                                    "${width}x${height}"
+                                } else {
+                                    "N/A"
+                                }
+                            } else {
+                                "N/A"
+                            }
+                        } catch (e: Exception) {
+                            "N/A"
+                        }
+                    }
+                    
+                    if (resolution != "N/A") {
                         DetailCard(
-                            icon = Icons.Outlined.Person,
-                            label = stringResource(R.string.video_creator_label),
-                            value = downloadInfo.videoAuthor,
+                            icon = Icons.Outlined.HighQuality,
+                            label = stringResource(R.string.resolution),
+                            value = resolution,
                             modifier = Modifier.weight(1f)
                         )
                     }
