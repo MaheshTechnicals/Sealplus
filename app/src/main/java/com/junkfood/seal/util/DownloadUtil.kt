@@ -120,9 +120,6 @@ object DownloadUtil {
                     if (restrictFilenames) {
                         addOption("--restrict-filenames")
                     }
-                    
-                    // Use player_skip for deterministic client selection
-                    addOption("--extractor-args", "youtube:player_skip=configs,webpage")
                 }
             }
             execute(request, playlistURL).out.run {
@@ -178,16 +175,11 @@ object DownloadUtil {
                         addOption("--write-auto-subs")
                     }
                     
-                    // Use player_skip for consistent client selection without PO Token issues
-                    // player_skip=configs avoids config-based client selection randomness
-                    // This ensures same client selection for both fetch and download
-                    val extractorArgs = buildList {
-                        if (autoSubtitle && !autoTranslatedSubtitles) {
-                            add("skip=translated_subs")
-                        }
-                        add("player_skip=configs,webpage")
-                    }.joinToString(";")
-                    addOption("--extractor-args", "youtube:$extractorArgs")
+                    // No player_skip or player_client to get all format types
+                    // Format ID consistency will be maintained through caching within the same session
+                    if (autoSubtitle && !autoTranslatedSubtitles) {
+                        addOption("--extractor-args", "youtube:skip=translated_subs")
+                    }
                     
                     if (playlistIndex != null) {
                         addOption("--playlist-items", playlistIndex)
@@ -487,15 +479,11 @@ object DownloadUtil {
                     applyFormatSorter(this, toFormatSorter())
                 }
                 
-                // Use player_skip for consistent client selection between fetch and download
-                // This ensures the SAME client is used, so format IDs match perfectly
-                val extractorArgs = buildList {
-                    if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
-                        add("skip=translated_subs")
-                    }
-                    add("player_skip=configs,webpage")
-                }.joinToString(";")
-                addOption("--extractor-args", "youtube:$extractorArgs")
+                // No player_skip - format IDs selected by user are passed explicitly via -f flag
+                // This ensures correct format is downloaded regardless of client selection
+                if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
+                    addOption("--extractor-args", "youtube:skip=translated_subs")
+                }
                 
                 if (downloadSubtitle) {
                     if (autoSubtitle) {
@@ -611,14 +599,10 @@ object DownloadUtil {
             with(preferences) {
                 addOption("-x")
                 
-                // Use player_skip for consistent client selection
-                val extractorArgs = buildList {
-                    if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
-                        add("skip=translated_subs")
-                    }
-                    add("player_skip=configs,webpage")
-                }.joinToString(";")
-                addOption("--extractor-args", "youtube:$extractorArgs")
+                // No player_skip for audio - format ID explicitly passed
+                if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
+                    addOption("--extractor-args", "youtube:skip=translated_subs")
+                }
                 
                 if (downloadSubtitle) {
                     addOption("--write-subs")
