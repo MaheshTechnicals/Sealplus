@@ -121,9 +121,9 @@ object DownloadUtil {
                         addOption("--restrict-filenames")
                     }
                     
-                    // Apply android player client for consistent format IDs
-                    // CRITICAL: Must match download phase (same as fetchVideoInfoFromUrl)
-                    addOption("--extractor-args", "youtube:player_client=android")
+                    // NOTE: Do NOT use android player client for playlist info fetching
+                    // It requires PO Token and limits available quality options
+                    // Let yt-dlp use default clients for full format availability
                 }
             }
             execute(request, playlistURL).out.run {
@@ -179,16 +179,12 @@ object DownloadUtil {
                         addOption("--write-auto-subs")
                     }
                     
-                    // Build YouTube extractor args (combine multiple args with semicolon)
-                    // CRITICAL: Must match download phase to ensure consistent format IDs
-                    val extractorArgs = buildList {
-                        if (autoSubtitle && !autoTranslatedSubtitles) {
-                            add("skip=translated_subs")
-                        }
-                        // Speed optimization: android player client for faster downloads
-                        add("player_client=android")
-                    }.joinToString(";")
-                    addOption("--extractor-args", "youtube:$extractorArgs")
+                    // Build YouTube extractor args for format fetching
+                    // NOTE: Do NOT use android player client here - it requires PO Token for high quality formats
+                    // Let yt-dlp use default clients (ios, tv) which provide all quality options
+                    if (autoSubtitle && !autoTranslatedSubtitles) {
+                        addOption("--extractor-args", "youtube:skip=translated_subs")
+                    }
                     
                     if (playlistIndex != null) {
                         addOption("--playlist-items", playlistIndex)
@@ -488,15 +484,15 @@ object DownloadUtil {
                     applyFormatSorter(this, toFormatSorter())
                 }
                 
-                // Build YouTube extractor args - MUST be applied for ALL downloads
-                // to ensure consistent format IDs between format selection and download
+                // Build YouTube extractor args - android client for download speed optimization
+                // NOTE: Format fetching uses default clients to get all quality options (no PO Token needed)
+                // Download uses android client for speed - works with format IDs even if missing PO Token
                 val extractorArgs = buildList {
                     // Subtitle-related args
                     if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
                         add("skip=translated_subs")
                     }
                     // Speed optimization: android player client for faster downloads
-                    // CRITICAL: Must ALWAYS match fetchVideoInfoFromUrl, even without subtitles
                     add("player_client=android")
                 }.joinToString(";")
                 addOption("--extractor-args", "youtube:$extractorArgs")
@@ -615,15 +611,15 @@ object DownloadUtil {
             with(preferences) {
                 addOption("-x")
                 
-                // Build YouTube extractor args - MUST be applied for ALL downloads
-                // to ensure consistent format IDs between format selection and download
+                // Build YouTube extractor args - android client for download speed optimization
+                // NOTE: Format fetching uses default clients to get all quality options (no PO Token needed)
+                // Download uses android client for speed - works with format IDs even if missing PO Token
                 val extractorArgs = buildList {
                     // Subtitle-related args
                     if (downloadSubtitle && autoSubtitle && !autoTranslatedSubtitles) {
                         add("skip=translated_subs")
                     }
                     // Speed optimization: android player client for faster downloads
-                    // CRITICAL: Must ALWAYS match fetchVideoInfoFromUrl, even without subtitles
                     add("player_client=android")
                 }.joinToString(";")
                 addOption("--extractor-args", "youtube:$extractorArgs")
