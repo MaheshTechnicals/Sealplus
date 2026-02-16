@@ -88,62 +88,46 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## 🚀 Seal Plus v2.0.0 - Major Release: Revolutionary Download Management
-          
-          **Package Name Changed:** `com.maheshtechnicals.sealplus`
-          
-          ⚠️ **IMPORTANT:** App package name has changed. Uninstall old app and install this new version. If using auto-update, download from app, install, then remove old app.
+          ## 🚀 Seal Plus v2.1.0 - Enhanced Download Management & Performance
           
           ---
           
-          ### ⏯️ Download Control & Management
+          ### 🔄 Download Management Enhancements
           
-          * **Pause and Resume Functionality**
-            * Pause/Resume in three-dot menu and icon on download cards
-            * Queue support for managing multiple downloads
-            * Progress preservation when paused
-            * Resume from exact position
+          * **Retry Option for Failed/Canceled Downloads**
+            * One-click retry button in failed/canceled download cards
+            * Smart state management maintains download preferences
+            * Quick recovery without re-entering URLs
+            * Automatic error handling for temporary failures
           
-          * **Concurrent Downloads Control (1-5 simultaneous)**
-            * Control how many files download at once
-            * Available in Settings → Seal Plus Extras
-            * Automatic queuing system
+          ### 📊 Download Details & UI Improvements
           
-          ### 🌐 Advanced Proxy Settings (BETA)
+          * **Enhanced Details Dialog**
+            * Added comprehensive resolution section in details dialog
+            * Details dialog opens directly at full length for better visibility
+            * Improved information layout with clear video/audio resolution
+            * Better organized format specifications (codec, bitrate, quality)
           
-          * **Auto-fetch and auto-test proxies**
-            * Free proxy support by country
-            * Custom HTTP/HTTPS/SOCKS proxy configuration
-            * Automatic proxy testing and connection
+          ### ⚡ Performance Optimization
           
-          ### 📊 Download Details & Information
+          * **Download Speed Optimization**
+            * Advanced speed optimization algorithms for ultra-fast downloads
+            * Enhanced aria2c multi-connection configuration
+            * Better bandwidth utilization and network efficiency
+            * Reduced latency for faster connection and data transfer
           
-          * **Comprehensive details dialog** - View file name, thumbnail, size, format, path, date
-          * **Enhanced status messages** - Clear indicators: "Fetching data", "Downloading video/audio", "Merging"
-          * **Interactive elements** - Click to copy URLs and view paths
+          ### 💎 Sponsors Feature
           
-          ### 💰 Developer Support
-          
-          * **UPI Payment Integration** - Support developers through donations
-          * **Redesigned Sponsors Page** - Fully enhanced with better engagement
-          * **Support Developer Page** - Multiple ways to contribute
-          
-          ### 🔔 Smart Permissions
-          
-          * Notification permission handling (Android 13+)
-          * Battery optimization management
-          * Telegram release notifications
-          
-          ### ⚙️ Configuration
-          
-          * **yt-dlp stable build** - Changed from nightly to stable (Settings → General → yt-dlp)
-          * Better reliability and download stability
+          * **API Integration & Display**
+            * Integrated sponsor data fetching from API endpoint
+            * Beautiful dynamic sponsor dialog with profile information
+            * Real-time sponsor list updates from server
+            * Premium gradient design for sponsor recognition
+            * Proper attribution and thanks to project supporters
           
           ---
           
           ### 📦 Installation
-          
-          ⚠️ **Package name changed!** Uninstall old version first.
           
           Download the appropriate APK for your device:
           - **Universal APK**: Works on all devices (recommended)
@@ -152,14 +136,15 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### 💎 Key Features (v2.0)
+          ### 💎 Key Features (v2.1)
+          - 🔄 **Retry failed downloads** - One-click recovery for canceled/failed downloads
+          - 📊 **Enhanced details dialog** - Resolution section with full-length display
+          - ⚡ **Speed optimization** - Ultra-fast downloads with advanced algorithms
+          - 💎 **Sponsors feature** - API integration with dynamic display
           - ⏯️ **Pause/Resume downloads** with queue support
           - 🌐 **Advanced proxy settings** (BETA) with auto-fetch/test
-          - 📊 **Comprehensive download details** dialog
           - 💰 **Developer support** via UPI payments
           - 🔢 **Concurrent downloads** control (1-5 simultaneous)
-          - 🔔 **Smart notifications** & permission management
-          - ✨ Professional onboarding screens
           - 🎨 Gradient Dark theme with glassmorphism
           - 🔒 App Lock with PIN & Biometric
           - 📥 Download from 1000+ sites via yt-dlp
@@ -208,43 +193,39 @@ jobs:
         
         ━━━━━━━━━━━━━━━━━━━━━
         
-        📝 <b>Changelog:</b>
+        📝 <b>Changelog (v2.1):</b>
         
-        <b>⏯️ Download Control &amp; Management</b>
-        • Pause/Resume downloads in menu and cards
-        • Concurrent downloads control (1-5 simultaneous)
-        • Queue support with progress preservation
+        <b>🔄 Download Management Enhancements</b>
+        • Retry option for failed/canceled downloads
+        • One-click recovery without re-entering URLs
+        • Smart state management for quick restart
         
-        <b>🌐 Advanced Proxy Settings (BETA)</b>
-        • Auto-fetch and auto-test proxies
-        • Free proxy support by country
-        • Custom proxy configuration
+        <b>📊 Details Dialog &amp; UI Improvements</b>
+        • Added resolution section in details dialog
+        • Direct full-length display for better visibility
+        • Improved information layout with format specs
         
-        <b>📊 Download Details &amp; Info</b>
-        • Comprehensive details dialog
-        • Enhanced status messages
-        • Interactive copy/view elements
+        <b>⚡ Performance Optimization</b>
+        • Advanced speed optimization algorithms
+        • Ultra-fast downloads with enhanced aria2c
+        • Better bandwidth utilization
+        • Reduced latency for faster transfers
         
-        <b>💰 Developer Support</b>
-        • UPI Payment Integration
-        • Redesigned Sponsors Page
-        • Support Developer page
-        
-        <b>🔔 Smart Permissions</b>
-        • Notification permission handling
-        • Battery optimization management
-        • Telegram release notifications
-        
-        <b>⚙️ Configuration Updates</b>
-        • yt-dlp stable build (was nightly)
-        • Better download reliability
+        <b>💎 Sponsors Feature</b>
+        • API integration for sponsor data
+        • Dynamic sponsor dialog with profiles
+        • Real-time updates from server
+        • Premium gradient design
         
         ━━━━━━━━━━━━━━━━━━━━━
         
-        💎 <b>Key Features:</b>
+        💎 <b>Key Features (v2.1):</b>
+        🔄 Retry failed downloads
+        📊 Enhanced details with resolution
+        ⚡ Speed optimization
+        💎 Sponsors API integration
         ⏯️ Pause/Resume downloads
-        🌐 Advanced proxy settings (BETA)
-        📊 Comprehensive download details
+        🌐 Advanced proxy (BETA)
         💰 UPI payment integration
         🔢 Concurrent downloads (1-5)
         🎨 Gradient Dark theme
@@ -267,7 +248,7 @@ jobs:
         
         ━━━━━━━━━━━━━━━━━━━━━
         
-        ℹ️ <b>Note:</b> This is a MAJOR release with package name change. Uninstall old app before installing v${{ steps.version.outputs.VERSION }}. Includes revolutionary download management features: pause/resume, advanced proxy (BETA), concurrent downloads control, and developer support via UPI payments!
+        ℹ️ <b>Note:</b> This release brings enhanced download management with retry functionality, improved details dialog with resolution info, ultra-fast speed optimization, and new sponsors feature with API integration. Enjoy faster downloads and better user experience!
         
         📅 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         

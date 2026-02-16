@@ -5,6 +5,52 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-16
+
+### 🔄 Download Management Enhancements
+
+* **Retry Option for Failed/Canceled Downloads**
+  * **Retry button** - Added retry functionality in canceled or failed state download cards
+  * **One-click recovery** - Quickly restart failed downloads without re-entering URL
+  * **Smart state management** - Maintains download preferences and settings
+  * **Error recovery** - Automatically handles temporary failures
+
+### 📊 Download Details & UI Improvements
+
+* **Enhanced Details Dialog**
+  * **Resolution section** - Added comprehensive resolution information in details dialog
+  * **Direct full-length display** - Details dialog now opens directly at full length for better visibility
+  * **Improved information layout** - Better organized video/audio resolution details
+  * **Format specifications** - Clear display of codec, bitrate, and quality information
+
+### ⚡ Performance Optimization
+
+* **Download Speed Optimization**
+  * **Higher download speeds** - Implemented advanced speed optimization algorithms
+  * **Enhanced aria2c configuration** - Optimized multi-connection download parameters
+  * **Network efficiency** - Better bandwidth utilization and connection management
+  * **Reduced latency** - Faster initial connection and data transfer start
+
+### 💎 Sponsors Feature
+
+* **API Integration & Display**
+  * **Sponsors API** - Integrated sponsor data fetching from API endpoint
+  * **Dynamic sponsor dialog** - Beautiful sponsor display with profile information
+  * **Real-time updates** - Sponsor list updates automatically from server
+  * **Enhanced UI** - Premium gradient design for sponsor acknowledgment
+  * **Support recognition** - Proper attribution and thanks to project supporters
+
+### 🐛 Bug Fixes & Improvements
+
+* Improved download state management for retry functionality
+* Enhanced dialog opening animations for details view
+* Better error handling in failed download scenarios
+* Optimized memory usage during high-speed downloads
+* Fixed UI responsiveness in details dialog
+* Improved sponsor data caching and loading
+
+---
+
 ## [2.0.0] - 2026-02-05
 
 ### 🚀 Major Release - Revolutionary Download Management

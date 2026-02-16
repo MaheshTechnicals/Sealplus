@@ -23,7 +23,7 @@
 - **⚡ Auto-Update System**: Seamless in-app updates from our release page
 - **🎯 Enhanced Repository**: Active maintenance and improvements by [Mahesh Technicals](https://github.com/MaheshTechnicals)
 - **💎 Modern Architecture**: Latest Android SDK 36, Kotlin 2.0, Jetpack Compose, yt-dlp 2025.12.08
-- **🚀 Performance Optimized**: Hardware-accelerated animations, efficient downloads, advanced aria2c support
+- **🚀 Performance Optimized**: Hardware-accelerated animations, ultra-fast downloads with speed optimization, advanced aria2c support
 
 ---
 
@@ -171,10 +171,22 @@ English
 
 ## ⬇️ Download & Installation
 
-### 🎉 What's New in v2.0?
+### 🎉 What's New in v2.1?
 
 <details>
-<summary><b>📱 Click to see latest updates - MAJOR RELEASE (February 5, 2026)</b></summary>
+<summary><b>📱 Click to see latest updates - Enhanced Features (February 16, 2026)</b></summary>
+
+#### 🔄 Download Management Enhancements (v2.1)
+- ✅ **Retry Failed Downloads** - One-click retry for canceled or failed downloads
+- 📊 **Resolution in Details** - Added comprehensive resolution section in details dialog
+- 🖥️ **Full-Length Details** - Details dialog opens directly at full length for better visibility
+- ⚡ **Speed Optimization** - Enhanced download speeds with advanced algorithms
+- 💎 **Sponsors Feature** - API integration with dynamic sponsor display and dialog
+
+</details>
+
+<details>
+<summary><b>📱 Previous Major Release - v2.0 (February 5, 2026)</b></summary>
 
 #### 🚀 Major Release - Revolutionary Download Management
 
@@ -227,14 +239,15 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 ### 🚀 Latest Releases
 
 - **Latest Stable**: [Download from GitHub Releases](https://github.com/MaheshTechnicals/Sealplus/releases/latest)
-  - ✅ **Current Version**: v2.0.0 (February 2026)
+  - ✅ **Current Version**: v2.1.0 (February 2026)
+  - 🔄 **Retry Failed Downloads** - One-click retry for canceled/failed downloads
+  - 📊 **Enhanced Details Dialog** - Resolution section with full-length direct display
+  - ⚡ **Speed Optimization** - Ultra-fast downloads with advanced speed algorithms
+  - 💎 **Sponsors Feature** - API-integrated sponsor display and recognition
   - ⏯️ **Pause/Resume Downloads** - Full download control with queue
   - 🌐 **Advanced Proxy (BETA)** - Auto-fetch and test proxies
-  - 📊 **Download Details** - Comprehensive info dialogs
   - 💰 **UPI Payment Support** - Donate to support development
   - 🔢 **Concurrent Downloads** - Control 1-5 simultaneous downloads
-  - 🔔 **Smart Permissions** - Better notification & battery management
-  - ⚠️ **Package Name Changed** - Uninstall old app first
   - 🚀 **Auto-Update System** enabled for seamless updates
 
 - **Preview Builds**: [Download Pre-release Versions](https://github.com/MaheshTechnicals/Sealplus/releases) 
@@ -248,8 +261,8 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 |------------|---------------|
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target Android** | Android 14 (API 36) |
-| **Current Version** | 2.0.0 |
-| **Release Date** | February 5, 2026 |
+| **Current Version** | 2.1.0 |
+| **Release Date** | February 16, 2026 |
 
 ### 🏗️ Architecture Support
 

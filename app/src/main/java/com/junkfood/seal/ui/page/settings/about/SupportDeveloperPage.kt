@@ -111,7 +111,7 @@ fun SupportDeveloperPage(
                         .build()
                     
                     val request = Request.Builder()
-                        .url("https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/refs/heads/test/sponsors.json")
+                        .url("https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/refs/heads/main/sponsors.json")
                         .get()
                         .addHeader("Accept", "application/json")
                         .build()
