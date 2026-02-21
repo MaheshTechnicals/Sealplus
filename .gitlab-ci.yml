@@ -2,6 +2,7 @@ stages:
   - build
 
 variables:
+  # Gradle ko bata rahe hain ki cache project folder me hi rakhe
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -11,14 +12,19 @@ cache:
   paths:
     - .gradle/wrapper
     - .gradle/caches
-    - jdk21/ # Ab ye warning nahi dega aur save ho jayega
+    - jdk21/
 
 build_job:
   stage: build
   image: mobiledevops/android-sdk-image:34.0.0-jdk17
 
   before_script:
-    # --- SMART JAVA INSTALL & CACHE FIX ---
+    # --- ?? CACHE PERMISSION FIX ---
+    # Agar folder nahi hai toh banayega, aur usko full Read/Write permission dega
+    - mkdir -p "$CI_PROJECT_DIR/.gradle"
+    - chmod -R 777 "$CI_PROJECT_DIR/.gradle"
+
+    # --- ? SMART JAVA INSTALL & CACHE FIX ---
     - |
       if [ ! -d "$CI_PROJECT_DIR/jdk21" ]; then
         echo "? Downloading Java 21 (First Run Only)..."
@@ -26,7 +32,7 @@ build_job:
         tar -xzf jdk21.tar.gz
         rm jdk21.tar.gz
         
-        # NAYA STEP: Folder ka exact naam 'jdk21' set kar rahe hain
+        # Extracted folder ka naam badal kar exactly 'jdk21' kar rahe hain taaki cache save ho sake
         EXTRACTED_DIR=$(find . -maxdepth 1 -type d -name "jdk-21*" | head -n 1)
         mv "$EXTRACTED_DIR" jdk21
       else
@@ -37,7 +43,7 @@ build_job:
     - export JAVA_HOME="$CI_PROJECT_DIR/jdk21"
     - export PATH="$JAVA_HOME/bin:$PATH"
     
-    # --- DECODE KEYSTORE ---
+    # --- ? DECODE KEYSTORE ---
     - echo "? Decoding Key..."
     - echo "$ANDROID_SIGNING_KEY" | tr -d '\n\r ' | base64 --decode > "$CI_PROJECT_DIR/Mahesh.jks"
 
