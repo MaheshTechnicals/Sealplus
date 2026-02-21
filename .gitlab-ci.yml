@@ -2,41 +2,54 @@ stages:
   - build
 
 variables:
+  # Gradle ko batao ki cache project folder me hi rakhe taaki GitLab usse save kar sake
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+# --- ? CACHE CONFIGURATION (Speed Booster) ---
+cache:
+  key: "$CI_COMMIT_REF_SLUG" # Har branch ka apna alag cache hoga
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
+    - jdk21/ # Java 21 ko bhi cache karenge!
 
 build_job:
   stage: build
-  # ? FIXED: Wapas working image par aa gaye
   image: mobiledevops/android-sdk-image:34.0.0-jdk17
 
   before_script:
-    # --- STEP 1: INSTALL JAVA 21 MANUALLY (Kyunki image me nahi hai) ---
-    - echo "? Downloading Java 21..."
-    - curl -L https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz -o jdk21.tar.gz
-    - tar -xzf jdk21.tar.gz
+    # --- SMART JAVA INSTALL (Sirf tab download karega jab cache me nahi hoga) ---
+    - |
+      if [ ! -d "$CI_PROJECT_DIR/jdk21" ]; then
+        echo "? Downloading Java 21 (First Run Only)..."
+        curl -L https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz -o jdk21.tar.gz
+        tar -xzf jdk21.tar.gz
+        rm jdk21.tar.gz
+      else
+        echo "? Using Cached Java 21 (Skipping Download)"
+      fi
+    
+    # Setup Java Path
     - JAVA_DIR=$(find . -maxdepth 1 -type d -name "jdk-21*" | head -n 1)
     - export JAVA_HOME="$CI_PROJECT_DIR/$JAVA_DIR"
     - export PATH="$JAVA_HOME/bin:$PATH"
-    - echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
     
-    # --- STEP 2: DECODE KEYSTORE (Optimized Fix) ---
+    # --- DECODE KEYSTORE ---
     - echo "? Decoding Key..."
-    # ? FIX: tr -d '\n\r ' hidden characters (enter/space) ko clean karega
     - echo "$ANDROID_SIGNING_KEY" | tr -d '\n\r ' | base64 --decode > "$CI_PROJECT_DIR/Mahesh.jks"
-    
-    # Verify file size (0 bytes nahi hona chahiye)
-    - ls -lh "$CI_PROJECT_DIR/Mahesh.jks"
 
   script:
-    # --- STEP 3: EXTRACT VERSION ---
+    # --- STEP 1: EXTRACT VERSION ---
     - |
       VERSION=$(grep -A 1 'val currentVersion: Version =' buildSrc/src/main/kotlin/Version.kt | grep -oP 'versionMajor = \K\d+' | head -1).$(grep -A 1 'val currentVersion: Version =' buildSrc/src/main/kotlin/Version.kt | grep -oP 'versionMinor = \K\d+' | head -1).$(grep -A 1 'val currentVersion: Version =' buildSrc/src/main/kotlin/Version.kt | grep -oP 'versionPatch = \K\d+' | head -1)
       echo "? Building Version: $VERSION"
 
-    # --- STEP 4: BUILD & SIGN ---
-    - bash ./gradlew assembleRelease -Pandroid.injected.signing.store.file="$CI_PROJECT_DIR/Mahesh.jks" -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" -Pandroid.injected.signing.key.alias="$ANDROID_ALIAS" -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
+    # --- STEP 2: FAST BUILD ---
+    # Added '--parallel' (modules ek sath build honge) and '--build-cache' (gradle ka internal cache use hoga)
+    - bash ./gradlew assembleRelease --parallel --build-cache -Pandroid.injected.signing.store.file="$CI_PROJECT_DIR/Mahesh.jks" -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" -Pandroid.injected.signing.key.alias="$ANDROID_ALIAS" -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
 
-    # --- STEP 5: SAVE ARTIFACTS ---
+    # --- STEP 3: SAVE ARTIFACTS ---
     - mkdir -p release_output
     - find app/build/outputs -name "*.apk" -exec cp {} release_output/ \;
     - ls -l release_output/
