@@ -1,4 +1,4 @@
 {
-  "release": false,
+  "release": true,
   "description": "Control release publishing. Set to true to publish releases, false to upload APKs as artifacts only."
 }
