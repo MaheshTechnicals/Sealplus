@@ -5,6 +5,52 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-27
+
+### 🚀 Performance Optimization
+
+* **Aria2c Speed Boost & Fixes**
+  + Fixed an argument quoting issue that previously forced aria2c into a slow, single-connection fallback mode
+  + Doubled parallel connection limits (from 8 to 16 streams) for a massive real-world download speed improvement
+  + Cleaned up redundant summary interval arguments for better libaria2c.so compatibility
+
+### 🛠️ Core Downloader Fixes
+
+* **Accurate Resolution Selection**
+  + Resolved a major bug where the app would ignore the user's chosen video resolution and fall back to default quality
+  + Corrected internal format validation to prevent stale state captures during format list generation
+  + Fixed audio codec checks to ensure the exact selected resolution is properly merged and passed to yt-dlp
+
+### 🎨 UI & Notification Improvements
+
+* **Cleaner Progress Tracking**
+  + Stripped the unnecessary `[download]` prefix from yt-dlp progress text for a cleaner display in cards and active notifications
+  + Fixed progress bar threshold logic so early download progress (0.1–0.9%) shows a real bar instead of an indeterminate spinner
+
+---
+
+### 📦 Installation
+
+Download the appropriate APK for your device:
+
+* **Universal APK**: Works on all devices (recommended)
+* **arm64-v8a**: For 64-bit ARM devices (most modern phones)
+* **armeabi-v7a**: For 32-bit ARM devices
+* **x86_64**: For 64-bit x86 devices
+* **x86**: For 32-bit x86 devices
+
+### ✨ Key Features (v2.2)
+
+* 🏎️ **Aria2c Speed Boost** - 16x parallel connections for ultra-fast downloads
+* 🎯 **Precise Quality Selection** - Reliable resolution and format merging
+* 🎨 **Enhanced Notifications** - Cleaner, accurate progress tracking right from the start
+* 🔄 **Retry failed downloads** - One-click recovery for canceled/failed downloads
+* 💎 **Sponsors feature** - API integration with dynamic display
+* ⏯️ **Pause/Resume downloads** with queue support
+* 🌐 Download from 1000+ sites via yt-dlp
+
+---
+
 ## [2.1.0] - 2026-02-16
 
 ### 🔄 Download Management Enhancements

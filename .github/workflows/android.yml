@@ -83,46 +83,33 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## ? Seal Plus v2.1.0 - Enhanced Download Management & Performance
+          ## 🏎️ Seal Plus v2.2.0 - Downloader Performance & Core Fixes
           
           ---
           
-          ### ? Download Management Enhancements
+          ### 🚀 Performance Optimization
           
-          * **Retry Option for Failed/Canceled Downloads**
-            * One-click retry button in failed/canceled download cards
-            * Smart state management maintains download preferences
-            * Quick recovery without re-entering URLs
-            * Automatic error handling for temporary failures
+          * **Aria2c Speed Boost & Fixes**
+              + Fixed an argument quoting issue that previously forced aria2c into a slow, single-connection fallback mode
+              + Doubled parallel connection limits (from 8 to 16 streams) for a massive real-world download speed improvement
+              + Cleaned up redundant summary interval arguments for better libaria2c.so compatibility
           
-          ### ? Download Details & UI Improvements
+          ### 🛠️ Core Downloader Fixes
           
-          * **Enhanced Details Dialog**
-            * Added comprehensive resolution section in details dialog
-            * Details dialog opens directly at full length for better visibility
-            * Improved information layout with clear video/audio resolution
-            * Better organized format specifications (codec, bitrate, quality)
+          * **Accurate Resolution Selection**
+              + Resolved a major bug where the app would ignore the user's chosen video resolution and fall back to default quality
+              + Corrected internal format validation to prevent stale state captures during format list generation
+              + Fixed audio codec checks to ensure the exact selected resolution is properly merged and passed to yt-dlp
           
-          ### ? Performance Optimization
+          ### 🎨 UI & Notification Improvements
           
-          * **Download Speed Optimization**
-            * Advanced speed optimization algorithms for ultra-fast downloads
-            * Enhanced aria2c multi-connection configuration
-            * Better bandwidth utilization and network efficiency
-            * Reduced latency for faster connection and data transfer
-          
-          ### ? Sponsors Feature
-          
-          * **API Integration & Display**
-            * Integrated sponsor data fetching from API endpoint
-            * Beautiful dynamic sponsor dialog with profile information
-            * Real-time sponsor list updates from server
-            * Premium gradient design for sponsor recognition
-            * Proper attribution and thanks to project supporters
+          * **Cleaner Progress Tracking**
+              + Stripped the unnecessary `[download]` prefix from yt-dlp progress text for a cleaner display in cards and active notifications
+              + Fixed progress bar threshold logic so early download progress (0.1–0.9%) shows a real bar instead of an indeterminate spinner
           
           ---
           
-          ### ? Installation
+          ### 📦 Installation
           
           Download the appropriate APK for your device:
           - **Universal APK**: Works on all devices (recommended)
@@ -131,22 +118,16 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### ? Key Features (v2.1)
-          - ? **Retry failed downloads** - One-click recovery for canceled/failed downloads
-          - ? **Enhanced details dialog** - Resolution section with full-length display
-          - ? **Speed optimization** - Ultra-fast downloads with advanced algorithms
-          - ? **Sponsors feature** - API integration with dynamic display
-          - ?? **Pause/Resume downloads** with queue support
-          - ? **Advanced proxy settings** (BETA) with auto-fetch/test
-          - ? **Developer support** via UPI payments
-          - ? **Concurrent downloads** control (1-5 simultaneous)
-          - ? Gradient Dark theme with glassmorphism
-          - ? App Lock with PIN & Biometric
-          - ? Download from 1000+ sites via yt-dlp
-          - ? 50+ language translations
-          - ?? Custom command templates
+          ### ✨ Key Features (v2.2)
+          - 🏎️ **Aria2c Speed Boost** - 16x parallel connections for ultra-fast downloads
+          - 🎯 **Precise Quality Selection** - Reliable resolution and format merging
+          - 🎨 **Enhanced Notifications** - Cleaner, accurate progress tracking right from the start
+          - 🔄 **Retry failed downloads** - One-click recovery for canceled/failed downloads
+          - 💎 **Sponsors feature** - API integration with dynamic display
+          - ⏯️ **Pause/Resume downloads** with queue support
+          - 🌐 Download from 1000+ sites via yt-dlp
           
-          ### ? Full Changelog
+          ### 📜 Full Changelog
           See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
           
           ---
@@ -177,74 +158,63 @@ jobs:
         # Prepare the release URL
         RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.VERSION }}"
         
+
         # Create a beautiful Telegram message with HTML formatting
         MESSAGE="? <b>New Release Available!</b> ?
-        
-        ?????????????????????
-        
+
+        ????????????????????????
+
         ? <b>App Name:</b> Seal Plus
-        
+
         ?? <b>Version:</b> v${{ steps.version.outputs.VERSION }}
-        
-        ?????????????????????
-        
-        ? <b>Changelog (v2.1):</b>
-        
-        <b>? Download Management Enhancements</b>
-        ? Retry option for failed/canceled downloads
-        ? One-click recovery without re-entering URLs
-        ? Smart state management for quick restart
-        
-        <b>? Details Dialog &amp; UI Improvements</b>
-        ? Added resolution section in details dialog
-        ? Direct full-length display for better visibility
-        ? Improved information layout with format specs
-        
-        <b>? Performance Optimization</b>
-        ? Advanced speed optimization algorithms
-        ? Ultra-fast downloads with enhanced aria2c
-        ? Better bandwidth utilization
-        ? Reduced latency for faster transfers
-        
-        <b>? Sponsors Feature</b>
-        ? API integration for sponsor data
-        ? Dynamic sponsor dialog with profiles
-        ? Real-time updates from server
-        ? Premium gradient design
-        
-        ?????????????????????
-        
-        ? <b>Key Features (v2.1):</b>
-        ? Retry failed downloads
-        ? Enhanced details with resolution
-        ? Speed optimization
-        ? Sponsors API integration
-        ?? Pause/Resume downloads
-        ? Advanced proxy (BETA)
-        ? UPI payment integration
-        ? Concurrent downloads (1-5)
-        ? Gradient Dark theme
-        ? App Lock (PIN &amp; Biometric)
-        ? Download from 1000+ sites
-        ? 50+ language translations
-        
-        ?????????????????????
-        
+
+        ????????????????????????
+
+        ? <b>Changelog (v2.2):</b>
+
+        <b>🚀 Performance Optimization</b>
+        ? Aria2c Speed Boost & Fixes
+        ? Fixed argument quoting issue for aria2c
+        ? Doubled parallel connection limits (8 → 16 streams)
+        ? Cleaned up summary interval args for libaria2c.so
+
+        <b>🛠️ Core Downloader Fixes</b>
+        ? Accurate resolution selection (no fallback to default)
+        ? Corrected format validation and stale state bug
+        ? Fixed audio codec checks for proper merging
+
+        <b>🎨 UI & Notification Improvements</b>
+        ? Cleaner progress tracking (no [download] prefix)
+        ? Fixed progress bar threshold logic (0.1–0.9% shows real bar)
+
+        ????????????????????????
+
+        ? <b>Key Features (v2.2):</b>
+        🏎️ Aria2c Speed Boost (16x parallel connections)
+        🎯 Precise Quality Selection
+        🎨 Enhanced Notifications
+        🔄 Retry failed downloads
+        💎 Sponsors feature (API integration)
+        ⏯️ Pause/Resume downloads with queue
+        🌐 Download from 1000+ sites via yt-dlp
+
+        ????????????????????????
+
         ? <b>Available APKs:</b>
         ? Universal (All devices)
         ? arm64-v8a (Modern phones)
         ? armeabi-v7a (Older phones)
         ? x86_64 / x86 (Tablets)
-        
-        ?????????????????????
-        
+
+        ????????????????????????
+
         ? <b>Download Now:</b>
         <a href=\"${RELEASE_URL}\">Click here to download v${{ steps.version.outputs.VERSION }}</a>
-        
-        ?????????????????????
-        
-        ?? <b>Note:</b> This release brings enhanced download management with retry functionality, improved details dialog with resolution info, ultra-fast speed optimization, and new sponsors feature with API integration. Enjoy faster downloads and better user experience!
-        
+
+        ????????????????????????
+
+        ?? <b>Note:</b> This release brings massive download speed improvements, accurate resolution selection, cleaner progress tracking, and core fixes for a smoother experience. Enjoy ultra-fast downloads and enhanced notifications!
+
         ? <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues
