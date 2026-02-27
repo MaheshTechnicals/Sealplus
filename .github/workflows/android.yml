@@ -83,33 +83,33 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## 🏎️ Seal Plus v2.2.0 - Downloader Performance & Core Fixes
+          ## ?? Seal Plus v2.2.0 - Downloader Performance & Core Fixes
           
           ---
           
-          ### 🚀 Performance Optimization
+          ### ? Performance Optimization
           
           * **Aria2c Speed Boost & Fixes**
               + Fixed an argument quoting issue that previously forced aria2c into a slow, single-connection fallback mode
               + Doubled parallel connection limits (from 8 to 16 streams) for a massive real-world download speed improvement
               + Cleaned up redundant summary interval arguments for better libaria2c.so compatibility
           
-          ### 🛠️ Core Downloader Fixes
+          ### ?? Core Downloader Fixes
           
           * **Accurate Resolution Selection**
               + Resolved a major bug where the app would ignore the user's chosen video resolution and fall back to default quality
               + Corrected internal format validation to prevent stale state captures during format list generation
               + Fixed audio codec checks to ensure the exact selected resolution is properly merged and passed to yt-dlp
           
-          ### 🎨 UI & Notification Improvements
+          ### ? UI & Notification Improvements
           
           * **Cleaner Progress Tracking**
               + Stripped the unnecessary `[download]` prefix from yt-dlp progress text for a cleaner display in cards and active notifications
-              + Fixed progress bar threshold logic so early download progress (0.1–0.9%) shows a real bar instead of an indeterminate spinner
+              + Fixed progress bar threshold logic so early download progress (0.1?0.9%) shows a real bar instead of an indeterminate spinner
           
           ---
           
-          ### 📦 Installation
+          ### ? Installation
           
           Download the appropriate APK for your device:
           - **Universal APK**: Works on all devices (recommended)
@@ -118,16 +118,16 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### ✨ Key Features (v2.2)
-          - 🏎️ **Aria2c Speed Boost** - 16x parallel connections for ultra-fast downloads
-          - 🎯 **Precise Quality Selection** - Reliable resolution and format merging
-          - 🎨 **Enhanced Notifications** - Cleaner, accurate progress tracking right from the start
-          - 🔄 **Retry failed downloads** - One-click recovery for canceled/failed downloads
-          - 💎 **Sponsors feature** - API integration with dynamic display
-          - ⏯️ **Pause/Resume downloads** with queue support
-          - 🌐 Download from 1000+ sites via yt-dlp
+          ### ? Key Features (v2.2)
+          - ?? **Aria2c Speed Boost** - 16x parallel connections for ultra-fast downloads
+          - ? **Precise Quality Selection** - Reliable resolution and format merging
+          - ? **Enhanced Notifications** - Cleaner, accurate progress tracking right from the start
+          - ? **Retry failed downloads** - One-click recovery for canceled/failed downloads
+          - ? **Sponsors feature** - API integration with dynamic display
+          - ?? **Pause/Resume downloads** with queue support
+          - ? Download from 1000+ sites via yt-dlp
           
-          ### 📜 Full Changelog
+          ### ? Full Changelog
           See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
           
           ---
@@ -149,56 +149,55 @@ jobs:
       run: |
         # Skip if Telegram credentials are not configured
         if [ -z "$TGTOKEN" ] || [ -z "$TGCHANNEL" ]; then
-          echo "⚠️ Telegram notification skipped (TGTOKEN or TGCHANNEL not configured)"
+          echo "?? Telegram notification skipped (TGTOKEN or TGCHANNEL not configured)"
           exit 0
         fi
-
-        echo "📢 Sending notification to Telegram Channel: $TGCHANNEL"
+        
+        echo "? Sending notification to Telegram Channel: $TGCHANNEL"
         
         # Prepare the release URL
         RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.VERSION }}"
         
-
         # Create a beautiful Telegram message with HTML formatting
-        MESSAGE="<b>🎉 New Release Available!</b> 🎉\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📱 <b>App Name:</b> Seal Plus\n\n"
-        MESSAGE+="🏷️ <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📝 <b>Changelog (v2.2):</b>\n\n"
-        MESSAGE+="<b>🚀 Performance Optimization</b>\n"
-        MESSAGE+="• ⚡ Aria2c Speed Boost & Fixes\n"
-        MESSAGE+="• 🛠️ Fixed argument quoting issue for aria2c\n"
-        MESSAGE+="• 🔗 Doubled parallel connection limits (8 → 16 streams)\n"
-        MESSAGE+="• 🧹 Cleaned up summary interval args for libaria2c.so\n\n"
-        MESSAGE+="<b>🛠️ Core Downloader Fixes</b>\n"
-        MESSAGE+="• 🎯 Accurate resolution selection (no fallback to default)\n"
-        MESSAGE+="• 🧪 Corrected format validation and stale state bug\n"
-        MESSAGE+="• 🎵 Fixed audio codec checks for proper merging\n\n"
-        MESSAGE+="<b>🎨 UI & Notification Improvements</b>\n"
-        MESSAGE+="• 🧹 Cleaner progress tracking (no [download] prefix)\n"
-        MESSAGE+="• 📊 Fixed progress bar threshold logic (0.1–0.9% shows real bar)\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="✨ <b>Key Features (v2.2):</b>\n"
-        MESSAGE+="🏎️ Aria2c Speed Boost (16x parallel connections)\n"
-        MESSAGE+="🎯 Precise Quality Selection\n"
-        MESSAGE+="🎨 Enhanced Notifications\n"
-        MESSAGE+="🔄 Retry failed downloads\n"
-        MESSAGE+="💎 Sponsors feature (API integration)\n"
-        MESSAGE+="⏯️ Pause/Resume downloads with queue\n"
-        MESSAGE+="🌐 Download from 1000+ sites via yt-dlp\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📦 <b>Available APKs:</b>\n"
-        MESSAGE+="• 🌍 Universal (All devices)\n"
-        MESSAGE+="• 📱 arm64-v8a (Modern phones)\n"
-        MESSAGE+="• 📲 armeabi-v7a (Older phones)\n"
-        MESSAGE+="• 💻 x86_64 / x86 (Tablets)\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="⬇️ <b>Download Now:</b>\n"
+        MESSAGE="<b>? New Release Available!</b> ?\n\n"
+        MESSAGE+="???????????????????????????\n\n"
+        MESSAGE+="? <b>App Name:</b> Seal Plus\n\n"
+        MESSAGE+="?? <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
+        MESSAGE+="???????????????????????????\n\n"
+        MESSAGE+="? <b>Changelog (v2.2):</b>\n\n"
+        MESSAGE+="<b>? Performance Optimization</b>\n"
+        MESSAGE+="? ? Aria2c Speed Boost & Fixes\n"
+        MESSAGE+="? ?? Fixed argument quoting issue for aria2c\n"
+        MESSAGE+="? ? Doubled parallel connection limits (8 ? 16 streams)\n"
+        MESSAGE+="? ? Cleaned up summary interval args for libaria2c.so\n\n"
+        MESSAGE+="<b>?? Core Downloader Fixes</b>\n"
+        MESSAGE+="? ? Accurate resolution selection (no fallback to default)\n"
+        MESSAGE+="? ? Corrected format validation and stale state bug\n"
+        MESSAGE+="? ? Fixed audio codec checks for proper merging\n\n"
+        MESSAGE+="<b>? UI & Notification Improvements</b>\n"
+        MESSAGE+="? ? Cleaner progress tracking (no [download] prefix)\n"
+        MESSAGE+="? ? Fixed progress bar threshold logic (0.1?0.9% shows real bar)\n\n"
+        MESSAGE+="???????????????????????????\n\n"
+        MESSAGE+="? <b>Key Features (v2.2):</b>\n"
+        MESSAGE+="?? Aria2c Speed Boost (16x parallel connections)\n"
+        MESSAGE+="? Precise Quality Selection\n"
+        MESSAGE+="? Enhanced Notifications\n"
+        MESSAGE+="? Retry failed downloads\n"
+        MESSAGE+="? Sponsors feature (API integration)\n"
+        MESSAGE+="?? Pause/Resume downloads with queue\n"
+        MESSAGE+="? Download from 1000+ sites via yt-dlp\n\n"
+        MESSAGE+="???????????????????????????\n\n"
+        MESSAGE+="? <b>Available APKs:</b>\n"
+        MESSAGE+="? ? Universal (All devices)\n"
+        MESSAGE+="? ? arm64-v8a (Modern phones)\n"
+        MESSAGE+="? ? armeabi-v7a (Older phones)\n"
+        MESSAGE+="? ? x86_64 / x86 (Tablets)\n\n"
+        MESSAGE+="???????????????????????????\n\n"
+        MESSAGE+="?? <b>Download Now:</b>\n"
         MESSAGE+="<a href=\"${RELEASE_URL}\">Click here to download v${{ steps.version.outputs.VERSION }}</a>\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="ℹ️ <b>Note:</b> This release brings massive download speed improvements, accurate resolution selection, cleaner progress tracking, and core fixes for a smoother experience. Enjoy ultra-fast downloads and enhanced notifications!\n\n"
-        MESSAGE+="🕒 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
+        MESSAGE+="???????????????????????????\n\n"
+        MESSAGE+="?? <b>Note:</b> This release brings massive download speed improvements, accurate resolution selection, cleaner progress tracking, and core fixes for a smoother experience. Enjoy ultra-fast downloads and enhanced notifications!\n\n"
+        MESSAGE+="? <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues
         MESSAGE_ENCODED=$(echo -ne "$MESSAGE" | jq -sRr @uri)
@@ -209,8 +208,8 @@ jobs:
           -d "text=${MESSAGE_ENCODED}" \
           -d "parse_mode=HTML" \
           -d "disable_web_page_preview=false" \
-          && echo "✅ Telegram Channel notification sent successfully!" \
-          || echo "❌ Failed to send Telegram notification"
+          && echo "? Telegram Channel notification sent successfully!" \
+          || echo "? Failed to send Telegram notification"
 
     - name: Upload Universal APK as Artifact
       if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
