@@ -58,6 +58,8 @@ build_job:
     - find app/build/outputs -name "*.apk" -exec cp {} release_output/ \;
     - ls -l release_output/
 
+    # Only testing, no publish/release logic
+
   artifacts:
     name: "SealPlus-$CI_COMMIT_SHORT_SHA"
     paths:
