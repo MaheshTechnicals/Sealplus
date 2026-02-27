@@ -408,16 +408,18 @@ private fun FormatPageImpl(
     val bestAudioFormat = remember(audioOnlyFormats) { audioOnlyFormats.firstOrNull() }
     
     // Create merged video formats: video-only + best audio
-    // This allows high-quality videos (720p, 1080p, 4K) to appear in Video section
+    // This allows high-quality videos (720p, 1080p, 4K) to appear in Video section.
+    // FIX: Do NOT override acodec here. Setting acodec to the audio codec value
+    // corrupts the Format object — isAudioOnly() / containsAudio() would return wrong
+    // results, and if originalVideoFormat lookup ever fails the modified copy is passed
+    // directly to yt-dlp, which downloads a silent video (video-only stream).
+    // We only need to annotate the display string so the user knows audio will be merged.
     val mergedVideoFormats = remember(audioOnly, bestAudioFormat, videoOnlyFormats) {
         if (!audioOnly && bestAudioFormat != null) {
             videoOnlyFormats.map { videoFormat ->
-                // Store reference to both formats for later merging
                 videoFormat.copy(
-                    // Mark this as requiring audio merge (yt-dlp will handle it)
+                    // Annotate format name for display only; do NOT touch acodec/vcodec
                     format = "${videoFormat.format} + audio",
-                    // Keep original properties but indicate it will have audio
-                    acodec = bestAudioFormat.acodec ?: "audio"
                 )
             }
         } else emptyList()
@@ -522,7 +524,19 @@ private fun FormatPageImpl(
 
     val lazyGridState = rememberLazyGridState()
 
-    val formatList: List<Format> by remember {
+    // FIX: Pass format lists as keys so derivedStateOf is recreated with fresh closures
+    // after LaunchedEffect finishes validation. Without keys, the lambda captured the
+    // initial empty lists and formatList remained empty forever — causing yt-dlp to
+    // ignore the user's selection and fall back to its own default quality.
+    val formatList: List<Format> by remember(
+        allVideoFormats,
+        mergedVideoFormats,
+        videoOnlyFormats,
+        audioOnlyFormats,
+        bestAudioFormat,
+        highestVideoFormat,
+        audioOnly,
+    ) {
         derivedStateOf {
             mutableListOf<Format>().apply {
                 if (isSuggestedFormatSelected) {
