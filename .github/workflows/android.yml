@@ -149,11 +149,11 @@ jobs:
       run: |
         # Skip if Telegram credentials are not configured
         if [ -z "$TGTOKEN" ] || [ -z "$TGCHANNEL" ]; then
-          echo "?? Telegram notification skipped (TGTOKEN or TGCHANNEL not configured)"
+          echo "⚠️ Telegram notification skipped (TGTOKEN or TGCHANNEL not configured)"
           exit 0
         fi
-        
-        echo "? Sending notification to Telegram Channel: $TGCHANNEL"
+
+        echo "📢 Sending notification to Telegram Channel: $TGCHANNEL"
         
         # Prepare the release URL
         RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.VERSION }}"
@@ -201,7 +201,7 @@ jobs:
         MESSAGE+="🕒 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues
-        MESSAGE_ENCODED=$(echo -n "$MESSAGE" | jq -sRr @uri)
+        MESSAGE_ENCODED=$(echo -ne "$MESSAGE" | jq -sRr @uri)
         
         # Send ONLY to Channel
         curl -s -X POST "https://api.telegram.org/bot${TGTOKEN}/sendMessage" \
@@ -209,8 +209,8 @@ jobs:
           -d "text=${MESSAGE_ENCODED}" \
           -d "parse_mode=HTML" \
           -d "disable_web_page_preview=false" \
-          && echo "? Telegram Channel notification sent successfully!" \
-          || echo "?? Failed to send Telegram notification"
+          && echo "✅ Telegram Channel notification sent successfully!" \
+          || echo "❌ Failed to send Telegram notification"
 
     - name: Upload Universal APK as Artifact
       if: steps.release_config.outputs.SHOULD_RELEASE == 'false'
