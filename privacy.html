@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seal Plus - Privacy Policy</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+/* =====================
+   GLOBAL STYLES
+===================== */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#05070f,#0b1225,#111c3a);
+color:#e6ecff;
+overflow-x:hidden;
+}
+
+/* Animated Background */
+body::before{
+content:"";
+position:fixed;
+width:300%;
+height:300%;
+background:radial-gradient(circle,#2b6cff33,transparent);
+animation:bgMove 18s linear infinite;
+z-index:-1;
+}
+
+@keyframes bgMove{
+0%{transform:translate(-20%,-20%)}
+50%{transform:translate(-10%,10%)}
+100%{transform:translate(-20%,-20%)}
+}
+
+/* =====================
+   HEADER
+===================== */
+
+header{
+text-align:center;
+padding:60px 20px;
+}
+
+header h1{
+font-size:2.8rem;
+background:linear-gradient(90deg,#4facfe,#00f2fe);
+-webkit-background-clip:text;
+color:transparent;
+}
+
+header p{
+opacity:.8;
+margin-top:10px;
+}
+
+/* =====================
+   CONTAINER
+===================== */
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:30px;
+}
+
+/* CARD */
+
+.card{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+border-radius:18px;
+padding:35px;
+margin-bottom:25px;
+box-shadow:0 10px 40px rgba(0,0,0,.4);
+transition:.4s;
+opacity:0;
+transform:translateY(40px);
+}
+
+.card.show{
+opacity:1;
+transform:translateY(0);
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+.card h2{
+margin-bottom:15px;
+color:#7fd8ff;
+}
+
+.card p{
+line-height:1.7;
+opacity:.9;
+}
+
+ul{
+margin-top:10px;
+padding-left:20px;
+}
+
+li{
+margin:8px 0;
+}
+
+/* =====================
+   FOOTER
+===================== */
+
+footer{
+text-align:center;
+padding:30px;
+opacity:.7;
+font-size:.9rem;
+}
+
+/* =====================
+   RESPONSIVE
+===================== */
+
+@media(max-width:768px){
+
+header h1{
+font-size:2rem;
+}
+
+.container{
+padding:15px;
+}
+
+.card{
+padding:22px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Seal Plus Privacy Policy</h1>
+<p>Last Updated: March 2026</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Introduction</h2>
+<p>
+Seal Plus respects your privacy and is committed to protecting user data.
+This Privacy Policy explains how the application handles information when
+you use Seal Plus.
+</p>
+</div>
+
+<div class="card">
+<h2>Information Collection</h2>
+<p>
+Seal Plus does not collect personal information such as name, email,
+location, or identity data.
+</p>
+
+<ul>
+<li>No account registration required</li>
+<li>No personal data collection</li>
+<li>No tracking of user activity</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>How Seal Plus Works</h2>
+<p>
+Seal Plus processes media links locally on your device. Downloads and
+processing activities occur directly on your device without transferring
+personal data to external servers controlled by the developer.
+</p>
+</div>
+
+<div class="card">
+<h2>Permissions Usage</h2>
+<ul>
+<li>Storage Permission — Save downloaded media files</li>
+<li>Network Access — Download requested content</li>
+<li>Notification Permission — Show download progress</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>Third-Party Services</h2>
+<p>
+Seal Plus may interact with external websites only when users provide
+links manually. The developer does not control third-party platform
+privacy policies.
+</p>
+</div>
+
+<div class="card">
+<h2>Data Security</h2>
+<p>
+All downloads and processing occur locally on the user's device.
+Seal Plus does not store user information on remote servers.
+</p>
+</div>
+
+<div class="card">
+<h2>Children's Privacy</h2>
+<p>
+Seal Plus does not knowingly collect data from children under
+13 years of age.
+</p>
+</div>
+
+<div class="card">
+<h2>Policy Updates</h2>
+<p>
+This Privacy Policy may be updated periodically. Changes will
+be reflected on this page.
+</p>
+</div>
+
+<div class="card">
+<h2>Contact</h2>
+<p>
+Developer: Mahesh Technicals<br>
+Email: msvarma10001@gmail.com<br>
+GitHub: https://github.com/MaheshTechnicals
+</p>
+</div>
+
+</div>
+
+<footer>
+© 2026 Seal Plus • Mahesh Technicals
+</footer>
+
+<script>
+
+/* Smooth Scroll Animation */
+const observer=new IntersectionObserver(entries=>{
+entries.forEach(entry=>{
+if(entry.isIntersecting){
+entry.target.classList.add("show");
+}
+});
+},{threshold:.15});
+
+document.querySelectorAll(".card")
+.forEach(el=>observer.observe(el));
+
+</script>
+
+</body>
+</html>
