@@ -5,6 +5,79 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-03-03
+
+### ⚙️ Seal Plus Extras Enhancements
+
+* **Aria2c Connection Control**
+  + Added a connection count selector in Settings → Seal Plus Extras
+  + Choose between 2, 4, 8, 16, 32 or more simultaneous aria2c connections to maximize download speed
+  + Setting takes effect immediately on the next download
+
+* **Sponsor Support Dialog Controls**
+  + Added a dedicated *Support & Sponsorship* section in Seal Plus Extras
+  + Users can configure how often the sponsor support dialog is shown: Off, Weekly, or Monthly
+  + Dialog opens the Support Developer page when tapped, respects the chosen schedule, and persists timing across restarts
+
+### 📊 Download Details Improvements
+
+* **Average Speed Display**
+  + Download Details dialog now shows the computed average download speed (e.g. `3.2 MB/s`)
+  + Derived from total file size ÷ elapsed download time for accurate reporting
+  + Hidden automatically for older history entries that predate this feature
+
+* **Download Time Display**
+  + Download Details dialog now shows total time taken (e.g. `2m 34s`)
+  + Captured as precise start-to-end duration around the actual yt-dlp execution
+  + Available in both the active-download details panel and the history drawer
+  + Stored in the database (Room migration v5 → v6, existing rows default to `-1`)
+
+### 🎨 UI & Format Card Improvements
+
+* **Clean Resolution Labels on Format Cards**
+  + Format selection cards now show concise human-readable titles (`1080×1920`) instead of raw yt-dlp format strings
+  + Priority order: explicit width/height metadata → `Format.resolution` field → regex-extracted `WxH` → audio-only label → format ID fallback
+  + Applied to both suggested-format items and individual format list items
+
+* **Redesigned Video Detail Drawer**
+  + Overhauled download-history detail sheet with a modern card-based layout
+  + 16:9 thumbnail card with rounded corners, source-URL card with copy/open actions
+  + Stats grid showing Download Time and Average Speed side-by-side
+  + Full-width Delete (outlined, error color) and Share/Re-download action buttons
+
+### 🚀 Smart Stream-Merge Routing
+
+* **Platform-Aware Format Selection**
+  + Only YouTube and Reddit natively separate video-only and audio-only streams, so they continue to use the merge path (`videoId` + `audioId`)
+  + All other platforms serve fully-muxed video+audio streams; the default download now picks the best combined format directly via `videoAudioFormats`, skipping the redundant merge step entirely
+  + Falls back to the merge path automatically when no combined format is available
+
+---
+
+### 📦 Installation
+
+Download the appropriate APK for your device:
+
+* **Universal APK**: Works on all devices (recommended)
+* **arm64-v8a**: For 64-bit ARM devices (most modern phones)
+* **armeabi-v7a**: For 32-bit ARM devices
+* **x86_64**: For 64-bit x86 devices
+* **x86**: For 32-bit x86 devices
+
+### ✨ Key Features (v2.3)
+
+* ⚙️ **Aria2c Connection Control** - Tune parallel connections (2–32+) for maximum download speed
+* 📊 **Average Speed & Download Time** - See real download metrics in the details dialog
+* 🚀 **Smart Stream-Merge Routing** - Automatic best-format selection per platform, no redundant merges
+* 🎨 **Clean Format Cards** - Human-readable resolution labels instead of raw format strings
+* 💎 **Sponsor Dialog Controls** - Flexible Off/Weekly/Monthly schedule in Seal Plus Extras
+* 🏎️ **Aria2c Speed Boost** - Up to 32x parallel connections for ultra-fast downloads
+* 🔄 **Retry failed downloads** - One-click recovery for canceled/failed downloads
+* ⏯️ **Pause/Resume downloads** with queue support
+* 🌐 Download from 1000+ sites via yt-dlp
+
+---
+
 ## [2.2.0] - 2026-02-27
 
 ### 🚀 Performance Optimization

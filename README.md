@@ -172,34 +172,56 @@ English
 ## ⬇️ Download & Installation
 
 
-### 🚀 What's New in v2.2?
+### 🚀 What's New in v2.3?
 
-<details>
-<summary><b>📱 Click to see latest updates - Downloader Performance & Core Fixes (February 27, 2026)</b></summary>
+<details open>
+<summary><b>📱 Click to see latest updates - Smart Downloads, Speed Controls & Better Details (March 3, 2026)</b></summary>
 
-## 🏎️ Seal Plus v2.2.0 - Downloader Performance & Core Fixes
+## ✨ Seal Plus v2.3.0 - Smart Downloads, Speed Controls & Better Details
 
 ---
 
-### 🚀 Performance Optimization
+### ⚙️ Seal Plus Extras Enhancements
 
-* **Aria2c Speed Boost & Fixes**
-  + Fixed an argument quoting issue that previously forced aria2c into a slow, single-connection fallback mode
-  + Doubled parallel connection limits (from 8 to 16 streams) for a massive real-world download speed improvement
-  + Cleaned up redundant summary interval arguments for better libaria2c.so compatibility
+* **Aria2c Connection Control**
+  + Added a connection count selector in Settings → Seal Plus Extras
+  + Choose between 2, 4, 8, 16, 32 or more simultaneous aria2c connections to maximize download speed
+  + Setting takes effect immediately on the next download
 
-### 🛠️ Core Downloader Fixes
+* **Sponsor Support Dialog Controls**
+  + Added a dedicated *Support & Sponsorship* section in Seal Plus Extras
+  + Users can configure how often the sponsor support dialog is shown: Off, Weekly, or Monthly
+  + Dialog opens the Support Developer page when tapped, respects the chosen schedule, and persists timing across restarts
 
-* **Accurate Resolution Selection**
-  + Resolved a major bug where the app would ignore the user's chosen video resolution and fall back to default quality
-  + Corrected internal format validation to prevent stale state captures during format list generation
-  + Fixed audio codec checks to ensure the exact selected resolution is properly merged and passed to yt-dlp
+### 📊 Download Details Improvements
 
-### 🎨 UI & Notification Improvements
+* **Average Speed Display**
+  + Download Details dialog now shows the computed average download speed (e.g. `3.2 MB/s`)
+  + Derived from total file size ÷ elapsed download time for accurate reporting
+  + Hidden automatically for older history entries that predate this feature
 
-* **Cleaner Progress Tracking**
-  + Stripped the unnecessary `[download]` prefix from yt-dlp progress text for a cleaner display in cards and active notifications
-  + Fixed progress bar threshold logic so early download progress (0.1–0.9%) shows a real bar instead of an indeterminate spinner
+* **Download Time Display**
+  + Download Details dialog now shows total time taken (e.g. `2m 34s`)
+  + Captured as precise start-to-end duration around the actual yt-dlp execution
+  + Available in both the active-download details panel and the history drawer
+
+### 🎨 UI & Format Card Improvements
+
+* **Clean Resolution Labels on Format Cards**
+  + Format selection cards now show concise human-readable titles (`1080×1920`) instead of raw yt-dlp format strings
+  + Priority order: explicit width/height → `Format.resolution` → regex-extracted `WxH` → audio label → format ID fallback
+
+* **Redesigned Video Detail Drawer**
+  + Overhauled download-history detail sheet with a modern card-based layout
+  + 16:9 thumbnail card with rounded corners, source-URL card with copy/open actions
+  + Stats grid showing Download Time and Average Speed side-by-side
+
+### 🚀 Smart Stream-Merge Routing
+
+* **Platform-Aware Format Selection**
+  + Only YouTube and Reddit use the merge path (`videoId` + `audioId`)
+  + All other platforms now pick the best combined format directly via `videoAudioFormats`, skipping the redundant merge step
+  + Falls back to the merge path automatically when no combined format is available
 
 ---
 
@@ -213,13 +235,15 @@ Download the appropriate APK for your device:
 * **x86_64**: For 64-bit x86 devices
 * **x86**: For 32-bit x86 devices
 
-### ✨ Key Features (v2.2)
+### ✨ Key Features (v2.3)
 
-* 🏎️ **Aria2c Speed Boost** - 16x parallel connections for ultra-fast downloads
-* 🎯 **Precise Quality Selection** - Reliable resolution and format merging
-* 🎨 **Enhanced Notifications** - Cleaner, accurate progress tracking right from the start
+* ⚙️ **Aria2c Connection Control** - Tune parallel connections (2–32+) for maximum download speed
+* 📊 **Average Speed & Download Time** - Real download metrics in the details dialog
+* 🚀 **Smart Stream-Merge Routing** - Best format per platform, no redundant merges
+* 🎨 **Clean Format Cards** - Human-readable resolution labels instead of raw strings
+* 💎 **Sponsor Dialog Controls** - Flexible Off/Weekly/Monthly schedule
+* 🏎️ **Aria2c Speed Boost** - Up to 32x parallel connections for ultra-fast downloads
 * 🔄 **Retry failed downloads** - One-click recovery for canceled/failed downloads
-* 💎 **Sponsors feature** - API integration with dynamic display
 * ⏯️ **Pause/Resume downloads** with queue support
 * 🌐 Download from 1000+ sites via yt-dlp
 
@@ -227,6 +251,27 @@ Download the appropriate APK for your device:
 
 See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
 
+</details>
+
+<details>
+<summary><b>📱 Previous Release - v2.2 (February 27, 2026)</b></summary>
+
+#### 🏎️ Seal Plus v2.2.0 - Downloader Performance & Core Fixes
+
+#### 🚀 Performance Optimization
+- ✅ **Aria2c Speed Boost** - Fixed argument quoting, doubled connections (8 → 16 streams)
+- ✅ **Cleaned up** redundant aria2c summary interval arguments
+
+#### 🛠️ Core Downloader Fixes
+- ✅ **Accurate Resolution Selection** - Fixed bug ignoring chosen video resolution
+- ✅ **Format validation corrected** - No more stale state captures
+- ✅ **Audio codec fix** - Proper merge path for selected resolution
+
+#### 🎨 UI & Notification Improvements
+- ✅ **Cleaner progress text** - Removed `[download]` prefix from progress cards
+- ✅ **Progress bar fix** - 0.1–0.9% shows real bar instead of spinner
+
+[View Full Changelog →](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md)
 </details>
 
 <details>
@@ -283,14 +328,16 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 ### 🚀 Latest Releases
 
 - **Latest Stable**: [Download from GitHub Releases](https://github.com/MaheshTechnicals/Sealplus/releases/latest)
-  - ✅ **Current Version**: v2.1.0 (February 2026)
+  - ✅ **Current Version**: v2.3.0 (March 2026)
+  - ⚙️ **Aria2c Connection Control** - Tune parallel connections (2–32+) for maximum speed
+  - 📊 **Average Speed & Download Time** - Real metrics in the details dialog
+  - 🚀 **Smart Stream-Merge Routing** - Best format per platform automatically
+  - 🎨 **Clean Format Cards** - Human-readable resolution labels
+  - 💎 **Sponsor Dialog Controls** - Flexible Off/Weekly/Monthly schedule
+  - 🏎️ **Aria2c Speed Boost** - Up to 32x parallel connections for ultra-fast downloads
   - 🔄 **Retry Failed Downloads** - One-click retry for canceled/failed downloads
-  - 📊 **Enhanced Details Dialog** - Resolution section with full-length direct display
-  - ⚡ **Speed Optimization** - Ultra-fast downloads with advanced speed algorithms
-  - 💎 **Sponsors Feature** - API-integrated sponsor display and recognition
   - ⏯️ **Pause/Resume Downloads** - Full download control with queue
   - 🌐 **Advanced Proxy (BETA)** - Auto-fetch and test proxies
-  - 💰 **UPI Payment Support** - Donate to support development
   - 🔢 **Concurrent Downloads** - Control 1-5 simultaneous downloads
   - 🚀 **Auto-Update System** enabled for seamless updates
 
@@ -305,8 +352,8 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 |------------|---------------|
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target Android** | Android 14 (API 36) |
-| **Current Version** | 2.2.0 |
-| **Release Date** | February 27, 2026 |
+| **Current Version** | 2.3.0 |
+| **Release Date** | March 3, 2026 |
 
 ### 🏗️ Architecture Support
 
