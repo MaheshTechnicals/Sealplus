@@ -39,9 +39,20 @@
   /* ─── AOS (scroll reveal) ─────────────────────── */
   const aosObserver = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); aosObserver.unobserve(e.target); } });
-  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
 
   $$('[data-aos]').forEach(el => aosObserver.observe(el));
+
+  // Trigger immediately for elements already in viewport
+  requestAnimationFrame(() => {
+    $$('[data-aos]').forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) {
+        el.classList.add('visible');
+        aosObserver.unobserve(el);
+      }
+    });
+  });
 
   /* ─── Counter animation ───────────────────────── */
   function animateCounter(el) {
@@ -68,9 +79,20 @@
         counterObserver.unobserve(e.target);
       }
     });
-  }, { threshold: 0.5 });
+  }, { threshold: 0 });
 
   $$('.stat-num[data-count]').forEach(el => counterObserver.observe(el));
+
+  // Also fire immediately for counters already visible on load
+  requestAnimationFrame(() => {
+    $$('.stat-num[data-count]').forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) {
+        counterObserver.unobserve(el);
+        animateCounter(el);
+      }
+    });
+  });
 
   /* ─── Screenshots carousel ────────────────────── */
   const track       = $('#carouselTrack, .carousel-track');
@@ -144,7 +166,7 @@
 
   /* ─── Lightbox ────────────────────────────────── */
   const lightbox      = $('#lightbox');
-  const lightboxImg   = lightbox ? $('img', lightbox) : null;
+  const lightboxImg   = $('#lightboxImg');
   const lightboxClose = $('#lightboxClose');
   const lightboxPrev  = $('#lightboxPrev');
   const lightboxNext  = $('#lightboxNext');

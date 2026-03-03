@@ -346,6 +346,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   max-width: 620px;
   padding: 80px 24px;
   flex: 1;
+  min-width: 0;
 }
 
 .badge {
@@ -405,7 +406,6 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .hero-stats {
   display: flex;
   align-items: center;
-  gap: 0;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -417,19 +417,28 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   gap: 2px;
 }
 
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  line-height: 1;
+}
+
 .stat-num {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-suffix {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--purple);
+  line-height: 1;
 }
 
 .stat-label {
@@ -707,15 +716,17 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .screenshots-carousel {
   position: relative;
   padding: 20px 0 60px;
+  overflow: hidden;
 }
 
 .carousel-track {
   display: flex;
   gap: 20px;
-  overflow-x: hidden;
   padding: 16px 8vw;
-  scroll-behavior: smooth;
   cursor: grab;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .carousel-track:active { cursor: grabbing; }
