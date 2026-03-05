@@ -14,6 +14,7 @@ import com.junkfood.seal.util.NETWORK_WIFI_ONLY
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.PreferenceUtil.getInt
+import com.junkfood.seal.util.ScheduleParams
 import com.junkfood.seal.util.VideoInfo
 import com.junkfood.seal.util.makeToast
 import com.yausername.youtubedl_android.YoutubeDL
@@ -34,7 +35,11 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
 
         data class PlaylistSelection(val result: PlaylistResult) : SelectionState
 
-        data class FormatSelection(val info: VideoInfo) : SelectionState
+        data class FormatSelection(
+            val info: VideoInfo,
+            /** Non-null when the user enabled "Schedule Download" in the dialog. */
+            val scheduleParams: ScheduleParams? = null,
+        ) : SelectionState
     }
 
     sealed interface SheetState {
@@ -71,6 +76,8 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
             val url: String,
             val audioOnly: Boolean,
             val preferences: DownloadUtil.DownloadPreferences,
+            /** Non-null when the user enabled "Schedule Download" in the dialog. */
+            val scheduleParams: ScheduleParams? = null,
         ) : Action
 
         data class DownloadWithPreset(
@@ -168,7 +175,7 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
     }
 
     private fun fetchFormat(action: Action.FetchFormats) {
-        val (url, audioOnly, preferences) = action
+        val (url, audioOnly, preferences, scheduleParams) = action
 
         // Check network availability before fetching
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
@@ -187,7 +194,11 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                     .onSuccess { info ->
                         withContext(Dispatchers.Main) {
                             mSelectionStateFlow.update {
-                                SelectionState.FormatSelection(info = info)
+                                // Carry scheduleParams forward so FormatPage can schedule instead
+                                SelectionState.FormatSelection(
+                                    info = info,
+                                    scheduleParams = scheduleParams,
+                                )
                             }
                             hideDialog()
                         }

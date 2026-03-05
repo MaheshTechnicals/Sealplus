@@ -10,6 +10,7 @@ import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.database.objects.CookieProfile
 import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
+import com.junkfood.seal.database.objects.ScheduledTask
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -77,6 +78,27 @@ interface VideoInfoDao {
     @Query("delete from CommandTemplate where id=:id") suspend fun deleteTemplateById(id: Int)
 
     @Delete suspend fun deleteTemplates(templates: List<CommandTemplate>)
+
+    // ──────────────── ScheduledTask ────────────────
+
+    @Insert suspend fun insertScheduledTask(task: ScheduledTask): Long
+
+    @Query("SELECT * FROM ScheduledTask ORDER BY scheduledTimeMillis ASC")
+    fun getScheduledTasksFlow(): Flow<List<ScheduledTask>>
+
+    @Query("SELECT * FROM ScheduledTask")
+    suspend fun getAllScheduledTasks(): List<ScheduledTask>
+
+    @Query("SELECT * FROM ScheduledTask WHERE id = :id")
+    suspend fun getScheduledTaskById(id: Int): ScheduledTask?
+
+    @Delete suspend fun deleteScheduledTask(task: ScheduledTask)
+
+    @Query("DELETE FROM ScheduledTask WHERE id = :id")
+    suspend fun deleteScheduledTaskById(id: Int)
+
+    @Query("UPDATE ScheduledTask SET workRequestId = :workRequestId WHERE id = :id")
+    suspend fun updateScheduledTaskWorkerId(id: Int, workRequestId: String)
 
     @Query("select * from OptionShortcut") fun getOptionShortcuts(): Flow<List<OptionShortcut>>
 

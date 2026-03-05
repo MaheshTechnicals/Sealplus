@@ -116,6 +116,9 @@ import kotlin.math.pow
 import kotlinx.coroutines.delay
 import androidx.compose.material3.CircularProgressIndicator
 import org.koin.compose.koinInject
+import com.junkfood.seal.util.ScheduleParams
+import com.junkfood.seal.util.ScheduleUtil
+import com.junkfood.seal.util.makeToast
 
 private const val TAG = "FormatPage"
 
@@ -211,6 +214,7 @@ private data class FormatConfig(
 fun FormatPage(
     modifier: Modifier = Modifier,
     videoInfo: VideoInfo,
+    scheduleParams: ScheduleParams? = null,
     downloader: DownloaderV2 = koinInject(),
     onNavigateBack: () -> Unit = {},
 ) {
@@ -228,6 +232,7 @@ fun FormatPage(
             emptySet()
         }
 
+    val context = LocalContext.current
     var showUpdateSubtitleDialog by remember { mutableStateOf(false) }
 
     var diffSubtitleLanguages by remember { mutableStateOf(emptySet<String>()) }
@@ -253,8 +258,8 @@ fun FormatPage(
                     .run { this - this.filterWithRegex(subtitleLanguageRegex) }
                     .toSet()
 
-            downloader.enqueue(
-                TaskFactory.createWithConfigurations(
+            if (scheduleParams != null) {
+                val taskWithState = TaskFactory.createWithConfigurations(
                     videoInfo = videoInfo,
                     formatList = formatList,
                     videoClips = videoClips,
@@ -263,12 +268,35 @@ fun FormatPage(
                     selectedSubtitles = selectedSubtitles,
                     selectedAutoCaptions = selectedAutoCaptions,
                 )
-            )
-
-            if (diffSubtitleLanguages.isNotEmpty()) {
-                showUpdateSubtitleDialog = true
-            } else {
+                val timeStr = ScheduleUtil.scheduleDownload(
+                    context = context,
+                    url = videoInfo.originalUrl ?: videoInfo.webpageUrl ?: "",
+                    title = videoInfo.title ?: "",
+                    thumbnailUrl = videoInfo.thumbnail ?: "",
+                    preferences = taskWithState.task.preferences,
+                    scheduleParams = scheduleParams,
+                    isPlaylist = false,
+                )
+                context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
                 onNavigateBack()
+            } else {
+                downloader.enqueue(
+                    TaskFactory.createWithConfigurations(
+                        videoInfo = videoInfo,
+                        formatList = formatList,
+                        videoClips = videoClips,
+                        splitByChapter = splitByChapter,
+                        newTitle = newTitle,
+                        selectedSubtitles = selectedSubtitles,
+                        selectedAutoCaptions = selectedAutoCaptions,
+                    )
+                )
+
+                if (diffSubtitleLanguages.isNotEmpty()) {
+                    showUpdateSubtitleDialog = true
+                } else {
+                    onNavigateBack()
+                }
             }
         }
     }

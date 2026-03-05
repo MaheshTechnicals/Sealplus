@@ -72,6 +72,7 @@ import com.junkfood.seal.ui.page.settings.sealplus.SealPlusExtrasPage
 import com.junkfood.seal.ui.page.settings.security.SecuritySettingsPage
 import com.junkfood.seal.ui.page.settings.troubleshooting.TroubleShootingPage
 import com.junkfood.seal.ui.page.videolist.VideoListPage
+import com.junkfood.seal.ui.page.schedule.ScheduledDownloadsPage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -163,6 +164,9 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                     )
                 }
                 animatedComposable(Route.DOWNLOADS) { VideoListPage { onNavigateBack() } }
+                animatedComposable(Route.SCHEDULED_DOWNLOADS) {
+                    ScheduledDownloadsPage(onNavigateBack = onNavigateBack)
+                }
                 animatedComposableVariant(Route.TASK_LIST) {
                     TaskListPage(
                         onNavigateBack = onNavigateBack,

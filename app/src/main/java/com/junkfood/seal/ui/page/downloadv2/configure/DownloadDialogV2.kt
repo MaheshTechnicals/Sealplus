@@ -11,8 +11,10 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -39,6 +41,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.VideoFile
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DoneAll
@@ -48,6 +52,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.NewLabel
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SettingsSuggest
 import androidx.compose.material.icons.outlined.VideoFile
 import androidx.compose.material3.Button
@@ -58,16 +63,19 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -138,12 +146,16 @@ import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
+import com.junkfood.seal.util.ScheduleNetworkPreference
+import com.junkfood.seal.util.ScheduleParams
+import com.junkfood.seal.util.ScheduleUtil
 import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.TEMPLATE_ID
 import com.junkfood.seal.util.THUMBNAIL
 import com.junkfood.seal.util.USE_CUSTOM_AUDIO_PRESET
 import com.junkfood.seal.util.VIDEO_FORMAT
 import com.junkfood.seal.util.VIDEO_QUALITY
+import java.util.Calendar
 import kotlinx.coroutines.launch
 
 @Composable
@@ -473,6 +485,7 @@ fun FormatPage(
         FormatPage(
             modifier = modifier,
             videoInfo = state.info,
+            scheduleParams = state.scheduleParams,
             onNavigateBack = {
                 scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
             },
@@ -526,6 +539,7 @@ private fun ConfigurePage(
     onActionPost: (Action) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var selectedType by remember(config) { mutableStateOf(config.downloadType) }
     var useFormatSelection by remember(config) { mutableStateOf(config.useFormatSelection) }
     val canProceed = selectedType in config.typeEntries
@@ -537,6 +551,11 @@ private fun ConfigurePage(
         remember(showTemplateCreatorDialog, showTemplateSelectionDialog, showTemplateEditorDialog) {
             mutableStateOf(PreferenceUtil.getTemplate())
         }
+
+    // ── Schedule state ──────────────────────────────────────────────────────────────
+    var scheduleEnabled by rememberSaveable { mutableStateOf(false) }
+    var scheduledDateTimeMillis by rememberSaveable { mutableLongStateOf(0L) }
+    var networkPreference by rememberSaveable { mutableStateOf(ScheduleNetworkPreference.WIFI_ONLY) }
 
     LaunchedEffect(selectedType) {
         if (selectedType == Playlist) {
@@ -624,7 +643,19 @@ private fun ConfigurePage(
             }
         }
         var expanded by remember { mutableStateOf(false) }
-        ExpandableTitle(expanded = expanded, onClick = { expanded = true }) { settingChips() }
+        ExpandableTitle(expanded = expanded, onClick = { expanded = true }) {
+            settingChips()
+            Spacer(Modifier.height(4.dp))
+            ScheduleSection(
+                modifier = Modifier,
+                scheduleEnabled = scheduleEnabled,
+                onScheduleToggle = { scheduleEnabled = it },
+                scheduledDateTimeMillis = scheduledDateTimeMillis,
+                onDateTimeSelected = { scheduledDateTimeMillis = it },
+                networkPreference = networkPreference,
+                onNetworkPrefChange = { networkPreference = it },
+            )
+        }
 
         ActionButtons(
             modifier = Modifier.padding(horizontal = 20.dp),
@@ -639,12 +670,30 @@ private fun ConfigurePage(
                         downloadType = selectedType,
                     )
                 )
-                onActionPost(
-                    Action.DownloadWithPreset(
-                        urlList = listOf(url),
-                        preferences = preferences.copy(extractAudio = selectedType == Audio),
+                val effectivePreferences = preferences.copy(extractAudio = selectedType == Audio)
+                if (scheduleEnabled && scheduledDateTimeMillis > System.currentTimeMillis()) {
+                    // Scenario A: Preset + Schedule ON → save to DB and schedule WorkManager
+                    val scheduleParams = ScheduleParams(
+                        scheduledTimeMillis = scheduledDateTimeMillis,
+                        networkPreference = networkPreference,
                     )
-                )
+                    val timeStr = ScheduleUtil.scheduleDownload(
+                        context = context,
+                        url = url,
+                        preferences = effectivePreferences,
+                        scheduleParams = scheduleParams,
+                        isPlaylist = false,
+                    )
+                    context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
+                    onActionPost(Action.HideSheet)
+                } else {
+                    onActionPost(
+                        Action.DownloadWithPreset(
+                            urlList = listOf(url),
+                            preferences = effectivePreferences,
+                        )
+                    )
+                }
             },
             onFetchInfo = {
                 onConfigSave(
@@ -653,14 +702,36 @@ private fun ConfigurePage(
                         downloadType = selectedType,
                     )
                 )
+                val scheduleParams = if (scheduleEnabled && scheduledDateTimeMillis > System.currentTimeMillis()) {
+                    ScheduleParams(
+                        scheduledTimeMillis = scheduledDateTimeMillis,
+                        networkPreference = networkPreference,
+                    )
+                } else null
+
                 if (selectedType == Playlist) {
-                    onActionPost(Action.FetchPlaylist(url = url, preferences = preferences))
+                    if (scheduleParams != null) {
+                        // Playlist + schedule → schedule immediately with preset
+                        val timeStr = ScheduleUtil.scheduleDownload(
+                            context = context,
+                            url = url,
+                            preferences = preferences,
+                            scheduleParams = scheduleParams,
+                            isPlaylist = true,
+                        )
+                        context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
+                        onActionPost(Action.HideSheet)
+                    } else {
+                        onActionPost(Action.FetchPlaylist(url = url, preferences = preferences))
+                    }
                 } else {
+                    // Scenario B: Custom + Schedule ON → carry scheduleParams to FormatPage
                     onActionPost(
                         Action.FetchFormats(
                             url = url,
                             audioOnly = selectedType == Audio,
                             preferences = preferences,
+                            scheduleParams = scheduleParams,
                         )
                     )
                 }
@@ -810,6 +881,218 @@ private fun AdditionalSettings(
                     onPreferenceUpdate()
                 },
             )
+        }
+    }
+}
+
+/**
+ * Section shown inside "Additional Settings" that lets the user schedule a download for a
+ * future date/time and choose a network constraint.
+ */
+@Composable
+private fun ScheduleSection(
+    modifier: Modifier = Modifier,
+    scheduleEnabled: Boolean,
+    onScheduleToggle: (Boolean) -> Unit,
+    scheduledDateTimeMillis: Long,
+    onDateTimeSelected: (Long) -> Unit,
+    networkPreference: ScheduleNetworkPreference,
+    onNetworkPrefChange: (ScheduleNetworkPreference) -> Unit,
+) {
+    val context = LocalContext.current
+
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+        // Toggle row ─────────────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Schedule,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = stringResource(R.string.schedule_download),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = scheduleEnabled,
+                onCheckedChange = onScheduleToggle,
+            )
+        }
+
+        // Expanded schedule options ────────────────────────────────
+        AnimatedVisibility(
+            visible = scheduleEnabled,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(start = 30.dp, top = 4.dp, bottom = 4.dp),
+            ) {
+                // Date picker chip
+                val dateLabel =
+                    if (scheduledDateTimeMillis > 0) {
+                        remember(scheduledDateTimeMillis) {
+                            java.text.SimpleDateFormat("EEE, MMM d yyyy", java.util.Locale.getDefault())
+                                .format(java.util.Date(scheduledDateTimeMillis))
+                        }
+                    } else {
+                        stringResource(R.string.select_date)
+                    }
+
+                // Time picker chip
+                val timeLabel =
+                    if (scheduledDateTimeMillis > 0) {
+                        remember(scheduledDateTimeMillis) {
+                            java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
+                                .format(java.util.Date(scheduledDateTimeMillis))
+                        }
+                    } else {
+                        stringResource(R.string.select_time)
+                    }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Date chip
+                    Surface(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply {
+                                if (scheduledDateTimeMillis > 0) timeInMillis = scheduledDateTimeMillis
+                            }
+                            android.app.DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    val newCal = Calendar.getInstance().apply {
+                                        if (scheduledDateTimeMillis > 0) timeInMillis = scheduledDateTimeMillis
+                                        set(Calendar.YEAR, year)
+                                        set(Calendar.MONTH, month)
+                                        set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                                    }
+                                    onDateTimeSelected(newCal.timeInMillis)
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH),
+                            ).show()
+                        },
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CalendarMonth,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = dateLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+
+                    // Time chip
+                    Surface(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply {
+                                if (scheduledDateTimeMillis > 0) timeInMillis = scheduledDateTimeMillis
+                            }
+                            android.app.TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    val newCal = Calendar.getInstance().apply {
+                                        if (scheduledDateTimeMillis > 0) timeInMillis = scheduledDateTimeMillis
+                                        set(Calendar.HOUR_OF_DAY, hour)
+                                        set(Calendar.MINUTE, minute)
+                                        set(Calendar.SECOND, 0)
+                                        set(Calendar.MILLISECOND, 0)
+                                    }
+                                    onDateTimeSelected(newCal.timeInMillis)
+                                },
+                                cal.get(Calendar.HOUR_OF_DAY),
+                                cal.get(Calendar.MINUTE),
+                                false,
+                            ).show()
+                        },
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccessTime,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = timeLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Network preference
+                Text(
+                    text = stringResource(R.string.network_preference),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    ScheduleNetworkPreference.entries.forEach { pref ->
+                        val label = stringResource(
+                            when (pref) {
+                                ScheduleNetworkPreference.WIFI_ONLY -> R.string.wifi_only
+                                ScheduleNetworkPreference.BOTH -> R.string.schedule_network_both
+                                ScheduleNetworkPreference.MOBILE_DATA -> R.string.mobile_data
+                            }
+                        )
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onNetworkPrefChange(pref) },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = networkPreference == pref,
+                                onClick = { onNetworkPrefChange(pref) },
+                            )
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

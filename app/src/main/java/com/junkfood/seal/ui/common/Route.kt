@@ -37,6 +37,8 @@ object Route {
     const val ONBOARDING = "onboarding"
     const val SUPPORT_DEVELOPER = "support_developer"
 
+    const val SCHEDULED_DOWNLOADS = "scheduled_downloads"
+
     const val TASK_HASHCODE = "task_hashcode"
     const val TEMPLATE_ID = "template_id"
 }

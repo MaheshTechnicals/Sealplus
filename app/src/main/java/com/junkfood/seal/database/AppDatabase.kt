@@ -7,6 +7,7 @@ import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.database.objects.CookieProfile
 import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
+import com.junkfood.seal.database.objects.ScheduledTask
 
 @Database(
     entities =
@@ -15,8 +16,9 @@ import com.junkfood.seal.database.objects.OptionShortcut
             CommandTemplate::class,
             CookieProfile::class,
             OptionShortcut::class,
+            ScheduledTask::class,
         ],
-    version = 6,
+    version = 7,
     autoMigrations =
         [
             AutoMigration(from = 1, to = 2),
@@ -24,6 +26,7 @@ import com.junkfood.seal.database.objects.OptionShortcut
             AutoMigration(from = 3, to = 4),
             AutoMigration(from = 4, to = 5),
             AutoMigration(from = 5, to = 6),
+            AutoMigration(from = 6, to = 7),
         ],
 )
 abstract class AppDatabase : RoomDatabase() {

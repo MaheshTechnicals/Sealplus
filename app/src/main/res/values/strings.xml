@@ -652,5 +652,17 @@
     <string name="notification_permission_desc">Seal Plus needs notification permission to show download progress and completion status. Please grant this permission for the best experience.</string>
     <string name="grant_permission">Grant Permission</string>
     <string name="skip">Skip</string>
+
+    <!-- Schedule Download -->
+    <string name="schedule_download">Schedule Download</string>
+    <string name="scheduled_downloads">Scheduled Downloads</string>
+    <string name="select_date">Select Date</string>
+    <string name="select_time">Select Time</string>
+    <string name="network_preference">Network Preference</string>
+    <string name="schedule_network_both">Both</string>
+    <string name="mobile_data">Mobile Data</string>
+    <string name="download_scheduled_for">Download scheduled for %1$s</string>
+    <string name="no_scheduled_downloads">No scheduled downloads</string>
+    <string name="cancel_scheduled_download">Cancel scheduled download?</string>
 </resources>
 

@@ -11,7 +11,9 @@ import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.database.objects.CookieProfile
 import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
+import com.junkfood.seal.database.objects.ScheduledTask
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -134,6 +136,31 @@ object DatabaseUtil {
     suspend fun deleteTemplateById(id: Int) = dao.deleteTemplateById(id)
 
     suspend fun deleteTemplates(templates: List<CommandTemplate>) = dao.deleteTemplates(templates)
+
+    // ────────────────── ScheduledTask helpers ──────────────────
+
+    /** Insert a new scheduled task and return its auto-generated ID. */
+    suspend fun insertScheduledTask(task: ScheduledTask): Long =
+        withContext(Dispatchers.IO) { dao.insertScheduledTask(task) }
+
+    /** Observe all scheduled tasks ordered by scheduled time. */
+    fun getScheduledTasksFlow() = dao.getScheduledTasksFlow()
+
+    /** Fetch a scheduled task by its primary key. */
+    suspend fun getScheduledTaskById(id: Int): ScheduledTask? =
+        withContext(Dispatchers.IO) { dao.getScheduledTaskById(id) }
+
+    /** Delete a scheduled task record from the DB. */
+    suspend fun deleteScheduledTask(task: ScheduledTask) =
+        withContext(Dispatchers.IO) { dao.deleteScheduledTask(task) }
+
+    /** Delete a scheduled task by its ID. */
+    suspend fun deleteScheduledTaskById(id: Int) =
+        withContext(Dispatchers.IO) { dao.deleteScheduledTaskById(id) }
+
+    /** Update the WorkManager request ID stored for a task (called right after enqueuing). */
+    suspend fun updateScheduledTaskWorkerId(id: Int, workRequestId: String) =
+        withContext(Dispatchers.IO) { dao.updateScheduledTaskWorkerId(id, workRequestId) }
 
     private const val TAG = "DatabaseUtil"
 }
