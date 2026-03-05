@@ -13,11 +13,16 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 /**
- * WorkManager worker that executes a previously-scheduled download.
- *
- * Input data key: [KEY_TASK_ID] — the primary key of the [com.junkfood.seal.database.objects.ScheduledTask]
- * row to execute.
+ * @deprecated Replaced by [com.junkfood.seal.DownloadAlarmReceiver] +
+ * [com.junkfood.seal.ScheduledDownloadService] which use
+ * [android.app.AlarmManager.setAlarmClock] to fire downloads at an exact time
+ * even in Doze mode. This WorkManager worker is no longer enqueued by [ScheduleUtil]
+ * and will be removed in a future release.
  */
+@Deprecated(
+    message = "Superseded by AlarmManager + ScheduledDownloadService. See ScheduleUtil.",
+    replaceWith = ReplaceWith("ScheduledDownloadService"),
+)
 class ScheduledDownloadWorker(
     appContext: Context,
     params: WorkerParameters,

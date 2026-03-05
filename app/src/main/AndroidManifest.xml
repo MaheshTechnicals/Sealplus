@@ -18,6 +18,13 @@
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- Exact-alarm permissions (required to bypass Doze mode for scheduled downloads) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Required on API 34+ for foreground services that perform data transfers -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- Required so BootReceiver can re-register AlarmManager alarms after a device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <queries>
         <intent>
@@ -129,6 +136,35 @@
         </provider>
 
         <receiver android:name=".NotificationActionReceiver" />
+
+        <!-- Receives AlarmManager alarms for scheduled downloads -->
+        <receiver
+            android:name=".DownloadAlarmReceiver"
+            android:exported="false" />
+
+        <!--
+            Re-registers AlarmManager alarms after the device reboots.
+            AlarmManager alarms are cleared on reboot; this receiver restores them
+            from the ScheduledTask Room database table.
+        -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            Foreground service that actually enqueues the download when an alarm fires.
+            foregroundServiceType="dataSync" is required on API 34+ for data-transfer FGS.
+        -->
+        <service
+            android:name=".ScheduledDownloadService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>

@@ -40,6 +40,8 @@ object NotificationUtil {
     private const val NOTIFICATION_GROUP_ID = "seal.download.notification"
     private const val DEFAULT_NOTIFICATION_ID = 100
     const val SERVICE_NOTIFICATION_ID = 123
+    /** Notification ID used by [com.junkfood.seal.ScheduledDownloadService]. */
+    const val SCHEDULED_SERVICE_NOTIFICATION_ID = 124
     private lateinit var serviceNotification: Notification
 
     //    private var builder =
@@ -289,6 +291,24 @@ object NotificationUtil {
                 .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
                 .build()
         return serviceNotification
+    }
+
+    /**
+     * Build the persistent foreground-service notification for [com.junkfood.seal.ScheduledDownloadService].
+     *
+     * This notification is shown for only a few seconds while the service looks up
+     * the task and hands it to [com.junkfood.seal.download.DownloaderV2].
+     *
+     * @param intent A [PendingIntent] that opens the app when the user taps the notification.
+     */
+    fun makeScheduledServiceNotification(intent: PendingIntent): android.app.Notification {
+        return NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_seal)
+            .setContentTitle(context.getString(R.string.scheduled_download_service))
+            .setOngoing(true)
+            .setContentIntent(intent)
+            .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
+            .build()
     }
 
     fun updateServiceNotificationForPlaylist(index: Int, itemCount: Int) {

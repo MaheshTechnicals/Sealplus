@@ -146,6 +146,10 @@ object DatabaseUtil {
     /** Observe all scheduled tasks ordered by scheduled time. */
     fun getScheduledTasksFlow() = dao.getScheduledTasksFlow()
 
+    /** Fetch ALL scheduled tasks as a one-shot list (used by [com.junkfood.seal.BootReceiver]). */
+    suspend fun getAllScheduledTasks(): List<ScheduledTask> =
+        withContext(Dispatchers.IO) { dao.getAllScheduledTasks() }
+
     /** Fetch a scheduled task by its primary key. */
     suspend fun getScheduledTaskById(id: Int): ScheduledTask? =
         withContext(Dispatchers.IO) { dao.getScheduledTaskById(id) }
@@ -158,7 +162,7 @@ object DatabaseUtil {
     suspend fun deleteScheduledTaskById(id: Int) =
         withContext(Dispatchers.IO) { dao.deleteScheduledTaskById(id) }
 
-    /** Update the WorkManager request ID stored for a task (called right after enqueuing). */
+    /** Update the alarm request identifier stored for a task (retained for schema compatibility). */
     suspend fun updateScheduledTaskWorkerId(id: Int, workRequestId: String) =
         withContext(Dispatchers.IO) { dao.updateScheduledTaskWorkerId(id, workRequestId) }
 

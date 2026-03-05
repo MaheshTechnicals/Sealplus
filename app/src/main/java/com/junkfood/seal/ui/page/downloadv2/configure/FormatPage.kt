@@ -1,6 +1,8 @@
 package com.junkfood.seal.ui.page.downloadv2.configure
 
 import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.spring
@@ -259,26 +261,38 @@ fun FormatPage(
                     .toSet()
 
             if (scheduleParams != null) {
-                val taskWithState = TaskFactory.createWithConfigurations(
-                    videoInfo = videoInfo,
-                    formatList = formatList,
-                    videoClips = videoClips,
-                    splitByChapter = splitByChapter,
-                    newTitle = newTitle,
-                    selectedSubtitles = selectedSubtitles,
-                    selectedAutoCaptions = selectedAutoCaptions,
-                )
-                val timeStr = ScheduleUtil.scheduleDownload(
-                    context = context,
-                    url = videoInfo.originalUrl ?: videoInfo.webpageUrl ?: "",
-                    title = videoInfo.title ?: "",
-                    thumbnailUrl = videoInfo.thumbnail ?: "",
-                    preferences = taskWithState.task.preferences,
-                    scheduleParams = scheduleParams,
-                    isPlaylist = false,
-                )
-                context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
-                onNavigateBack()
+                if (!ScheduleUtil.canScheduleExactAlarms(context)) {
+                    // SCHEDULE_EXACT_ALARM permission missing — redirect to system settings
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        context.startActivity(
+                            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
+                    // Navigate back so the user can re-open the dialog after granting
+                    onNavigateBack()
+                } else {
+                    val taskWithState = TaskFactory.createWithConfigurations(
+                        videoInfo = videoInfo,
+                        formatList = formatList,
+                        videoClips = videoClips,
+                        splitByChapter = splitByChapter,
+                        newTitle = newTitle,
+                        selectedSubtitles = selectedSubtitles,
+                        selectedAutoCaptions = selectedAutoCaptions,
+                    )
+                    val timeStr = ScheduleUtil.scheduleDownload(
+                        context = context,
+                        url = videoInfo.originalUrl ?: videoInfo.webpageUrl ?: "",
+                        title = videoInfo.title ?: "",
+                        thumbnailUrl = videoInfo.thumbnail ?: "",
+                        preferences = taskWithState.task.preferences,
+                        scheduleParams = scheduleParams,
+                        isPlaylist = false,
+                    )
+                    context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
+                    onNavigateBack()
+                }
             } else {
                 downloader.enqueue(
                     TaskFactory.createWithConfigurations(

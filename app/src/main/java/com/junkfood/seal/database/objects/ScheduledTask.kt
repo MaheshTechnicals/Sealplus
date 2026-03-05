@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
  * Room entity representing a download that is queued to execute at a future time.
  *
  * [preferencesJson] stores a JSON-serialised [com.junkfood.seal.util.DownloadUtil.DownloadPreferences]
- * so that the WorkManager worker can reconstruct the exact download configuration.
+ * so that [com.junkfood.seal.ScheduledDownloadService] can reconstruct the exact download
+ * configuration when the [android.app.AlarmManager] alarm fires.
  */
 @Entity(tableName = "ScheduledTask")
 data class ScheduledTask(
@@ -26,7 +27,7 @@ data class ScheduledTask(
     val isPlaylist: Boolean = false,
     /** JSON-encoded DownloadPreferences */
     val preferencesJson: String = "",
-    /** WorkManager unique work-request name (used for cancellation) */
+    /** AlarmManager request code / stable identifier (unused since task.id serves as request code) */
     val workRequestId: String = "",
     /** Epoch-milliseconds when this record was created */
     val createdAtMillis: Long = System.currentTimeMillis(),

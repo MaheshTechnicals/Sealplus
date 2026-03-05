@@ -1,5 +1,8 @@
 package com.junkfood.seal.ui.page.downloadv2.configure
 
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -672,20 +675,31 @@ private fun ConfigurePage(
                 )
                 val effectivePreferences = preferences.copy(extractAudio = selectedType == Audio)
                 if (scheduleEnabled && scheduledDateTimeMillis > System.currentTimeMillis()) {
-                    // Scenario A: Preset + Schedule ON → save to DB and schedule WorkManager
+                    // Scenario A: Preset + Schedule ON → register exact AlarmManager alarm
                     val scheduleParams = ScheduleParams(
                         scheduledTimeMillis = scheduledDateTimeMillis,
                         networkPreference = networkPreference,
                     )
-                    val timeStr = ScheduleUtil.scheduleDownload(
-                        context = context,
-                        url = url,
-                        preferences = effectivePreferences,
-                        scheduleParams = scheduleParams,
-                        isPlaylist = false,
-                    )
-                    context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
-                    onActionPost(Action.HideSheet)
+                    if (!ScheduleUtil.canScheduleExactAlarms(context)) {
+                        // SCHEDULE_EXACT_ALARM permission missing — redirect to system settings
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            context.startActivity(
+                                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }
+                        // Keep the sheet open so the user can retry after granting
+                    } else {
+                        val timeStr = ScheduleUtil.scheduleDownload(
+                            context = context,
+                            url = url,
+                            preferences = effectivePreferences,
+                            scheduleParams = scheduleParams,
+                            isPlaylist = false,
+                        )
+                        context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
+                        onActionPost(Action.HideSheet)
+                    }
                 } else {
                     onActionPost(
                         Action.DownloadWithPreset(
@@ -711,16 +725,26 @@ private fun ConfigurePage(
 
                 if (selectedType == Playlist) {
                     if (scheduleParams != null) {
-                        // Playlist + schedule → schedule immediately with preset
-                        val timeStr = ScheduleUtil.scheduleDownload(
-                            context = context,
-                            url = url,
-                            preferences = preferences,
-                            scheduleParams = scheduleParams,
-                            isPlaylist = true,
-                        )
-                        context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
-                        onActionPost(Action.HideSheet)
+                        // Playlist + schedule → register exact AlarmManager alarm
+                        if (!ScheduleUtil.canScheduleExactAlarms(context)) {
+                            // SCHEDULE_EXACT_ALARM permission missing — redirect to system settings
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                context.startActivity(
+                                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                )
+                            }
+                        } else {
+                            val timeStr = ScheduleUtil.scheduleDownload(
+                                context = context,
+                                url = url,
+                                preferences = preferences,
+                                scheduleParams = scheduleParams,
+                                isPlaylist = true,
+                            )
+                            context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
+                            onActionPost(Action.HideSheet)
+                        }
                     } else {
                         onActionPost(Action.FetchPlaylist(url = url, preferences = preferences))
                     }

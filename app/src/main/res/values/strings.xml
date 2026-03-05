@@ -664,5 +664,10 @@
     <string name="download_scheduled_for">Download scheduled for %1$s</string>
     <string name="no_scheduled_downloads">No scheduled downloads</string>
     <string name="cancel_scheduled_download">Cancel scheduled download?</string>
+    <!-- Scheduled-download foreground service notification -->
+    <string name="scheduled_download_service">Starting scheduled download…</string>
+    <!-- Exact-alarm permission warning shown in Scheduled Downloads page -->
+    <string name="exact_alarm_permission_required">Exact alarm permission required</string>
+    <string name="exact_alarm_permission_desc">Grant the \"Schedule Exact Alarm\" permission so downloads start exactly on time, even when the phone is asleep.</string>
 </resources>
 

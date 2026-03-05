@@ -1,17 +1,17 @@
 package com.junkfood.seal.util
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.util.Log
-import androidx.work.Constraints
-import androidx.work.Data
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
+import androidx.core.content.getSystemService
+import com.junkfood.seal.DownloadAlarmReceiver
 import com.junkfood.seal.database.objects.ScheduledTask
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,25 +20,39 @@ import kotlinx.serialization.json.Json
 
 private const val TAG = "ScheduleUtil"
 
-/** Work-tag applied to all scheduled-download work requests (allows bulk cancel). */
-const val SCHEDULE_WORK_TAG = "seal_scheduled_download"
-
 object ScheduleUtil {
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    // ── Permission helpers ───────────────────────────────────────────────────────
+
     /**
-     * Persist + enqueue a new scheduled download.
+     * Returns true if the app is currently allowed to schedule exact alarms.
      *
-     * @param context       Application context (used to get WorkManager).
-     * @param url           URL to download.
-     * @param title         Video title, for display purposes.
-     * @param thumbnailUrl  Thumbnail URL, for display purposes.
-     * @param preferences   Full download preferences to use when the task fires.
-     * @param scheduleParams Time and network constraint from the user.
-     * @param isPlaylist    Whether the URL represents a playlist.
-     * @param scope         Coroutine scope to run the suspend DB calls on.
-     * @return              Human-readable scheduled-time string, e.g. "10:30 AM, Mar 5"
+     * On API < 31 (Android 12), exact alarms are always permitted.
+     * On API 31+ the user must have granted [android.permission.SCHEDULE_EXACT_ALARM]
+     * (or [android.permission.USE_EXACT_ALARM] for privileged apps).
+     */
+    fun canScheduleExactAlarms(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
+        return context.getSystemService<AlarmManager>()?.canScheduleExactAlarms() == true
+    }
+
+    // ── Public API ───────────────────────────────────────────────────────────────
+
+    /**
+     * Persist a new [ScheduledTask] in the database and register an exact
+     * [AlarmManager.setAlarmClock] alarm that bypasses Doze mode completely.
+     *
+     * @param context         Application context.
+     * @param url             URL to download.
+     * @param title           Video title (display only, may be empty).
+     * @param thumbnailUrl    Thumbnail URL (display only, may be empty).
+     * @param preferences     Full download preferences to restore when the alarm fires.
+     * @param scheduleParams  Epoch-millisecond trigger time + network constraint.
+     * @param isPlaylist      True when the URL is a playlist.
+     * @param scope           Coroutine scope for async DB work (defaults to a fresh IO scope).
+     * @return                Human-readable scheduled-time string, e.g. "10:30 AM, Mar 5".
      */
     fun scheduleDownload(
         context: Context,
@@ -54,7 +68,7 @@ object ScheduleUtil {
         val preferencesJson = json.encodeToString(preferences)
 
         scope.launch {
-            // 1. Insert into DB to get a stable ID
+            // 1. Insert into DB to get a stable primary-key ID
             val entity =
                 ScheduledTask(
                     url = url,
@@ -65,73 +79,102 @@ object ScheduleUtil {
                     isPlaylist = isPlaylist,
                     preferencesJson = preferencesJson,
                 )
-            val rowId = DatabaseUtil.insertScheduledTask(entity)
-            val taskId = rowId.toInt()
+            val taskId = DatabaseUtil.insertScheduledTask(entity).toInt()
 
-            // 2. Build WorkManager constraints
-            val networkType =
-                when (scheduleParams.networkPreference) {
-                    ScheduleNetworkPreference.WIFI_ONLY -> NetworkType.UNMETERED
-                    ScheduleNetworkPreference.MOBILE_DATA -> NetworkType.METERED
-                    ScheduleNetworkPreference.BOTH -> NetworkType.CONNECTED
-                }
-            val constraints = Constraints.Builder().setRequiredNetworkType(networkType).build()
+            // 2. Register an exact alarm using the task's DB ID as the request code
+            //    so we can later reconstruct the same PendingIntent for cancellation.
+            setAlarm(context, taskId, scheduledTimeMillis)
 
-            // 3. Calculate initial delay
-            val delayMs =
-                (scheduledTimeMillis - System.currentTimeMillis()).coerceAtLeast(0L)
-
-            // 4. Build input data
-            val inputData =
-                Data.Builder()
-                    .putInt(ScheduledDownloadWorker.KEY_TASK_ID, taskId)
-                    .build()
-
-            // 5. Create one-time work request
-            val workRequest =
-                OneTimeWorkRequest.Builder(ScheduledDownloadWorker::class.java)
-                    .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
-                    .setConstraints(constraints)
-                    .setInputData(inputData)
-                    .addTag(SCHEDULE_WORK_TAG)
-                    .build()
-
-            // 6. Enqueue
-            WorkManager.getInstance(context).enqueue(workRequest)
-
-            // 7. Persist the work-request UUID so we can cancel it later
-            DatabaseUtil.updateScheduledTaskWorkerId(taskId, workRequest.id.toString())
-
-            Log.d(TAG, "scheduleDownload: taskId=$taskId, delay=${delayMs}ms, workId=${workRequest.id}")
+            Log.d(TAG, "scheduleDownload: taskId=$taskId, triggerAt=${formatScheduledTime(scheduledTimeMillis)}")
         }
 
         return formatScheduledTime(scheduledTimeMillis)
     }
 
     /**
-     * Cancel and delete a single scheduled task.
+     * (Re-)register an exact [AlarmManager.setAlarmClock] alarm for an already-persisted task.
+     *
+     * [AlarmManager.setAlarmClock] fires at **exactly** [triggerAtMillis] regardless of
+     * Doze mode, low-power mode, or app-standby buckets. It also displays a clock icon
+     * in the status bar so the user knows an alarm is pending.
+     *
+     * @param context         Application context.
+     * @param taskId          Primary key of the [ScheduledTask] row (used as PendingIntent
+     *                        request code so each task gets a unique PendingIntent).
+     * @param triggerAtMillis Epoch milliseconds when the alarm should fire.
+     */
+    fun setAlarm(context: Context, taskId: Int, triggerAtMillis: Long) {
+        val alarmManager = context.getSystemService<AlarmManager>() ?: run {
+            Log.e(TAG, "setAlarm: AlarmManager unavailable")
+            return
+        }
+
+        val operation = buildAlarmPendingIntent(context, taskId)
+
+        // showIntent: what to open when the user taps the alarm clock icon in the
+        // system status bar.  Opening the app's main launcher activity is ideal.
+        val launchIntent = context.packageManager
+            .getLaunchIntentForPackage(context.packageName)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val showIntent = PendingIntent.getActivity(
+            context,
+            0,
+            launchIntent ?: Intent(),
+            PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        // setAlarmClock is the strongest guarantee: fires on time even in full Doze.
+        alarmManager.setAlarmClock(
+            AlarmManager.AlarmClockInfo(triggerAtMillis, showIntent),
+            operation,
+        )
+
+        Log.d(TAG, "setAlarm: alarm set for taskId=$taskId at ${formatScheduledTime(triggerAtMillis)}")
+    }
+
+    /**
+     * Cancel an exact alarm and delete the corresponding [ScheduledTask] row.
+     *
+     * [AlarmManager.cancel] is synchronous and main-thread safe; the DB delete
+     * is dispatched on [Dispatchers.IO] via [scope].
      *
      * @param context Application context.
      * @param task    The [ScheduledTask] to cancel.
-     * @param scope   Coroutine scope.
+     * @param scope   Coroutine scope for the async DB delete.
      */
     fun cancelScheduledTask(
         context: Context,
         task: ScheduledTask,
         scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     ) {
+        // Cancel the alarm right away — safe to call on any thread
+        val alarmManager = context.getSystemService<AlarmManager>()
+        alarmManager?.cancel(buildAlarmPendingIntent(context, task.id))
+        Log.d(TAG, "cancelScheduledTask: alarm cancelled for taskId=${task.id}")
+
+        // Delete the DB record; runs on IO dispatcher
         scope.launch {
-            // Cancel in WorkManager if we have a valid ID
-            if (task.workRequestId.isNotBlank()) {
-                try {
-                    WorkManager.getInstance(context)
-                        .cancelWorkById(java.util.UUID.fromString(task.workRequestId))
-                } catch (e: Exception) {
-                    Log.w(TAG, "cancelScheduledTask: could not cancel work ${task.workRequestId}", e)
-                }
-            }
             DatabaseUtil.deleteScheduledTask(task)
         }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Build the [PendingIntent] that AlarmManager fires when the alarm triggers.
+     * Using [task.id] as the request code ensures every task has a distinct
+     * PendingIntent, which is required for both scheduling and cancellation.
+     */
+    private fun buildAlarmPendingIntent(context: Context, taskId: Int): PendingIntent {
+        val intent =
+            Intent(context, DownloadAlarmReceiver::class.java)
+                .putExtra(DownloadAlarmReceiver.EXTRA_TASK_ID, taskId)
+        return PendingIntent.getBroadcast(
+            context,
+            taskId, // unique per task — allows individual cancellation
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     /** Returns a locale-aware, human-readable date+time string. */
