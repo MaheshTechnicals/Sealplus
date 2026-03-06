@@ -53,6 +53,8 @@ const val SORTING_FIELDS = "sorting_fields"
 
 const val WELCOME_DIALOG = "welcome_dialog"
 const val ONBOARDING_COMPLETED = "onboarding_completed"
+/** Set to `true` after the user has seen the OEM auto-start permission dialog once. */
+const val AUTOSTART_PROMPT_SHOWN = "autostart_prompt_shown"
 const val VIDEO_DIRECTORY = "download_dir"
 const val AUDIO_DIRECTORY = "audio_dir"
 const val COMMAND_DIRECTORY = "command_directory"

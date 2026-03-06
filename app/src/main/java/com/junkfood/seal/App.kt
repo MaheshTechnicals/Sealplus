@@ -13,6 +13,7 @@ import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.google.android.material.color.DynamicColors
 import com.junkfood.seal.download.DownloaderV2
@@ -145,16 +146,28 @@ class App : Application() {
 
         fun startService() {
             if (isServiceRunning) return
-            Intent(context.applicationContext, DownloadService::class.java).also { intent ->
-                context.applicationContext.bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            }
+            val intent = Intent(context.applicationContext, DownloadService::class.java)
+            // Use startForegroundService() so DownloadService becomes a real foreground
+            // service immediately, even when called from a background or killed-app context
+            // (e.g., triggered by an AlarmManager alarm firing via ScheduledDownloadService).
+            // bindService() alone does NOT guarantee a foreground service on Android 8+:
+            // startForeground() called from onBind() is only valid for *started* services.
+            ContextCompat.startForegroundService(context.applicationContext, intent)
+            // Also bind so DownloaderV2Impl gets the IBinder and connection callbacks.
+            context.applicationContext.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
 
         fun stopService() {
             if (!isServiceRunning) return
             try {
                 isServiceRunning = false
-                context.applicationContext.run { unbindService(connection) }
+                context.applicationContext.run {
+                    unbindService(connection)
+                    // Stop the started-service side too; onUnbind() calls stopSelf() but
+                    // sending an explicit stopService() ensures clean termination if
+                    // the binding never completed (e.g. early cancel).
+                    stopService(Intent(context.applicationContext, DownloadService::class.java))
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

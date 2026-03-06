@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.android.inject
@@ -109,6 +110,20 @@ class ScheduledDownloadService : Service() {
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to enqueue task $taskId", e)
             } finally {
+                // ── Bridge the foreground-service hand-off gap ─────────────────────────────
+                // DownloaderV2Impl’s snapshot collector calls App.startService() on
+                // Dispatchers.Default — that binding is ASYNCHRONOUS.  If we call
+                // shutDown() here immediately, this service’s foreground slot is
+                // released before DownloadService has called startForeground(), leaving
+                // a window with NO active foreground service.  On Android 8+ the OS
+                // will kill the process in that window, which is exactly the bug:
+                // the download only starts when the user re-opens the app.
+                //
+                // Fix: proactively start DownloadService ourselves (no-op if already
+                // called by DownloaderV2Impl), then hold the foreground slot for 3 s
+                // so DownloadService has time to bind and call startForeground().
+                App.startService()
+                delay(3_000)
                 shutDown()
             }
         }

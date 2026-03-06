@@ -147,6 +147,7 @@ import com.junkfood.seal.util.FORMAT_SELECTION
 import com.junkfood.seal.util.PreferenceStrings
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
+import com.junkfood.seal.util.AutoStartHelper
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.ScheduleNetworkPreference
@@ -659,6 +660,12 @@ private fun ConfigurePage(
                     if (enabled && scheduledDateTimeMillis <= System.currentTimeMillis()) {
                         scheduledDateTimeMillis = System.currentTimeMillis() + 30 * 60 * 1000L
                     }
+                    // On OEM devices (MIUI, ColorOS, One UI, …) a swipe-to-dismiss is
+                    // treated as Force Stop which cancels all AlarmManager alarms.
+                    // Prompt the user once to enable Auto-Start / background execution
+                    // in their manufacturer's security settings so scheduled downloads
+                    // fire reliably even when the app has been swiped away.
+                    if (enabled) AutoStartHelper.showAutoStartDialogIfNeeded(context)
                 },
                 scheduledDateTimeMillis = scheduledDateTimeMillis,
                 onDateTimeSelected = { scheduledDateTimeMillis = it },
