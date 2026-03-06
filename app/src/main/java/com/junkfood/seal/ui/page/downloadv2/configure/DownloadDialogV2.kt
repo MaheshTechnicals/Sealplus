@@ -157,9 +157,7 @@ import com.junkfood.seal.util.ScheduleParams
 import com.junkfood.seal.util.ScheduleUtil
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json as KJson
-import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.TEMPLATE_ID
-import com.junkfood.seal.util.THUMBNAIL
 import com.junkfood.seal.util.USE_CUSTOM_AUDIO_PRESET
 import com.junkfood.seal.util.VIDEO_FORMAT
 import com.junkfood.seal.util.VIDEO_QUALITY
@@ -390,7 +388,6 @@ private fun DownloadDialogContent(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 isQuickDownload = false,
                                 preference = preferences,
-                                selectedType = config.downloadType,
                                 onPreferenceUpdate = {
                                     onPreferencesUpdate(
                                         DownloadUtil.DownloadPreferences.createFromPreferences()
@@ -882,7 +879,6 @@ fun ConfigurePagePlaylistVariant(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 isQuickDownload = false,
                 preference = preferences,
-                selectedType = Audio,
                 onPreferenceUpdate = {
                     onPreferencesUpdate(DownloadUtil.DownloadPreferences.createFromPreferences())
                 },
@@ -909,7 +905,6 @@ fun ConfigurePagePlaylistVariant(
 private fun AdditionalSettings(
     modifier: Modifier = Modifier,
     isQuickDownload: Boolean,
-    selectedType: DownloadType?,
     preference: DownloadUtil.DownloadPreferences,
     onNavigateToCookieGeneratorPage: (String) -> Unit = {},
     onPreferenceUpdate: () -> Unit,
@@ -934,24 +929,6 @@ private fun AdditionalSettings(
                 )
             }
 
-            VideoFilterChip(
-                selected = downloadSubtitle,
-                enabled = selectedType != Command,
-                onClick = {
-                    SUBTITLE.updateBoolean(!downloadSubtitle)
-                    onPreferenceUpdate()
-                },
-                label = stringResource(id = R.string.download_subtitles),
-            )
-            VideoFilterChip(
-                selected = createThumbnail,
-                enabled = selectedType != Command,
-                onClick = {
-                    THUMBNAIL.updateBoolean(!createThumbnail)
-                    onPreferenceUpdate()
-                },
-                label = stringResource(R.string.create_thumbnail),
-            )
         }
 
         if (showCookiesDialog && cookiesProfiles.isNotEmpty()) {
