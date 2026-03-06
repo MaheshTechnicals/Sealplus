@@ -554,15 +554,24 @@
        SPONSOR STRIP
   ═══════════════════════════════════════════════════════ -->
   <section id="sponsor-strip" aria-label="Sponsors">
-    <p class="sponsor-strip-title reveal">
-      <span>Thank you</span> to our amazing sponsors who make this possible ❤️
-    </p>
-    <div class="sponsors-ticker reveal delay-1" aria-label="Sponsor list">
-      <div class="sponsor-pill"><span class="heart" aria-hidden="true">❤️</span> Abdul Kadar K</div>
-      <div class="sponsor-pill"><span class="heart" aria-hidden="true">❤️</span> Peter Ciomer</div>
-      <div class="sponsor-pill"><span class="heart" aria-hidden="true">❤️</span> Rami Maunula</div>
+    <div class="section-header">
+      <div class="section-tag reveal">Sponsors</div>
+      <h2 class="section-title reveal delay-1">
+        Our Amazing <span class="grad-text">Sponsors</span>
+      </h2>
+      <p class="section-sub reveal delay-2">
+        Thank you to the incredible people who support Seal Plus development ❤️
+      </p>
     </div>
-    <div class="reveal delay-2">
+
+    <div class="sponsors-grid reveal delay-1" id="sponsors-strip-list" aria-label="Sponsor list">
+      <!-- Dynamically populated from sponsors.json -->
+    </div>
+
+    <div class="sponsors-actions reveal delay-2">
+      <button class="btn btn-secondary" id="sponsors-view-all" style="display:none;" aria-label="View all sponsors">
+        View All Sponsors
+      </button>
       <button class="btn btn-primary" data-sponsor-modal aria-label="Support Seal Plus development">
         ❤️ Become a Sponsor
       </button>
@@ -664,10 +673,8 @@
         helps keep development active and the updates coming!
       </p>
 
-      <div class="modal-sponsors" aria-label="Current sponsors">
-        <div class="sponsor-pill"><span class="heart" aria-hidden="true">❤️</span> Abdul Kadar K</div>
-        <div class="sponsor-pill"><span class="heart" aria-hidden="true">❤️</span> Peter Ciomer</div>
-        <div class="sponsor-pill"><span class="heart" aria-hidden="true">❤️</span> Rami Maunula</div>
+      <div class="modal-sponsors-grid" id="sponsors-modal-list" aria-label="Current sponsors">
+        <!-- Dynamically populated from sponsors.json -->
       </div>
 
       <div class="modal-actions">

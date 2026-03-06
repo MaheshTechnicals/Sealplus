@@ -119,6 +119,83 @@ const toast = (() => {
   };
 })();
 
+/* ── Load Sponsors from sponsors.json ───────────────────────── */
+(function loadSponsors() {
+  const stripContainer = document.getElementById('sponsors-strip-list');
+  const modalContainer = document.getElementById('sponsors-modal-list');
+  const viewAllBtn     = document.getElementById('sponsors-view-all');
+  if (!stripContainer && !modalContainer) return;
+
+  /* Palette for avatar backgrounds */
+  const avatarColors = [
+    'linear-gradient(135deg, #7b2ff7, #4facfe)',
+    'linear-gradient(135deg, #f72585, #ff6f91)',
+    'linear-gradient(135deg, #00e676, #00c853)',
+    'linear-gradient(135deg, #ff9800, #ff5722)',
+    'linear-gradient(135deg, #4facfe, #00f2fe)',
+    'linear-gradient(135deg, #e040fb, #7c4dff)',
+    'linear-gradient(135deg, #ffd600, #ff6d00)',
+    'linear-gradient(135deg, #00bcd4, #2196f3)',
+  ];
+
+  function getInitials(name) {
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  const VISIBLE_LIMIT = 6;
+
+  fetch('sponsors.json')
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to load sponsors.json');
+      return res.json();
+    })
+    .then(data => {
+      const sponsors = data.sponsors || [];
+
+      /* ── Strip: profile cards (limit 5 initially) ── */
+      if (stripContainer) {
+        const stripHTML = sponsors.map((s, i) => {
+          const bg = avatarColors[i % avatarColors.length];
+          const initials = getInitials(s.name);
+          const hidden = i >= VISIBLE_LIMIT ? ' hidden-sponsor' : '';
+          return `<div class="sponsor-card${hidden}">
+            <div class="sponsor-avatar" style="background:${bg}">${initials}</div>
+            <div class="sponsor-name">${s.name}</div>
+            <div class="sponsor-badge"><span class="heart" aria-hidden="true">❤️</span> Sponsor</div>
+          </div>`;
+        }).join('');
+        stripContainer.innerHTML = stripHTML;
+
+        /* Show View All button if more than VISIBLE_LIMIT */
+        if (viewAllBtn && sponsors.length > VISIBLE_LIMIT) {
+          viewAllBtn.style.display = '';
+          viewAllBtn.textContent = `View All Sponsors (${sponsors.length})`;
+          viewAllBtn.addEventListener('click', () => {
+            stripContainer.classList.toggle('show-all');
+            const expanded = stripContainer.classList.contains('show-all');
+            viewAllBtn.textContent = expanded
+              ? 'Show Less'
+              : `View All Sponsors (${sponsors.length})`;
+          });
+        }
+      }
+
+      /* ── Modal: compact profile cards ── */
+      if (modalContainer) {
+        const modalHTML = sponsors.map((s, i) => {
+          const bg = avatarColors[i % avatarColors.length];
+          const initials = getInitials(s.name);
+          return `<div class="modal-sponsor-card">
+            <div class="modal-sponsor-avatar" style="background:${bg}">${initials}</div>
+            <div class="modal-sponsor-name">${s.name}</div>
+          </div>`;
+        }).join('');
+        modalContainer.innerHTML = modalHTML;
+      }
+    })
+    .catch(err => console.error('Sponsors load error:', err));
+})();
+
 /* ── Sponsor Modal ──────────────────────────────────────────── */
 (function initSponsorModal() {
   const overlay   = document.querySelector('.modal-overlay');
