@@ -676,6 +676,13 @@
     <string name="battery_optimization_desc">Some device manufacturers (MIUI, One UI, etc.) aggressively kill alarms when the app is swiped away. Tap below to exempt Seal Plus from battery optimizations so scheduled downloads always start on time.</string>
     <string name="disable_battery_optimization">Disable optimization</string>
 
+    <!-- Reliability Mode (ScheduleKeeperService) -->
+    <string name="reliability_mode">Reliability Mode</string>
+    <string name="reliability_mode_desc">Keeps the app process alive to guarantee on-time downloads. Uses slightly more battery.</string>
+    <string name="schedule_keeper_waiting">Waiting for scheduled download at %1$s</string>
+    <string name="schedule_keeper_downloading">Starting scheduled download…</string>
+    <string name="schedule_keeper_channel_name">Scheduled Tasks</string>
+
     <!-- OEM Auto-Start permission dialog (shown once when Schedule toggle is turned ON) -->
     <string name="autostart_dialog_title">Allow Auto-Start</string>
     <string name="autostart_dialog_message">To ensure your scheduled downloads start exactly on time even when the app is closed, please allow the app to Auto-Start or run in the background on the next screen.</string>

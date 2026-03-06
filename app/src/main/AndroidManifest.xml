@@ -165,6 +165,18 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!--
+            Long-running foreground service that keeps the process alive from the time
+            the user schedules a download until it fires ("Reliability Mode").
+            This is an alternative to AlarmManager for users on aggressive OEM builds
+            (MIUI, ColorOS, One UI) where swipe-to-dismiss silently cancels all alarms.
+        -->
+        <service
+            android:name=".ScheduleKeeperService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>

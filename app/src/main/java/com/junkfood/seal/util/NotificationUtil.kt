@@ -42,6 +42,9 @@ object NotificationUtil {
     const val SERVICE_NOTIFICATION_ID = 123
     /** Notification ID used by [com.junkfood.seal.ScheduledDownloadService]. */
     const val SCHEDULED_SERVICE_NOTIFICATION_ID = 124
+    /** Notification ID used by [com.junkfood.seal.ScheduleKeeperService] (Reliability Mode). */
+    const val KEEPER_NOTIFICATION_ID = 125
+    private const val KEEPER_CHANNEL_ID = "schedule_keeper_channel"
     private lateinit var serviceNotification: Notification
 
     //    private var builder =
@@ -158,9 +161,25 @@ object NotificationUtil {
                 enableVibration(false)
                 enableLights(false)
             }
+        // Low-importance channel for the long-running "Reliability Mode" keeper service.
+        // IMPORTANCE_LOW means no sound/vibration — the notification is just a persistent
+        // status entry so the OS keeps the process alive.
+        val keeperChannel =
+            NotificationChannel(
+                KEEPER_CHANNEL_ID,
+                context.getString(R.string.schedule_keeper_channel_name),
+                NotificationManager.IMPORTANCE_LOW,
+            ).apply {
+                description = context.getString(R.string.schedule_keeper_channel_name)
+                group = NOTIFICATION_GROUP_ID
+                setSound(null, null)
+                enableVibration(false)
+                enableLights(false)
+            }
         notificationManager.createNotificationChannelGroup(channelGroup)
         notificationManager.createNotificationChannel(channel)
         notificationManager.createNotificationChannel(serviceChannel)
+        notificationManager.createNotificationChannel(keeperChannel)
     }
 
     fun notifyProgress(
@@ -301,6 +320,43 @@ object NotificationUtil {
      *
      * @param intent A [PendingIntent] that opens the app when the user taps the notification.
      */
+    /**
+     * Builds the persistent "Waiting for scheduled download at [time]" notification shown
+     * by [com.junkfood.seal.ScheduleKeeperService] while it waits for the scheduled moment.
+     *
+     * Uses [KEEPER_CHANNEL_ID] (IMPORTANCE_LOW) so it is silent and non-intrusive.
+     */
+    fun makeKeeperWaitingNotification(intent: PendingIntent, timeLabel: String): Notification {
+        return NotificationCompat.Builder(context, KEEPER_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_seal)
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.schedule_keeper_waiting, timeLabel))
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setContentIntent(intent)
+            .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
+            .build()
+    }
+
+    /**
+     * Updates the [com.junkfood.seal.ScheduleKeeperService] notification from "Waiting…" to
+     * "Downloading…" once the scheduled delay has elapsed and the download is being enqueued.
+     */
+    fun updateKeeperNotificationToDownloading(intent: PendingIntent) {
+        val notification = NotificationCompat.Builder(context, KEEPER_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_seal)
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.schedule_keeper_downloading))
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setContentIntent(intent)
+            .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
+            .build()
+        notificationManager.notify(KEEPER_NOTIFICATION_ID, notification)
+    }
+
     fun makeScheduledServiceNotification(intent: PendingIntent): android.app.Notification {
         return NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_seal)

@@ -101,6 +101,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.ContextCompat
 import com.junkfood.seal.App
 import com.junkfood.seal.R
 import com.junkfood.seal.util.makeToast
@@ -148,11 +149,14 @@ import com.junkfood.seal.util.PreferenceStrings
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.AutoStartHelper
+import com.junkfood.seal.ScheduleKeeperService
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.ScheduleNetworkPreference
 import com.junkfood.seal.util.ScheduleParams
 import com.junkfood.seal.util.ScheduleUtil
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json as KJson
 import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.TEMPLATE_ID
 import com.junkfood.seal.util.THUMBNAIL
@@ -560,6 +564,10 @@ private fun ConfigurePage(
     var scheduleEnabled by rememberSaveable { mutableStateOf(false) }
     var scheduledDateTimeMillis by rememberSaveable { mutableLongStateOf(0L) }
     var networkPreference by rememberSaveable { mutableStateOf(ScheduleNetworkPreference.BOTH) }
+    // When enabled, launches ScheduleKeeperService (long-running FGS) instead of AlarmManager.
+    // More reliable on OEM builds that wipe alarms on swipe-to-dismiss, at the cost of
+    // a persistent notification until the scheduled time arrives.
+    var reliabilityModeEnabled by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(selectedType) {
         if (selectedType == Playlist) {
@@ -671,6 +679,8 @@ private fun ConfigurePage(
                 onDateTimeSelected = { scheduledDateTimeMillis = it },
                 networkPreference = networkPreference,
                 onNetworkPrefChange = { networkPreference = it },
+                reliabilityModeEnabled = reliabilityModeEnabled,
+                onReliabilityModeToggle = { reliabilityModeEnabled = it },
             )
         }
 
@@ -689,6 +699,25 @@ private fun ConfigurePage(
                 )
                 val effectivePreferences = preferences.copy(extractAudio = selectedType == Audio)
                 if (scheduleEnabled && scheduledDateTimeMillis > System.currentTimeMillis()) {
+                    if (reliabilityModeEnabled) {
+                        // Reliability Mode: bypass AlarmManager entirely.
+                        // ScheduleKeeperService is a long-running FGS that keeps the process
+                        // alive and fires the download when System.currentTimeMillis() reaches
+                        // scheduledDateTimeMillis — immune to OEM swipe-to-dismiss alarm wipe.
+                        val preferencesJson = KJson { ignoreUnknownKeys = true }
+                            .encodeToString(effectivePreferences)
+                        ContextCompat.startForegroundService(
+                            context,
+                            Intent(context, ScheduleKeeperService::class.java).apply {
+                                putExtra(ScheduleKeeperService.EXTRA_URL, url)
+                                putExtra(ScheduleKeeperService.EXTRA_PREFERENCES_JSON, preferencesJson)
+                                putExtra(ScheduleKeeperService.EXTRA_SCHEDULED_MILLIS, scheduledDateTimeMillis)
+                            },
+                        )
+                        val timeStr = ScheduleUtil.formatScheduledTime(scheduledDateTimeMillis)
+                        context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
+                        onActionPost(Action.HideSheet)
+                    } else {
                     // Scenario A: Preset + Schedule ON → register exact AlarmManager alarm
                     val scheduleParams = ScheduleParams(
                         scheduledTimeMillis = scheduledDateTimeMillis,
@@ -714,6 +743,7 @@ private fun ConfigurePage(
                         context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
                         onActionPost(Action.HideSheet)
                     }
+                    } // closes the `else` block started for !reliabilityModeEnabled
                 } else {
                     onActionPost(
                         Action.DownloadWithPreset(
@@ -739,6 +769,22 @@ private fun ConfigurePage(
 
                 if (selectedType == Playlist) {
                     if (scheduleParams != null) {
+                        if (reliabilityModeEnabled) {
+                            // Reliability Mode for playlists: same keeper service approach
+                            val preferencesJson = KJson { ignoreUnknownKeys = true }
+                                .encodeToString(preferences)
+                            ContextCompat.startForegroundService(
+                                context,
+                                Intent(context, ScheduleKeeperService::class.java).apply {
+                                    putExtra(ScheduleKeeperService.EXTRA_URL, url)
+                                    putExtra(ScheduleKeeperService.EXTRA_PREFERENCES_JSON, preferencesJson)
+                                    putExtra(ScheduleKeeperService.EXTRA_SCHEDULED_MILLIS, scheduleParams.scheduledTimeMillis)
+                                },
+                            )
+                            val timeStr = ScheduleUtil.formatScheduledTime(scheduleParams.scheduledTimeMillis)
+                            context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
+                            onActionPost(Action.HideSheet)
+                        } else {
                         // Playlist + schedule → register exact AlarmManager alarm
                         if (!ScheduleUtil.canScheduleExactAlarms(context)) {
                             // SCHEDULE_EXACT_ALARM permission missing — redirect to system settings
@@ -759,6 +805,7 @@ private fun ConfigurePage(
                             context.makeToast(context.getString(R.string.download_scheduled_for, timeStr))
                             onActionPost(Action.HideSheet)
                         }
+                        } // closes else (!reliabilityModeEnabled)
                     } else {
                         onActionPost(Action.FetchPlaylist(url = url, preferences = preferences))
                     }
@@ -936,6 +983,8 @@ private fun ScheduleSection(
     onDateTimeSelected: (Long) -> Unit,
     networkPreference: ScheduleNetworkPreference,
     onNetworkPrefChange: (ScheduleNetworkPreference) -> Unit,
+    reliabilityModeEnabled: Boolean = false,
+    onReliabilityModeToggle: (Boolean) -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -1129,6 +1178,36 @@ private fun ScheduleSection(
                             )
                         }
                     }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // ── Reliability Mode toggle ─────────────────────────────────────────────
+                // Starts a long-running FGS (ScheduleKeeperService) instead of using
+                // AlarmManager. Immune to OEM swipe-to-dismiss alarm wipe, at the cost
+                // of a persistent silent notification until the scheduled time arrives.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.reliability_mode),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Text(
+                            text = stringResource(R.string.reliability_mode_desc),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Switch(
+                        checked = reliabilityModeEnabled,
+                        onCheckedChange = onReliabilityModeToggle,
+                    )
                 }
             }
         }
