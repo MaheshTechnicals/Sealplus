@@ -669,5 +669,9 @@
     <!-- Exact-alarm permission warning shown in Scheduled Downloads page -->
     <string name="exact_alarm_permission_required">Exact alarm permission required</string>
     <string name="exact_alarm_permission_desc">Grant the \"Schedule Exact Alarm\" permission so downloads start exactly on time, even when the phone is asleep.</string>
+    <!-- Battery optimization warning shown in Scheduled Downloads page -->
+    <string name="battery_optimization_title">Battery optimization is on</string>
+    <string name="battery_optimization_desc">Some device manufacturers (MIUI, One UI, etc.) aggressively kill alarms when the app is swiped away. Tap below to exempt Seal Plus from battery optimizations so scheduled downloads always start on time.</string>
+    <string name="disable_battery_optimization">Disable optimization</string>
 </resources>
 

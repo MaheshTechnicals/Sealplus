@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.content.getSystemService
 import com.junkfood.seal.DownloadAlarmReceiver
@@ -36,6 +37,23 @@ object ScheduleUtil {
     fun canScheduleExactAlarms(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
         return context.getSystemService<AlarmManager>()?.canScheduleExactAlarms() == true
+    }
+
+    /**
+     * Returns `true` if the OS is currently applying battery optimizations to this app.
+     *
+     * When battery-optimized, aggressive OEM battery managers (MIUI, One UI, etc.) can
+     * prevent [AlarmManager] exact alarms from waking the app after it has been swiped
+     * away from Recents. Requesting exemption via
+     * [android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS] removes
+     * this restriction and is required for reliable scheduled downloads.
+     *
+     * Always returns `false` on API < 23 where battery optimization didn't exist.
+     */
+    fun isBatteryOptimized(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+        val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return false
+        return !pm.isIgnoringBatteryOptimizations(context.packageName)
     }
 
     // ── Public API ───────────────────────────────────────────────────────────────

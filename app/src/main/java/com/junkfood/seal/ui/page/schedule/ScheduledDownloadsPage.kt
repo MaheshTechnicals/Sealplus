@@ -1,6 +1,7 @@
 package com.junkfood.seal.ui.page.schedule
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
@@ -98,11 +99,15 @@ fun ScheduledDownloadsPage(
         // Re-check permission on every resume so the banner disappears immediately
         // when the user returns from the system "Schedule Exact Alarm" settings screen.
         var hasExactAlarmPermission by remember { mutableStateOf(ScheduleUtil.canScheduleExactAlarms(context)) }
+        var isBatteryOptimized by remember { mutableStateOf(ScheduleUtil.isBatteryOptimized(context)) }
         val lifecycleOwner = LocalLifecycleOwner.current
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
                     hasExactAlarmPermission = ScheduleUtil.canScheduleExactAlarms(context)
+                    // Re-check battery optimization so the banner dismisses immediately
+                    // after the user returns from the system settings screen.
+                    isBatteryOptimized = ScheduleUtil.isBatteryOptimized(context)
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -121,6 +126,28 @@ fun ScheduledDownloadsPage(
                             context.startActivity(
                                 Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }
+                    },
+                )
+            }
+
+            // Battery optimization warning banner — shown when the app is still
+            // battery-optimized. OEM optimizers (MIUI, One UI) can silently kill
+            // AlarmManager alarms when the app is swiped away, causing scheduled
+            // downloads to never start unless the user opens the app manually.
+            if (isBatteryOptimized) {
+                BatteryOptimizationBanner(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    onDisableClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                    Uri.parse("package:${context.packageName}"),
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             )
                         }
                     },
@@ -299,6 +326,57 @@ private fun ScheduledTaskItem(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = stringResource(R.string.cancel_scheduled_download),
                     tint = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Full-width warning card shown when the app is still battery-optimized.
+ *
+ * Tapping the action button opens the system dialog that lets the user exempt this app
+ * from battery optimizations, which is the definitive fix for alarms being suppressed
+ * after the app is swiped away from Recents on OEM-skinned devices (MIUI, One UI, etc.).
+ */
+@Composable
+private fun BatteryOptimizationBanner(
+    modifier: Modifier = Modifier,
+    onDisableClick: () -> Unit = {},
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+        ),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.battery_optimization_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.battery_optimization_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            Spacer(Modifier.height(8.dp))
+            TextButton(onClick = onDisableClick) {
+                Text(
+                    text = stringResource(R.string.disable_battery_optimization),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                 )
             }
         }

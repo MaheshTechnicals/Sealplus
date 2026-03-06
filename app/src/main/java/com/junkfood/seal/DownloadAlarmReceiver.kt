@@ -3,8 +3,8 @@ package com.junkfood.seal
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat
 
 /**
  * Receives [android.app.AlarmManager] alarms for scheduled downloads and immediately
@@ -31,13 +31,12 @@ class DownloadAlarmReceiver : BroadcastReceiver() {
             Intent(context, ScheduledDownloadService::class.java)
                 .putExtra(ScheduledDownloadService.EXTRA_TASK_ID, taskId)
 
-        // startForegroundService is required on API 26+; the service must call
-        // startForeground() within ~5 seconds of being started.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent)
-        } else {
-            context.startService(serviceIntent)
-        }
+        // ContextCompat.startForegroundService handles the API 26+ check internally and
+        // ensures the service is promoted to foreground even when the app process was
+        // killed before the alarm fired. The service MUST call startForeground() within
+        // ~5 seconds of onStartCommand() to avoid ForegroundServiceDidNotStartInTimeException
+        // on Android 14+.
+        ContextCompat.startForegroundService(context, serviceIntent)
     }
 
     companion object {

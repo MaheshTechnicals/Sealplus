@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.ScheduleUtil
 import kotlinx.coroutines.CoroutineScope
@@ -56,11 +57,9 @@ class BootReceiver : BroadcastReceiver() {
                         val serviceIntent =
                             Intent(context, ScheduledDownloadService::class.java)
                                 .putExtra(ScheduledDownloadService.EXTRA_TASK_ID, task.id)
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            context.startForegroundService(serviceIntent)
-                        } else {
-                            context.startService(serviceIntent)
-                        }
+                        // ContextCompat handles the API 26+ check and is correct for a
+                        // cold-start scenario (boot) where the app process does not exist yet.
+                        ContextCompat.startForegroundService(context, serviceIntent)
                     }
                 }
 
