@@ -576,6 +576,13 @@ private fun ConfigurePage(
     }
 
     Column {
+        // Scrollable area — weight(1f) makes it fill all space above the pinned
+        // action buttons, so "Cancel / Continue" are always visible on screen.
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+        ) {
         Column(modifier = modifier.padding(horizontal = 20.dp)) {
             Header(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -683,6 +690,7 @@ private fun ConfigurePage(
                 onReliabilityModeToggle = { reliabilityModeEnabled = it },
             )
         }
+        } // end scrollable content column
 
         ActionButtons(
             modifier = Modifier.padding(horizontal = 20.dp),
@@ -1048,7 +1056,9 @@ private fun ScheduleSection(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Date chip
+                    // Date chip — uses surfaceContainerHigh so it reads as a selector,
+                    // not a primary action button (secondaryContainer is too vivid in
+                    // most Material You palettes for a dark theme).
                     Surface(
                         onClick = {
                             val cal = Calendar.getInstance().apply {
@@ -1071,23 +1081,27 @@ private fun ScheduleSection(
                             ).show()
                         },
                         shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier.weight(1f),
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 9.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.CalendarMonth,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(15.dp),
+                                tint = MaterialTheme.colorScheme.primary,
                             )
-                            Spacer(Modifier.width(6.dp))
+                            Spacer(Modifier.width(5.dp))
                             Text(
                                 text = dateLabel,
                                 style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -1118,23 +1132,27 @@ private fun ScheduleSection(
                             ).show()
                         },
                         shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier.weight(1f),
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 9.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.AccessTime,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(15.dp),
+                                tint = MaterialTheme.colorScheme.primary,
                             )
-                            Spacer(Modifier.width(6.dp))
+                            Spacer(Modifier.width(5.dp))
                             Text(
                                 text = timeLabel,
                                 style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -1180,22 +1198,29 @@ private fun ScheduleSection(
                     }
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(10.dp))
 
                 // ── Reliability Mode toggle ─────────────────────────────────────────────
                 // Starts a long-running FGS (ScheduleKeeperService) instead of using
                 // AlarmManager. Immune to OEM swipe-to-dismiss alarm wipe, at the cost
                 // of a persistent silent notification until the scheduled time arrives.
+                HorizontalDivider(
+                    modifier = Modifier.padding(end = 4.dp),
+                    thickness = Dp.Hairline,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                Spacer(Modifier.height(8.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp),
+                        .padding(end = 4.dp, top = 2.dp, bottom = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         Text(
                             text = stringResource(R.string.reliability_mode),
                             style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
                             text = stringResource(R.string.reliability_mode_desc),
@@ -1203,7 +1228,6 @@ private fun ScheduleSection(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Spacer(Modifier.width(8.dp))
                     Switch(
                         checked = reliabilityModeEnabled,
                         onCheckedChange = onReliabilityModeToggle,
