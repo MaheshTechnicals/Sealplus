@@ -176,6 +176,40 @@ object ScheduleUtil {
         }
     }
 
+    /**
+     * Cancel the existing alarm for [task], persist the updated schedule into the database,
+     * and register a new [AlarmManager.setAlarmClock] alarm.
+     *
+     * This is a suspend function because it writes to Room; call it from a coroutine scope.
+     *
+     * @param context         Application context.
+     * @param task            The [ScheduledTask] whose schedule is being changed.
+     * @param newTimeMillis   New epoch-millisecond trigger time.
+     * @param newNetworkPref  New network constraint to persist.
+     */
+    suspend fun rescheduleTask(
+        context: Context,
+        task: ScheduledTask,
+        newTimeMillis: Long,
+        newNetworkPref: ScheduleNetworkPreference,
+    ) {
+        // 1. Cancel the current alarm — synchronous, safe on any thread
+        val alarmManager = context.getSystemService<AlarmManager>()
+        alarmManager?.cancel(buildAlarmPendingIntent(context, task.id))
+        Log.d(TAG, "rescheduleTask: cancelled old alarm for taskId=${task.id}")
+
+        // 2. Persist the updated schedule in the DB
+        val updatedTask = task.copy(
+            scheduledTimeMillis = newTimeMillis,
+            networkPreference = newNetworkPref.id,
+        )
+        DatabaseUtil.updateScheduledTask(updatedTask)
+
+        // 3. Register the new exact alarm
+        setAlarm(context, task.id, newTimeMillis)
+        Log.d(TAG, "rescheduleTask: taskId=${task.id} re-scheduled to ${formatScheduledTime(newTimeMillis)}")
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
     /**

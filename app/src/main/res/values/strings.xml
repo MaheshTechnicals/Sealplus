@@ -664,6 +664,8 @@
     <string name="download_scheduled_for">Download scheduled for %1$s</string>
     <string name="no_scheduled_downloads">No scheduled downloads</string>
     <string name="cancel_scheduled_download">Cancel scheduled download?</string>
+    <string name="cancel_scheduled_download_action">Delete</string>
+    <string name="edit_scheduled_download">Edit Schedule</string>
     <!-- Scheduled-download foreground service notification -->
     <string name="scheduled_download_service">Starting scheduled download…</string>
     <!-- Exact-alarm permission warning shown in Scheduled Downloads page -->

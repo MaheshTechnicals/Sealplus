@@ -67,6 +67,23 @@ import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.ScheduleNetworkPreference
 import com.junkfood.seal.util.ScheduleUtil
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.offset
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +96,7 @@ fun ScheduledDownloadsPage(
     val tasks by DatabaseUtil.getScheduledTasksFlow().collectAsState(initial = emptyList())
 
     var taskToDelete by remember { mutableStateOf<ScheduledTask?>(null) }
+    var taskToEdit by remember { mutableStateOf<ScheduledTask?>(null) }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -189,6 +207,7 @@ fun ScheduledDownloadsPage(
                     items(tasks, key = { it.id }) { task ->
                         ScheduledTaskItem(
                             task = task,
+                            onEditClick = { taskToEdit = task },
                             onDeleteClick = { taskToDelete = task },
                         )
                     }
@@ -228,26 +247,44 @@ fun ScheduledDownloadsPage(
             },
         )
     }
+
+    taskToEdit?.let { editTask ->
+        EditScheduleDialog(
+            task = editTask,
+            onDismiss = { taskToEdit = null },
+            onSave = { newTimeMillis, newNetworkPref ->
+                val task = taskToEdit ?: return@EditScheduleDialog
+                taskToEdit = null
+                scope.launch {
+                    ScheduleUtil.rescheduleTask(context, task, newTimeMillis, newNetworkPref)
+                }
+            },
+        )
+    }
 }
 
 @Composable
 private fun ScheduledTaskItem(
     task: ScheduledTask,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
-        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
             // Thumbnail
             AsyncImage(
@@ -255,81 +292,316 @@ private fun ScheduledTaskItem(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(10.dp)),
             )
 
             Spacer(Modifier.width(12.dp))
 
-            // Info column
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = task.title.ifBlank { task.url },
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            // Content column
+            Column(modifier = Modifier.weight(1f)) {
 
-                // Scheduled time chip
-                SuggestionChip(
-                    onClick = {},
-                    label = {
-                        Text(
-                            text = ScheduleUtil.formatScheduledTime(task.scheduledTimeMillis),
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Schedule,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    },
-                )
+                // Title row + three-dot menu
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Text(
+                        text = task.title.ifBlank { task.url },
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
 
-                // Network preference chip
-                val networkPref = ScheduleNetworkPreference.entries
-                    .firstOrNull { it.id == task.networkPreference }
-                    ?: ScheduleNetworkPreference.BOTH
-
-                val (netIcon, netLabel) = when (networkPref) {
-                    ScheduleNetworkPreference.WIFI_ONLY -> Pair(Icons.Outlined.SignalWifi4Bar, stringResource(R.string.wifi_only))
-                    ScheduleNetworkPreference.BOTH -> Pair(Icons.Rounded.NetworkCheck, stringResource(R.string.schedule_network_both))
-                    ScheduleNetworkPreference.MOBILE_DATA -> Pair(Icons.Outlined.SignalCellular4Bar, stringResource(R.string.mobile_data))
+                    Box {
+                        IconButton(
+                            onClick = { menuExpanded = true },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .offset(x = 6.dp, y = (-4).dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.MoreVert,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.edit_scheduled_download)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Edit,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEditClick()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(R.string.cancel_scheduled_download_action),
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onDeleteClick()
+                                },
+                            )
+                        }
+                    }
                 }
 
-                SuggestionChip(
-                    onClick = {},
-                    label = {
-                        Text(
-                            text = netLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = netIcon,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    },
-                )
-            }
+                Spacer(Modifier.height(8.dp))
 
-            // Delete button
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = stringResource(R.string.cancel_scheduled_download),
-                    tint = MaterialTheme.colorScheme.error,
-                )
+                // Chips row — time + network
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Scheduled-time chip
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(20.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Schedule,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                            Text(
+                                text = ScheduleUtil.formatScheduledTime(task.scheduledTimeMillis),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                    }
+
+                    // Network-preference chip
+                    val networkPref = ScheduleNetworkPreference.entries
+                        .firstOrNull { it.id == task.networkPreference }
+                        ?: ScheduleNetworkPreference.BOTH
+
+                    val (netIcon, netLabel) = when (networkPref) {
+                        ScheduleNetworkPreference.WIFI_ONLY ->
+                            Pair(Icons.Outlined.SignalWifi4Bar, stringResource(R.string.wifi_only))
+                        ScheduleNetworkPreference.BOTH ->
+                            Pair(Icons.Rounded.NetworkCheck, stringResource(R.string.schedule_network_both))
+                        ScheduleNetworkPreference.MOBILE_DATA ->
+                            Pair(Icons.Outlined.SignalCellular4Bar, stringResource(R.string.mobile_data))
+                    }
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(20.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = netIcon,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                            Text(
+                                text = netLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+/**
+ * Dialog that lets the user change the scheduled time and network preference of an
+ * existing [ScheduledTask] without having to delete and re-create the task.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditScheduleDialog(
+    task: ScheduledTask,
+    onDismiss: () -> Unit,
+    onSave: (newTimeMillis: Long, newNetworkPref: ScheduleNetworkPreference) -> Unit,
+) {
+    val context = LocalContext.current
+    var dateTimeMillis by remember { mutableLongStateOf(task.scheduledTimeMillis) }
+    var networkPreference by remember {
+        mutableStateOf(
+            ScheduleNetworkPreference.entries.firstOrNull { it.id == task.networkPreference }
+                ?: ScheduleNetworkPreference.BOTH
+        )
+    }
+
+    val dateLabel = remember(dateTimeMillis) {
+        SimpleDateFormat("EEE, MMM d yyyy", Locale.getDefault()).format(Date(dateTimeMillis))
+    }
+    val timeLabel = remember(dateTimeMillis) {
+        SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(dateTimeMillis))
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.edit_scheduled_download)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Date + time pickers side by side
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilledTonalButton(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply { timeInMillis = dateTimeMillis }
+                            android.app.DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    val newCal = Calendar.getInstance().apply {
+                                        timeInMillis = dateTimeMillis
+                                        set(Calendar.YEAR, year)
+                                        set(Calendar.MONTH, month)
+                                        set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                                    }
+                                    dateTimeMillis = newCal.timeInMillis
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH),
+                            ).show()
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CalendarMonth,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = dateLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+
+                    FilledTonalButton(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply { timeInMillis = dateTimeMillis }
+                            android.app.TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    val newCal = Calendar.getInstance().apply {
+                                        timeInMillis = dateTimeMillis
+                                        set(Calendar.HOUR_OF_DAY, hour)
+                                        set(Calendar.MINUTE, minute)
+                                        set(Calendar.SECOND, 0)
+                                        set(Calendar.MILLISECOND, 0)
+                                    }
+                                    dateTimeMillis = newCal.timeInMillis
+                                },
+                                cal.get(Calendar.HOUR_OF_DAY),
+                                cal.get(Calendar.MINUTE),
+                                false,
+                            ).show()
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.AccessTime,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = timeLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                        )
+                    }
+                }
+
+                // Network preference
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = stringResource(R.string.network_preference),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        ScheduleNetworkPreference.entries.forEach { pref ->
+                            val label = stringResource(
+                                when (pref) {
+                                    ScheduleNetworkPreference.WIFI_ONLY -> R.string.wifi_only
+                                    ScheduleNetworkPreference.BOTH -> R.string.schedule_network_both
+                                    ScheduleNetworkPreference.MOBILE_DATA -> R.string.mobile_data
+                                }
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { networkPreference = pref },
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                RadioButton(
+                                    selected = networkPreference == pref,
+                                    onClick = { networkPreference = pref },
+                                )
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSave(dateTimeMillis, networkPreference) },
+                enabled = dateTimeMillis > System.currentTimeMillis(),
+            ) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 /**

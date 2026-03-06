@@ -558,7 +558,7 @@ private fun ConfigurePage(
     // ── Schedule state ──────────────────────────────────────────────────────────────
     var scheduleEnabled by rememberSaveable { mutableStateOf(false) }
     var scheduledDateTimeMillis by rememberSaveable { mutableLongStateOf(0L) }
-    var networkPreference by rememberSaveable { mutableStateOf(ScheduleNetworkPreference.WIFI_ONLY) }
+    var networkPreference by rememberSaveable { mutableStateOf(ScheduleNetworkPreference.BOTH) }
 
     LaunchedEffect(selectedType) {
         if (selectedType == Playlist) {
@@ -652,7 +652,14 @@ private fun ConfigurePage(
             ScheduleSection(
                 modifier = Modifier,
                 scheduleEnabled = scheduleEnabled,
-                onScheduleToggle = { scheduleEnabled = it },
+                onScheduleToggle = { enabled ->
+                    scheduleEnabled = enabled
+                    // Pre-fill current time + 30 min so the date/time chips always show a
+                    // meaningful default value the moment the toggle is switched on.
+                    if (enabled && scheduledDateTimeMillis <= System.currentTimeMillis()) {
+                        scheduledDateTimeMillis = System.currentTimeMillis() + 30 * 60 * 1000L
+                    }
+                },
                 scheduledDateTimeMillis = scheduledDateTimeMillis,
                 onDateTimeSelected = { scheduledDateTimeMillis = it },
                 networkPreference = networkPreference,

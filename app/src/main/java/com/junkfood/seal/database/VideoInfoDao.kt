@@ -83,6 +83,8 @@ interface VideoInfoDao {
 
     @Insert suspend fun insertScheduledTask(task: ScheduledTask): Long
 
+    @Update suspend fun updateScheduledTask(task: ScheduledTask)
+
     @Query("SELECT * FROM ScheduledTask ORDER BY scheduledTimeMillis ASC")
     fun getScheduledTasksFlow(): Flow<List<ScheduledTask>>
 

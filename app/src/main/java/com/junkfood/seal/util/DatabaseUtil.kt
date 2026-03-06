@@ -162,6 +162,10 @@ object DatabaseUtil {
     suspend fun deleteScheduledTaskById(id: Int) =
         withContext(Dispatchers.IO) { dao.deleteScheduledTaskById(id) }
 
+    /** Update an existing scheduled task (e.g. after user edits the schedule time). */
+    suspend fun updateScheduledTask(task: ScheduledTask) =
+        withContext(Dispatchers.IO) { dao.updateScheduledTask(task) }
+
     /** Update the alarm request identifier stored for a task (retained for schema compatibility). */
     suspend fun updateScheduledTaskWorkerId(id: Int, workRequestId: String) =
         withContext(Dispatchers.IO) { dao.updateScheduledTaskWorkerId(id, workRequestId) }
