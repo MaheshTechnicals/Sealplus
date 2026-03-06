@@ -100,6 +100,14 @@ class ScheduledDownloadService : Service() {
                             scheduledTask.preferencesJson
                         )
 
+                // Wait for yt-dlp / FFmpeg / Aria2c to finish initialising.
+                // App.onCreate() launches these on a background coroutine; if we enqueue
+                // a download before they're ready (common when the app process is started
+                // fresh by an AlarmManager alarm) yt-dlp throws immediately and the
+                // download fails. Awaiting this Deferred costs nothing when init is
+                // already done (i.e. when the app was already running).
+                App.isInitialized.await()
+
                 val task = Task(url = scheduledTask.url, preferences = preferences)
                 downloader.enqueue(task)
 

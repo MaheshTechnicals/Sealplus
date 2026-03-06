@@ -44,6 +44,7 @@ import com.yausername.aria2c.Aria2c
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import java.io.File
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -98,6 +99,11 @@ class App : Application() {
                 UpdateUtil.deleteOutdatedApk()
             } catch (th: Throwable) {
                 withContext(Dispatchers.Main) { startCrashReportActivity(th) }
+            } finally {
+                // Unblock any services that are waiting for library initialisation.
+                // This is completed even on failure so callers don't hang forever;
+                // the subsequent yt-dlp call will surface the real error.
+                isInitialized.complete(Unit)
             }
         }
 
@@ -133,6 +139,15 @@ class App : Application() {
         lateinit var packageInfo: PackageInfo
 
         var isServiceRunning = false
+
+        /**
+         * Completed (with [Unit]) once [YoutubeDL], [FFmpeg] and [Aria2c] have all been
+         * initialised in [App.onCreate]. Services that need to call yt-dlp should
+         * `await()` this before enqueuing / starting a download, otherwise they risk
+         * calling into native libraries before they are ready — which causes an
+         * immediate download failure when the app process is started cold by an alarm.
+         */
+        val isInitialized: CompletableDeferred<Unit> = CompletableDeferred()
 
         private val connection =
             object : ServiceConnection {

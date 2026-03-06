@@ -133,6 +133,11 @@ class ScheduleKeeperService : Service() {
 
                 val task = Task(url = localUrl, preferences = preferences)
 
+                // Wait for yt-dlp / FFmpeg / Aria2c to finish initialising.
+                // App.onCreate() initialises these on a background coroutine; if we
+                // enqueue a download before they're ready the download fails immediately.
+                App.isInitialized.await()
+
                 // Ensure DownloadService foreground slot is live before we release ours
                 App.startService()
                 delay(1_000)
