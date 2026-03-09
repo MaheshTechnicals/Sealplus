@@ -200,20 +200,11 @@ fun DrawerHeader(
         ) {
             // App Logo
             Image(
-                painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                painter = painterResource(id = R.mipmap.ic_launcher_round),
                 contentDescription = "Seal Plus Logo",
                 modifier = Modifier
                     .size(72.dp)
                     .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.colorScheme.secondaryContainer
-                            )
-                        ),
-                        shape = CircleShape
-                    )
             )
             
             Spacer(modifier = Modifier.height(16.dp))

@@ -2117,22 +2117,10 @@ fun AnimatedGlowingPlus() {
                 shadow = Shadow(
                     color = glowColor,
                     offset = Offset.Zero,
-                    blurRadius = 24f * glowAlpha
+                    blurRadius = 16f * glowAlpha
                 )
             )
         ),
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier
-            .drawBehind {
-                // Draw multiple glow layers for a richer glow effect
-                drawCircle(
-                    color = glowColor.copy(alpha = glowAlpha * 0.15f),
-                    radius = size.maxDimension * 0.9f * scale
-                )
-                drawCircle(
-                    color = glowColor.copy(alpha = glowAlpha * 0.08f),
-                    radius = size.maxDimension * 1.3f * scale
-                )
-            }
+        fontWeight = FontWeight.Bold
     )
 }
