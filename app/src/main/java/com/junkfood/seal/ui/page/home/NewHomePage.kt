@@ -152,6 +152,17 @@ import com.junkfood.seal.util.SPONSOR_FREQ_WEEKLY
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.PreferenceUtil.getLong
 import com.junkfood.seal.util.PreferenceUtil.updateLong
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.text.TextStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -566,7 +577,7 @@ fun NewHomePage(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Seal+ Branding
+            // Seal+ Branding with animated glowing "+"
             item {
                 Box(
                     modifier = Modifier
@@ -574,12 +585,15 @@ fun NewHomePage(
                         .padding(vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Seal+",
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Seal",
+                            style = MaterialTheme.typography.displayMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        AnimatedGlowingPlus()
+                    }
                 }
             }
             
@@ -2035,4 +2049,90 @@ private fun DetailCard(
             )
         }
     }
+}
+
+/**
+ * Animated glowing "+" text with continuously cycling gradient colors
+ * and a pulsing glow effect that matches the app theme.
+ */
+@Composable
+fun AnimatedGlowingPlus() {
+    val infiniteTransition = rememberInfiniteTransition(label = "plusGlow")
+
+    // Animate the gradient offset to make colors flow continuously
+    val gradientShift by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1500f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "gradientShift"
+    )
+
+    // Animate glow intensity (pulsing alpha for the shadow)
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowAlpha"
+    )
+
+    // Animate scale for subtle pulse
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
+
+    val gradientColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.primary,
+    )
+
+    val glowColor = MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha * 0.6f)
+
+    val gradientBrush = Brush.linearGradient(
+        colors = gradientColors,
+        start = Offset(gradientShift, 0f),
+        end = Offset(gradientShift + 500f, 500f),
+        tileMode = TileMode.Mirror
+    )
+
+    Text(
+        text = "+",
+        style = MaterialTheme.typography.displayMedium.merge(
+            TextStyle(
+                brush = gradientBrush,
+                shadow = Shadow(
+                    color = glowColor,
+                    offset = Offset.Zero,
+                    blurRadius = 24f * glowAlpha
+                )
+            )
+        ),
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .drawBehind {
+                // Draw multiple glow layers for a richer glow effect
+                drawCircle(
+                    color = glowColor.copy(alpha = glowAlpha * 0.15f),
+                    radius = size.maxDimension * 0.9f * scale
+                )
+                drawCircle(
+                    color = glowColor.copy(alpha = glowAlpha * 0.08f),
+                    radius = size.maxDimension * 1.3f * scale
+                )
+            }
+    )
 }
