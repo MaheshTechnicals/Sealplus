@@ -183,6 +183,7 @@ dependencies {
     implementation(libs.bundles.youtubedlAndroid)
 
     // Torrent engine — ABI-specific native libs; Gradle splits pick correct .so per APK
+    implementation(libs.libtorrent4j.java)
     implementation(libs.libtorrent4j.android.arm64)
     implementation(libs.libtorrent4j.android.arm) { isTransitive = false }
     implementation(libs.libtorrent4j.android.x86) { isTransitive = false }
