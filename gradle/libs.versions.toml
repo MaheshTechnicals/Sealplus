@@ -117,7 +117,7 @@ mmkv = { group = "com.tencent", name = "mmkv", version.ref = "mmkv" }
 libtorrent4j-android-arm64  = { group = "org.libtorrent4j", name = "libtorrent4j-android-arm64",  version.ref = "libtorrent4j" }
 libtorrent4j-android-arm    = { group = "org.libtorrent4j", name = "libtorrent4j-android-arm",    version.ref = "libtorrent4j" }
 libtorrent4j-android-x86    = { group = "org.libtorrent4j", name = "libtorrent4j-android-x86",    version.ref = "libtorrent4j" }
-libtorrent4j-android-x86-64 = { group = "org.libtorrent4j", name = "libtorrent4j-android-x86_64", version.ref = "libtorrent4j" }
+libtorrent4j-android-x86v64 = { group = "org.libtorrent4j", name = "libtorrent4j-android-x86_64", version.ref = "libtorrent4j" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

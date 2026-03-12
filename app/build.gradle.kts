@@ -186,7 +186,7 @@ dependencies {
     implementation(libs.libtorrent4j.android.arm64)
     implementation(libs.libtorrent4j.android.arm) { isTransitive = false }
     implementation(libs.libtorrent4j.android.x86) { isTransitive = false }
-    implementation(libs.libtorrent4j.android.x86.64) { isTransitive = false }
+    implementation(libs.libtorrent4j.android.x86v64) { isTransitive = false }
 
     implementation(libs.mmkv)
 
