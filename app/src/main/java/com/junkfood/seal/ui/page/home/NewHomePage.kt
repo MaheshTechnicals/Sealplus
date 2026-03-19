@@ -76,7 +76,7 @@ import com.junkfood.seal.ui.alerts.DownloadDetailsDialog
 import com.junkfood.seal.ui.alerts.RecentDownloadDetailsDialog
 import com.junkfood.seal.ui.common.HapticFeedback.slightHapticFeedback
 import com.junkfood.seal.ui.component.ActiveDownloadCard
-import com.junkfood.seal.ui.component.RecentDownloadCard
+import com.junkfood.seal.ui.component.card.RecentDownloadCard
 import com.junkfood.seal.ui.component.URLInputField
 import com.junkfood.seal.ui.icons.PlusIcon
 import com.junkfood.seal.ui.page.downloadv2.UiAction
