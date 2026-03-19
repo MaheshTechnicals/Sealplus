@@ -158,6 +158,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shadow
@@ -201,7 +202,7 @@ fun NewHomePage(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     
     // State to track lifecycle and force refresh
-    var lifecycleRefreshTrigger by remember { mutableStateOf(0) }
+    var lifecycleRefreshTrigger by remember { mutableIntStateOf(0) }
     
     // Monitor lifecycle events to trigger refresh when screen resumes
     DisposableEffect(lifecycleOwner) {
@@ -236,12 +237,8 @@ fun NewHomePage(
     
     // Check battery optimization
     val isBatteryOptimizationDisabled = remember(lifecycleRefreshTrigger) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val pm = context.getSystemService(PowerManager::class.java)
-            pm.isIgnoringBatteryOptimizations(context.packageName)
-        } else {
-            true // Not needed below Android 6
-        }
+        val pm = context.getSystemService(PowerManager::class.java)
+        pm.isIgnoringBatteryOptimizations(context.packageName)
     }
     
     // Notification permission launcher - tries system permission first
@@ -615,10 +612,10 @@ fun NewHomePage(
                     onPasteClick = {
                         val clipText = clipboardManager.getText()?.text
                         if (clipText != null) {
-                            context.matchUrlFromClipboard(clipText)?.let { url ->
+                            context.matchUrlFromClipboard(clipText).let { url ->
                                 urlText = url
                                 context.makeToast(R.string.paste_msg)
-                            } ?: context.makeToast(R.string.paste_fail_msg)
+                            }
                         }
                     }
                 )
