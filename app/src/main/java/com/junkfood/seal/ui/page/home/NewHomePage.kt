@@ -10,12 +10,6 @@ import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -100,11 +94,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -118,6 +109,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -173,7 +165,7 @@ fun NewHomePage(
     val clipboardManager = LocalClipboardManager.current
     val uriHandler = LocalUriHandler.current
     val activity = context as? Activity
-    
+
     var showExitDialog by remember { mutableStateOf(false) }
     var urlText by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -186,13 +178,13 @@ fun NewHomePage(
             dialogViewModel.consumeSharedUrl()
         }
     }
-    
+
     // Get lifecycle owner
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    
+
     // State to track lifecycle and force refresh
     var lifecycleRefreshTrigger by remember { mutableIntStateOf(0) }
-    
+
     // Monitor lifecycle events to trigger refresh when screen resumes
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -205,13 +197,13 @@ fun NewHomePage(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-    
+
     // Permission states
     var showNotificationPermissionDialog by remember { mutableStateOf(false) }
     var showBatteryOptimizationDialog by remember { mutableStateOf(false) }
     var permissionsChecked by remember { mutableStateOf(false) }
     var showSponsorDialog by remember { mutableStateOf(false) }
-    
+
     // Check notification permission
     val hasNotificationPermission = remember(lifecycleRefreshTrigger) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -223,25 +215,25 @@ fun NewHomePage(
             true // Not needed below Android 13
         }
     }
-    
+
     // Check battery optimization
     val isBatteryOptimizationDisabled = remember(lifecycleRefreshTrigger) {
         val pm = context.getSystemService(PowerManager::class.java)
         pm.isIgnoringBatteryOptimizations(context.packageName)
     }
-    
+
     // Notification permission launcher - tries system permission first
     // Notification settings launcher - opens app notification settings
     val notificationSettingsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { /* Permission state will be checked on resume */ }
-    
+
     // Battery optimization launcher
     val batteryOptimizationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { /* Result handled by remembering state */ }
 
-    
+
     // Check permissions on first load
     LaunchedEffect(Unit) {
         if (!permissionsChecked) {
@@ -267,7 +259,7 @@ fun NewHomePage(
             }
         }
     }
-    
+
     // Monitor permission state changes to show next dialog when user returns from settings
     LaunchedEffect(hasNotificationPermission, isBatteryOptimizationDisabled) {
         if (permissionsChecked) {
@@ -278,12 +270,12 @@ fun NewHomePage(
             }
         }
     }
-    
+
     // Get recent downloads from database - will refresh when lifecycleRefreshTrigger changes
     val recentDownloads by remember(lifecycleRefreshTrigger) {
         DatabaseUtil.getDownloadHistoryFlow()
     }.collectAsStateWithLifecycle(initialValue = emptyList())
-    
+
     // Get recent 5 downloads (remove duplicates by video URL and path to prevent duplicate cards)
     val recentFiveDownloads = remember(recentDownloads) {
         recentDownloads
@@ -291,10 +283,10 @@ fun NewHomePage(
             .takeLast(5)
             .reversed()
     }
-    
+
     // Get active downloads with proper state observation for real-time updates
     val taskStateMap = downloader.getTaskStateMap()
-    
+
     // Create a comprehensive set of identifiers from recent downloads to avoid duplicates
     val recentDownloadIdentifiers = remember(recentFiveDownloads) {
         recentFiveDownloads.flatMap { download ->
@@ -305,25 +297,25 @@ fun NewHomePage(
             )
         }.toSet()
     }
-    
+
     // Filter active downloads - only show non-completed tasks OR completed tasks not in recent downloads
     val activeDownloads by remember(taskStateMap, recentDownloadIdentifiers) {
         derivedStateOf {
             taskStateMap.toList().filter { (task, state) ->
                 val downloadState = state.downloadState
                 val isCompleted = downloadState is Task.DownloadState.Completed
-                
+
                 when {
                     // If completed, check if it's already in recent downloads
                     isCompleted && downloadState is Task.DownloadState.Completed -> {
                         val filePath = downloadState.filePath
                         val taskUrl = task.url
-                        
+
                         // Don't show if URL, path, or combined key is in recent downloads
                         val isInRecent = recentDownloadIdentifiers.contains(taskUrl) ||
-                                       recentDownloadIdentifiers.contains(filePath) ||
-                                       recentDownloadIdentifiers.contains("$taskUrl|$filePath")
-                        
+                                recentDownloadIdentifiers.contains(filePath) ||
+                                recentDownloadIdentifiers.contains("$taskUrl|$filePath")
+
                         !isInRecent // Show only if NOT in recent downloads
                     }
                     // Show all non-completed tasks (running, canceled, error, etc.)
@@ -332,22 +324,22 @@ fun NewHomePage(
             }
         }
     }
-    
+
     // Handle back press to show exit confirmation
     BackHandler {
         showExitDialog = true
     }
-    
+
     // Notification Permission Dialog
     if (showNotificationPermissionDialog) {
         AlertDialog(
-            onDismissRequest = { 
+            onDismissRequest = {
                 showNotificationPermissionDialog = false
                 if (!isBatteryOptimizationDisabled) {
                     showBatteryOptimizationDialog = true
                 }
             },
-            icon = { 
+            icon = {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = null,
@@ -355,14 +347,14 @@ fun NewHomePage(
                     modifier = Modifier.size(32.dp)
                 )
             },
-            title = { 
+            title = {
                 Text(
                     text = stringResource(R.string.notification_permission_required),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
             },
-            text = { 
+            text = {
                 Text(
                     text = stringResource(R.string.notification_permission_desc),
                     style = MaterialTheme.typography.bodyMedium,
@@ -390,7 +382,7 @@ fun NewHomePage(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { 
+                    onClick = {
                         showNotificationPermissionDialog = false
                         if (!isBatteryOptimizationDisabled) {
                             showBatteryOptimizationDialog = true
@@ -407,12 +399,12 @@ fun NewHomePage(
             tonalElevation = 6.dp
         )
     }
-    
+
     // Battery Optimization Dialog
     if (showBatteryOptimizationDialog) {
         AlertDialog(
             onDismissRequest = { showBatteryOptimizationDialog = false },
-            icon = { 
+            icon = {
                 Icon(
                     imageVector = Icons.Outlined.BatteryChargingFull,
                     contentDescription = null,
@@ -420,14 +412,14 @@ fun NewHomePage(
                     modifier = Modifier.size(32.dp)
                 )
             },
-            title = { 
+            title = {
                 Text(
                     text = stringResource(R.string.battery_configuration),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
             },
-            text = { 
+            text = {
                 Column {
                     Text(
                         text = stringResource(R.string.battery_configuration_desc),
@@ -446,9 +438,10 @@ fun NewHomePage(
                 TextButton(
                     onClick = {
                         showBatteryOptimizationDialog = false
-                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                            data = Uri.parse("package:${context.packageName}")
-                        }
+                        val intent =
+                            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                data = Uri.parse("package:${context.packageName}")
+                            }
                         batteryOptimizationLauncher.launch(intent)
                     }
                 ) {
@@ -492,7 +485,13 @@ fun NewHomePage(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
-            icon = { Icon(Icons.Outlined.ExitToApp, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary) },
+            icon = {
+                Icon(
+                    Icons.Outlined.ExitToApp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+            },
             title = { Text(stringResource(R.string.exit_app_title)) },
             text = { Text(stringResource(R.string.exit_app_message)) },
             confirmButton = {
@@ -512,11 +511,11 @@ fun NewHomePage(
             }
         )
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         text = stringResource(R.string.home),
                         style = MaterialTheme.typography.titleLarge,
@@ -576,11 +575,11 @@ fun NewHomePage(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        AnimatedGlowingPlus()
+                        PlusIcon()
                     }
                 }
             }
-            
+
             // URL Input Field with Download Button
             item {
                 URLInputField(
@@ -607,7 +606,7 @@ fun NewHomePage(
                     }
                 )
             }
-            
+
             // Recent Downloads Section - combines both active and completed
             if (taskStateMap.isNotEmpty() || recentFiveDownloads.isNotEmpty()) {
                 item {
@@ -618,7 +617,7 @@ fun NewHomePage(
                     )
                 }
             }
-            
+
             // Show active downloads first
             if (activeDownloads.isNotEmpty()) {
                 items(
@@ -628,7 +627,7 @@ fun NewHomePage(
                     var showDetailsDialog by remember { mutableStateOf(false) }
                     var detailsTask by remember { mutableStateOf<Task?>(null) }
                     var detailsState by remember { mutableStateOf<Task.State?>(null) }
-                    
+
                     ActiveDownloadCard(
                         task = task,
                         state = state,
@@ -646,28 +645,34 @@ fun NewHomePage(
                                     )
                                     context.makeToast(R.string.error_copied)
                                 }
+
                                 is UiAction.CopyVideoURL -> {
                                     clipboardManager.setText(AnnotatedString(task.url))
                                     context.makeToast(R.string.link_copied)
                                 }
+
                                 UiAction.ShowDetails -> {
                                     detailsTask = task
                                     detailsState = state
                                     showDetailsDialog = true
                                 }
+
                                 is UiAction.OpenFile -> {
                                     action.filePath?.let {
-                                        FileUtil.openFile(path = it) { 
-                                            context.makeToast(R.string.file_unavailable) 
+                                        FileUtil.openFile(path = it) {
+                                            context.makeToast(R.string.file_unavailable)
                                         }
                                     }
                                 }
+
                                 is UiAction.OpenThumbnailURL -> {
                                     uriHandler.openUri(action.url)
                                 }
+
                                 is UiAction.OpenVideoURL -> {
                                     uriHandler.openUri(action.url)
                                 }
+
                                 is UiAction.ShareFile -> {
                                     val shareTitle = context.getString(R.string.share)
                                     FileUtil.createIntentForSharingFile(action.filePath)?.let {
@@ -677,7 +682,7 @@ fun NewHomePage(
                             }
                         }
                     )
-                    
+
                     if (showDetailsDialog && detailsTask != null && detailsState != null) {
                         DownloadDetailsDialog(
                             task = detailsTask!!,
@@ -687,7 +692,7 @@ fun NewHomePage(
                     }
                 }
             }
-            
+
             // Show recent completed downloads
             if (recentFiveDownloads.isNotEmpty()) {
                 items(
@@ -695,7 +700,7 @@ fun NewHomePage(
                     key = { it.id }
                 ) { downloadInfo ->
                     var showRecentDetailsDialog by remember { mutableStateOf(false) }
-                    
+
                     RecentDownloadCard(
                         downloadInfo = downloadInfo,
                         onClick = {
@@ -720,7 +725,7 @@ fun NewHomePage(
                             showRecentDetailsDialog = true
                         }
                     )
-                    
+
                     if (showRecentDetailsDialog) {
                         RecentDownloadDetailsDialog(
                             downloadInfo = downloadInfo,
@@ -729,14 +734,14 @@ fun NewHomePage(
                     }
                 }
             }
-            
+
             // Bottom spacing
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
-    
+
     // Download Dialog
     var preferences by remember {
         mutableStateOf(DownloadUtil.DownloadPreferences.createFromPreferences())
@@ -744,10 +749,10 @@ fun NewHomePage(
     val sheetValue by dialogViewModel.sheetValueFlow.collectAsStateWithLifecycle()
     val dialogState by dialogViewModel.sheetStateFlow.collectAsStateWithLifecycle()
     val selectionState = dialogViewModel.selectionStateFlow.collectAsStateWithLifecycle().value
-    
+
     var showDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
+
     LaunchedEffect(sheetValue) {
         if (sheetValue == DownloadDialogViewModel.SheetValue.Expanded) {
             showDialog = true
@@ -755,7 +760,7 @@ fun NewHomePage(
             launch { sheetState.hide() }.invokeOnCompletion { showDialog = false }
         }
     }
-    
+
     if (showDialog) {
         DownloadDialog(
             state = dialogState,
@@ -766,21 +771,21 @@ fun NewHomePage(
             onActionPost = { dialogViewModel.postAction(it) },
         )
     }
-    
+
     when (selectionState) {
         is DownloadDialogViewModel.SelectionState.FormatSelection ->
             FormatPage(
                 state = selectionState,
                 onDismissRequest = { dialogViewModel.postAction(Action.Reset) },
             )
-        
+
         is DownloadDialogViewModel.SelectionState.PlaylistSelection -> {
             PlaylistSelectionPage(
                 state = selectionState,
                 onDismissRequest = { dialogViewModel.postAction(Action.Reset) },
             )
         }
-        
+
         DownloadDialogViewModel.SelectionState.Idle -> {}
     }
 }
@@ -828,7 +833,7 @@ fun URLInputField(
                         )
                     }
                 }
-                
+
                 FilledIconButton(
                     onClick = onDownloadClick,
                     modifier = Modifier
@@ -873,7 +878,7 @@ fun RecentDownloadCard(
     val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
     val isGradientDark = LocalGradientDarkMode.current
     var showMenu by remember { mutableStateOf(false) }
-    
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -904,7 +909,7 @@ fun RecentDownloadCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentScale = ContentScale.Crop
             )
-            
+
             // Content
             Column(
                 modifier = Modifier.weight(1f),
@@ -917,7 +922,7 @@ fun RecentDownloadCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -939,7 +944,7 @@ fun RecentDownloadCard(
                     )
                 }
             }
-            
+
             // More button with dropdown menu
             Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                 IconButton(onClick = { showMenu = true }) {
@@ -949,7 +954,7 @@ fun RecentDownloadCard(
                         tint = MaterialTheme.colorScheme.secondary
                     )
                 }
-                
+
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
@@ -1012,7 +1017,7 @@ fun ActiveDownloadCard(
     val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
     val isGradientDark = LocalGradientDarkMode.current
     var showMenu by remember { mutableStateOf(false) }
-    
+
     val downloadState = state.downloadState
     val progress = when (downloadState) {
         is Task.DownloadState.Running -> downloadState.progress
@@ -1020,28 +1025,32 @@ fun ActiveDownloadCard(
         is Task.DownloadState.Canceled -> downloadState.progress ?: 0f
         else -> 0f
     }
-    
+
     // Parse progress text to determine download phase
-    val progressText = if (downloadState is Task.DownloadState.Running) downloadState.progressText else ""
+    val progressText =
+        if (downloadState is Task.DownloadState.Running) downloadState.progressText else ""
     val context = androidx.compose.ui.platform.LocalContext.current
-    
+
     // Track download state: format info -> video download -> audio download -> merging
     var hasSeenFormatInfo by remember { mutableStateOf(false) }
     var hasSeenVideoComplete by remember { mutableStateOf(false) }
     var currentPhase by remember { mutableStateOf("downloading") }
-    
+
     // Determine phase based on progressText patterns
     val downloadPhase = when {
         // Merging phase
-        progressText.contains("[Merger]", ignoreCase = true) || 
-        progressText.contains("Merging formats", ignoreCase = true) -> {
+        progressText.contains("[Merger]", ignoreCase = true) ||
+                progressText.contains("Merging formats", ignoreCase = true) -> {
             currentPhase = "merging"
             hasSeenVideoComplete = false
             hasSeenFormatInfo = false
             "merging"
         }
         // Format info line - indicates download will start
-        progressText.contains("[info]", ignoreCase = true) && progressText.contains("format", ignoreCase = true) -> {
+        progressText.contains("[info]", ignoreCase = true) && progressText.contains(
+            "format",
+            ignoreCase = true
+        ) -> {
             hasSeenFormatInfo = true
             hasSeenVideoComplete = false
             currentPhase = "fetching"
@@ -1066,24 +1075,26 @@ fun ActiveDownloadCard(
                     currentPhase = "video"
                     "video"
                 }
+
                 else -> "downloading"
             }
         }
         // Post-download file operations - maintain current phase
         progressText.contains("Deleting original file", ignoreCase = true) ||
-        progressText.contains("[Metadata]", ignoreCase = true) ||
-        progressText.contains("[MoveFiles]", ignoreCase = true) -> {
+                progressText.contains("[Metadata]", ignoreCase = true) ||
+                progressText.contains("[MoveFiles]", ignoreCase = true) -> {
             currentPhase
         }
         // Fetching info phase
-        progressText.contains("[youtube]", ignoreCase = true) || 
-        progressText.contains("Downloading webpage", ignoreCase = true) ||
-        progressText.contains("Downloading player", ignoreCase = true) -> {
+        progressText.contains("[youtube]", ignoreCase = true) ||
+                progressText.contains("Downloading webpage", ignoreCase = true) ||
+                progressText.contains("Downloading player", ignoreCase = true) -> {
             "fetching"
         }
+
         else -> currentPhase
     }
-    
+
     val statusText = when (downloadState) {
         is Task.DownloadState.Running -> {
             when (downloadPhase) {
@@ -1094,6 +1105,7 @@ fun ActiveDownloadCard(
                 else -> "Downloading... ${(progress * 100).toInt()}%"
             }
         }
+
         is Task.DownloadState.Paused -> stringResource(R.string.status_paused) + " ${(progress * 100).toInt()}%"
         is Task.DownloadState.Canceled -> stringResource(R.string.status_canceled)
         is Task.DownloadState.Error -> stringResource(R.string.download_error)
@@ -1101,20 +1113,21 @@ fun ActiveDownloadCard(
         is Task.DownloadState.FetchingInfo -> stringResource(R.string.fetching_info)
         else -> ""
     }
-    
+
     val statusColor = when (downloadState) {
         is Task.DownloadState.Running -> if (isGradientDark && isDarkTheme) {
             GradientDarkColors.GradientPrimaryStart
         } else {
             MaterialTheme.colorScheme.primary
         }
+
         is Task.DownloadState.Paused -> Color(0xFFFBBF24)
         is Task.DownloadState.Canceled -> Color(0xFFEF4444)
         is Task.DownloadState.Error -> Color(0xFFEF4444)
         is Task.DownloadState.Completed -> Color(0xFF4ADE80)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -1160,7 +1173,7 @@ fun ActiveDownloadCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                
+
                 // Content
                 Column(
                     modifier = Modifier
@@ -1175,7 +1188,7 @@ fun ActiveDownloadCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    
+
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -1186,7 +1199,7 @@ fun ActiveDownloadCard(
                             color = statusColor,
                             fontWeight = FontWeight.Medium
                         )
-                        
+
                         // Show Queue badge for Idle or ReadyWithInfo tasks
                         if (downloadState is Task.DownloadState.Idle || downloadState is Task.DownloadState.ReadyWithInfo) {
                             androidx.compose.material3.Surface(
@@ -1212,7 +1225,7 @@ fun ActiveDownloadCard(
                         }
                     }
                 }
-                
+
                 // Pause/Resume action button
                 if (downloadState is Task.DownloadState.Running) {
                     IconButton(
@@ -1227,7 +1240,7 @@ fun ActiveDownloadCard(
                         )
                     }
                 }
-                
+
                 if (downloadState is Task.DownloadState.Paused) {
                     IconButton(
                         onClick = { onAction(UiAction.Resume) },
@@ -1241,7 +1254,7 @@ fun ActiveDownloadCard(
                         )
                     }
                 }
-                
+
                 // More button with dropdown menu
                 Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                     IconButton(onClick = { showMenu = true }) {
@@ -1251,13 +1264,13 @@ fun ActiveDownloadCard(
                             tint = MaterialTheme.colorScheme.secondary
                         )
                     }
-                    
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
                         val downloadState = state.downloadState
-                        
+
                         // Pause option for running downloads
                         if (downloadState is Task.DownloadState.Running) {
                             DropdownMenuItem(
@@ -1275,7 +1288,7 @@ fun ActiveDownloadCard(
                                 }
                             )
                         }
-                        
+
                         // Resume option for paused downloads
                         if (downloadState is Task.DownloadState.Paused) {
                             DropdownMenuItem(
@@ -1293,7 +1306,7 @@ fun ActiveDownloadCard(
                                 }
                             )
                         }
-                        
+
                         // Retry option for canceled or failed downloads
                         if (downloadState is Task.DownloadState.Canceled || downloadState is Task.DownloadState.Error) {
                             DropdownMenuItem(
@@ -1311,11 +1324,12 @@ fun ActiveDownloadCard(
                                 }
                             )
                         }
-                        
+
                         // Cancel option for running/fetching/paused downloads
-                        if (downloadState is Task.DownloadState.Running || 
+                        if (downloadState is Task.DownloadState.Running ||
                             downloadState is Task.DownloadState.FetchingInfo ||
-                            downloadState is Task.DownloadState.Paused) {
+                            downloadState is Task.DownloadState.Paused
+                        ) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.cancel)) },
                                 onClick = {
@@ -1331,7 +1345,7 @@ fun ActiveDownloadCard(
                                 }
                             )
                         }
-                        
+
                         // Copy link option
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.copy_link)) },
@@ -1347,7 +1361,7 @@ fun ActiveDownloadCard(
                                 )
                             }
                         )
-                        
+
                         // Details option (only for completed downloads)
                         if (downloadState is Task.DownloadState.Completed) {
                             DropdownMenuItem(
@@ -1365,7 +1379,7 @@ fun ActiveDownloadCard(
                                 }
                             )
                         }
-                        
+
                         // Delete option
                         if (downloadState is Task.DownloadState.Completed || downloadState is Task.DownloadState.Error || downloadState is Task.DownloadState.Canceled) {
                             DropdownMenuItem(
@@ -1386,7 +1400,7 @@ fun ActiveDownloadCard(
                     }
                 }
             }
-            
+
             // Progress bar for active and paused downloads
             if (downloadState is Task.DownloadState.Running || downloadState is Task.DownloadState.Paused) {
                 LinearProgressIndicator(
@@ -1406,6 +1420,7 @@ fun ActiveDownloadCard(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadDetailsDialog(
@@ -1418,11 +1433,11 @@ fun DownloadDetailsDialog(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     var showFilePathDialog by remember { mutableStateOf(false) }
-    
+
     BackHandler {
         onDismiss()
     }
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -1464,7 +1479,7 @@ fun DownloadDetailsDialog(
                     )
                 }
             }
-            
+
             // Thumbnail Card
             state.videoInfo?.thumbnail?.let { thumbnailUrl ->
                 Card(
@@ -1486,7 +1501,7 @@ fun DownloadDetailsDialog(
                     )
                 }
             }
-            
+
             // Media Information Section
             Text(
                 text = stringResource(R.string.media_info),
@@ -1495,7 +1510,7 @@ fun DownloadDetailsDialog(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             // Grid Layout for Details
             Column(
                 modifier = Modifier
@@ -1518,7 +1533,7 @@ fun DownloadDetailsDialog(
                             )
                         }
                     }
-                    
+
                     val fileSize = state.viewState.fileSizeApprox
                     if (fileSize > 0) {
                         DetailCard(
@@ -1529,7 +1544,7 @@ fun DownloadDetailsDialog(
                         )
                     }
                 }
-                
+
                 // Row 2: Creator and Platform
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1543,7 +1558,7 @@ fun DownloadDetailsDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
+
                     if (state.viewState.extractorKey.isNotBlank()) {
                         DetailCard(
                             icon = Icons.Outlined.Language,
@@ -1553,7 +1568,7 @@ fun DownloadDetailsDialog(
                         )
                     }
                 }
-                
+
                 // Row 3: File Path and Download Date
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1570,16 +1585,19 @@ fun DownloadDetailsDialog(
                             )
                         }
                     }
-                    
+
                     DetailCard(
                         icon = Icons.Outlined.CalendarToday,
                         label = stringResource(R.string.download_date),
-                        value = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
+                        value = java.text.SimpleDateFormat(
+                            "MMM dd, yyyy",
+                            java.util.Locale.getDefault()
+                        )
                             .format(java.util.Date(task.timeCreated)),
                         modifier = Modifier.weight(1f)
                     )
                 }
-                
+
                 // Source URL Card
                 Card(
                     modifier = Modifier
@@ -1628,11 +1646,11 @@ fun DownloadDetailsDialog(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
-    
+
     // File Path Dialog
     if (showFilePathDialog && state.downloadState is Task.DownloadState.Completed) {
         state.downloadState.filePath?.let { path ->
@@ -1672,11 +1690,11 @@ fun RecentDownloadDetailsDialog(
     val context = androidx.compose.ui.platform.LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     var showFilePathDialog by remember { mutableStateOf(false) }
-    
+
     BackHandler {
         onDismiss()
     }
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -1718,7 +1736,7 @@ fun RecentDownloadDetailsDialog(
                     )
                 }
             }
-            
+
             // Thumbnail Card
             Card(
                 modifier = Modifier
@@ -1738,7 +1756,7 @@ fun RecentDownloadDetailsDialog(
                     contentScale = ContentScale.Crop
                 )
             }
-            
+
             // Media Information Section
             Text(
                 text = stringResource(R.string.media_info),
@@ -1747,11 +1765,11 @@ fun RecentDownloadDetailsDialog(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             // Grid Layout for Details
             val file = java.io.File(downloadInfo.videoPath)
             val fileExtension = downloadInfo.videoPath.substringAfterLast(".", "")
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1771,7 +1789,7 @@ fun RecentDownloadDetailsDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
+
                     if (file.exists()) {
                         val fileSize = file.length()
                         DetailCard(
@@ -1782,7 +1800,7 @@ fun RecentDownloadDetailsDialog(
                         )
                     }
                 }
-                
+
                 // Row 2: Resolution and Platform
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1794,10 +1812,12 @@ fun RecentDownloadDetailsDialog(
                             if (file.exists()) {
                                 val retriever = android.media.MediaMetadataRetriever()
                                 retriever.setDataSource(downloadInfo.videoPath)
-                                val width = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
-                                val height = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                                val width =
+                                    retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                                val height =
+                                    retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
                                 retriever.release()
-                                
+
                                 if (width != null && height != null) {
                                     "${width}x${height}"
                                 } else {
@@ -1810,7 +1830,7 @@ fun RecentDownloadDetailsDialog(
                             "N/A"
                         }
                     }
-                    
+
                     if (resolution != "N/A") {
                         DetailCard(
                             icon = Icons.Outlined.HighQuality,
@@ -1819,7 +1839,7 @@ fun RecentDownloadDetailsDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
+
                     DetailCard(
                         icon = Icons.Outlined.Language,
                         label = stringResource(R.string.platform),
@@ -1827,7 +1847,7 @@ fun RecentDownloadDetailsDialog(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                
+
                 // Row 3: File Path and Download Date
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1840,7 +1860,7 @@ fun RecentDownloadDetailsDialog(
                         modifier = Modifier.weight(1f),
                         onClick = { showFilePathDialog = true }
                     )
-                    
+
                     val downloadDate = if (file.exists()) {
                         java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
                             .format(java.util.Date(file.lastModified()))
@@ -1929,11 +1949,11 @@ fun RecentDownloadDetailsDialog(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
-    
+
     // File Path Dialog
     if (showFilePathDialog) {
         AlertDialog(
@@ -2037,74 +2057,16 @@ private fun DetailCard(
     }
 }
 
-/**
- * Animated glowing "+" text with continuously cycling gradient colors
- * and a pulsing glow effect that matches the app theme.
- */
+
+@Preview
 @Composable
-fun AnimatedGlowingPlus() {
-    val infiniteTransition = rememberInfiniteTransition(label = "plusGlow")
-
-    // Animate the gradient offset to make colors flow continuously
-    val gradientShift by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1500f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "gradientShift"
-    )
-
-    // Animate glow intensity (pulsing alpha for the shadow)
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowAlpha"
-    )
-
-    // Animate scale for subtle pulse
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
-
-    val gradientColors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.primary,
-    )
-
-    val glowColor = MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha * 0.6f)
-
-    val gradientBrush = Brush.linearGradient(
-        colors = gradientColors,
-        start = Offset(gradientShift, 0f),
-        end = Offset(gradientShift + 500f, 500f),
-        tileMode = TileMode.Mirror
-    )
+fun PlusIcon() {
 
     Text(
         text = "+",
         style = MaterialTheme.typography.displayMedium.merge(
             TextStyle(
-                brush = gradientBrush,
-                shadow = Shadow(
-                    color = glowColor,
-                    offset = Offset.Zero,
-                    blurRadius = 16f * glowAlpha
-                )
+                color = Color.Magenta
             )
         ),
         fontWeight = FontWeight.Bold
