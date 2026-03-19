@@ -1,8 +1,10 @@
 package com.junkfood.seal.ui.theme
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -15,6 +17,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextDirection
 import com.google.android.material.color.MaterialColors
+import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalFixedColorRoles
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.kyant.monet.LocalTonalPalettes
@@ -33,6 +36,21 @@ fun Color.harmonizeWith(other: Color) =
 @ReadOnlyComposable
 fun Color.harmonizeWithPrimary(): Color =
     this.harmonizeWith(other = MaterialTheme.colorScheme.primary)
+
+@SuppressLint("ComposableNaming")
+@Composable
+fun ColorScheme.recentCardContainer() : Color{
+    val isDark = LocalDarkTheme.current.isDarkTheme()
+    val isGradient = LocalGradientDarkMode.current
+    return if (isDark && isGradient) GradientDarkColors.SurfaceVariant else this.surfaceVariant
+}
+
+@Composable
+fun ColorScheme.statusSuccess() : Color{
+    val isDark = LocalDarkTheme.current.isDarkTheme()
+    val isGradient = LocalGradientDarkMode.current
+    return if (isDark && isGradient) Color(0xFF4ADE80) else this.primary
+}
 
 @Composable
 fun SealTheme(
