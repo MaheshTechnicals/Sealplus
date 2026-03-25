@@ -374,6 +374,8 @@
     <string name="system_settings">System settings</string>
     <string name="force_ipv4">Force IPv4</string>
     <string name="force_ipv4_desc">Make all connections via IPv4</string>
+    <string name="no_check_certificate">Ignore SSL certificates</string>
+    <string name="no_check_certificate_desc">Skip SSL certificate verification (required for filtered networks like Netfree)</string>
     <string name="keep_subtitle_files">Keep subtitle files</string>
     <string name="allow_once">Allow once</string>
     <string name="allow_always">Allow always</string>

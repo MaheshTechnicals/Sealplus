@@ -114,6 +114,9 @@ object DownloadUtil {
                     if (forceIpv4) {
                         addOption("-4")
                     }
+                    if (noCheckCertificate) {
+                        addOption("--no-check-certificate")
+                    }
                     if (cookies) {
                         enableCookies(userAgentString)
                     }
@@ -167,6 +170,9 @@ object DownloadUtil {
                     }
                     if (forceIpv4) {
                         addOption("-4")
+                    }
+                    if (noCheckCertificate) {
+                        addOption("--no-check-certificate")
                     }
                     /*            if (debug) {
                         addOption("-v")
@@ -246,6 +252,7 @@ object DownloadUtil {
         val restrictFilenames: Boolean,
         val supportAv1HardwareDecoding: Boolean,
         val forceIpv4: Boolean,
+        val noCheckCertificate: Boolean,
         val mergeAudioStream: Boolean,
         val mergeToMkv: Boolean,
     ) {
@@ -300,6 +307,7 @@ object DownloadUtil {
                     restrictFilenames = false,
                     supportAv1HardwareDecoding = false,
                     forceIpv4 = false,
+                    noCheckCertificate = false,
                     mergeAudioStream = false,
                     mergeToMkv = false,
                     useCustomAudioPreset = false,
@@ -369,6 +377,7 @@ object DownloadUtil {
                     restrictFilenames = RESTRICT_FILENAMES.getBoolean(),
                     supportAv1HardwareDecoding = checkIfAv1HardwareAccelerated(),
                     forceIpv4 = FORCE_IPV4.getBoolean(),
+                    noCheckCertificate = NO_CHECK_CERTIFICATE.getBoolean(),
                     mergeAudioStream = false,
                     mergeToMkv =
                         (downloadSubtitle && embedSubtitle) || MERGE_OUTPUT_MKV.getBoolean(),
@@ -776,6 +785,9 @@ object DownloadUtil {
                     }
                     if (forceIpv4) {
                         addOption("-4")
+                    }
+                    if (noCheckCertificate) {
+                        addOption("--no-check-certificate")
                     }
                     if (debug) {
                         addOption("-v")
