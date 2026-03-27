@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Cookie
 import androidx.compose.material.icons.outlined.OfflineBolt
+import androidx.compose.material.icons.outlined.SecurityUpdateWarning
 import androidx.compose.material.icons.outlined.SettingsEthernet
 import androidx.compose.material.icons.outlined.SignalCellular4Bar
 import androidx.compose.material.icons.outlined.SignalCellularConnectedNoInternet4Bar
@@ -38,6 +39,7 @@ import com.junkfood.seal.util.CELLULAR_DOWNLOAD
 import com.junkfood.seal.util.COOKIES
 import com.junkfood.seal.util.CUSTOM_COMMAND
 import com.junkfood.seal.util.FORCE_IPV4
+import com.junkfood.seal.util.NO_CHECK_CERTIFICATE
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateValue
@@ -57,6 +59,7 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
     var aria2c by remember { mutableStateOf(ARIA2C.getBoolean()) }
     var isCookiesEnabled by COOKIES.booleanState
     var forceIpv4 by FORCE_IPV4.booleanState
+    var noCheckCertificate by NO_CHECK_CERTIFICATE.booleanState
 
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -146,6 +149,18 @@ fun NetworkPreferences(navigateToCookieProfilePage: () -> Unit = {}, onNavigateB
                     ) {
                         forceIpv4 = !forceIpv4
                         FORCE_IPV4.updateBoolean(forceIpv4)
+                    }
+                }
+                item {
+                    PreferenceSwitch(
+                        title = stringResource(R.string.no_check_certificate),
+                        description = stringResource(id = R.string.no_check_certificate_desc),
+                        icon = Icons.Outlined.SecurityUpdateWarning,
+                        enabled = !isCustomCommandEnabled,
+                        isChecked = noCheckCertificate,
+                    ) {
+                        noCheckCertificate = !noCheckCertificate
+                        NO_CHECK_CERTIFICATE.updateBoolean(noCheckCertificate)
                     }
                 }
                 item {
