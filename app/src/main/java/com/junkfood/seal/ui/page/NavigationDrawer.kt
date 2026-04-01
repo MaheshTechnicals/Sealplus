@@ -191,77 +191,87 @@ fun DrawerHeader(
         modifier = modifier
             .fillMaxWidth()
             .background(headerGradient)
+            .padding(vertical = 22.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // App Logo
+            // App Logo - left side, vertically centered, reduced for balance
             Image(
                 painter = painterResource(id = R.drawable.splash_logo),
                 contentDescription = "Seal Plus Logo",
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier.size(76.dp)
             )
             
-            Spacer(modifier = Modifier.height(12.dp))
+            // Fixed spacing between logo and text
+            Spacer(modifier = Modifier.width(16.dp))
             
-            // App Name - centered, bold, prominent
-            Text(
-                text = "Seal Plus",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            // Tagline - centered, muted
-            Text(
-                text = "Download Manager",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Version badge with gradient background - centered
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.small)
-                    .background(
-                        if (isDarkTheme) {
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primaryContainer,
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                )
-                            )
-                        } else {
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
-                                )
-                            )
-                        }
-                    )
-                    .padding(horizontal = 14.dp, vertical = 5.dp),
-                contentAlignment = Alignment.Center
+            // Text content column - strictly left-aligned text stack
+            Column(
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Top
             ) {
+                // App Name - refined typography with tighter line height
                 Text(
-                    text = "v${App.packageInfo.versionName}",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.SemiBold
+                    text = "Seal Plus",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        lineHeight = 22.sp
                     ),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
                 )
+                
+                // Reduced spacing between title and tagline
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Tagline - enhanced hierarchy with improved opacity
+                Text(
+                    text = "Download Manager",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                    maxLines = 1
+                )
+                
+                // Increased spacing before version badge for better hierarchy
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Version badge with gradient background - premium pill appearance
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(
+                            if (isDarkTheme) {
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primaryContainer,
+                                        MaterialTheme.colorScheme.secondaryContainer
+                                    )
+                                )
+                            } else {
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                                    )
+                                )
+                            }
+                        )
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "v${App.packageInfo.versionName}",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 10.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
