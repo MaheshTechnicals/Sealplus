@@ -661,6 +661,6 @@
     <string name="hidden_content">Hidden Content</string>
     <string name="hidden_content_desc">View and manage your hidden media files</string>
     <string name="no_hidden_content">No hidden content</string>
-    <string name="hidden_content_requires_app_lock">Enable App Lock first to use Hidden Content</string>
+    <string name="hidden_content_requires_app_lock">Enable App Lock first to use Hidden Content. Go to Settings > SealPlus Extras > App Lock</string>
 </resources>
 

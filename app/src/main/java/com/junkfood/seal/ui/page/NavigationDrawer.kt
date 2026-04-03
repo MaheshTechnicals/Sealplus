@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -60,6 +61,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -81,6 +83,7 @@ import com.junkfood.seal.ui.common.ThemedIconColors
 import com.junkfood.seal.ui.page.downloadv2.DownloadPageImplV2
 import com.junkfood.seal.ui.page.security.LockScreen
 import com.junkfood.seal.util.AuthenticationManager
+import com.junkfood.seal.util.makeToast
 import kotlinx.coroutines.launch
 
 @Composable
@@ -97,7 +100,10 @@ fun NavigationDrawer(
     content: @Composable () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    var showHiddenContentAuthScreen by remember { mutableStateOf(false) }
+    var hiddenContentAuthDone by remember { mutableStateOf(false) }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     when (windowWidth) {
         WindowWidthSizeClass.Compact,
         WindowWidthSizeClass.Medium -> {
@@ -112,6 +118,10 @@ fun NavigationDrawer(
                             showQuickSettings = showQuickSettings,
                             onNavigateToRoute = onNavigateToRoute,
                             onDismissRequest = onDismissRequest,
+                            onShowHiddenContentAuth = {
+                                hiddenContentAuthDone = false
+                                showHiddenContentAuthScreen = true
+                            },
                         )
                     }
                 },
@@ -130,6 +140,10 @@ fun NavigationDrawer(
                             showQuickSettings = showQuickSettings,
                             onNavigateToRoute = onNavigateToRoute,
                             onDismissRequest = onDismissRequest,
+                            onShowHiddenContentAuth = {
+                                hiddenContentAuthDone = false
+                                showHiddenContentAuthScreen = true
+                            },
                         )
                     }
                 },
@@ -165,6 +179,23 @@ fun NavigationDrawer(
             }
         }
     }
+
+    // Full-screen LockScreen overlay — rendered outside the narrow ModalDrawerSheet
+    // so it covers the entire display.
+    if (showHiddenContentAuthScreen && !hiddenContentAuthDone) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            LockScreen(
+                onUnlocked = {
+                    hiddenContentAuthDone = true
+                    showHiddenContentAuthScreen = false
+                    scope.launch { onDismissRequest() }
+                        .invokeOnCompletion { onNavigateToRoute(Route.HIDDEN_CONTENT) }
+                },
+                useBiometric = AuthenticationManager.useBiometric()
+            )
+        }
+    }
+    } // end outer Box
 }
 
 @Composable
@@ -289,23 +320,10 @@ fun NavigationDrawerSheetContent(
     showQuickSettings: Boolean = true,
     onNavigateToRoute: (String) -> Unit,
     onDismissRequest: suspend () -> Unit,
+    onShowHiddenContentAuth: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
-    var showHiddenContentAuthScreen by remember { mutableStateOf(false) }
-    var hiddenContentAuthDone by remember { mutableStateOf(false) }
-
-    if (showHiddenContentAuthScreen && !hiddenContentAuthDone) {
-        LockScreen(
-            onUnlocked = {
-                hiddenContentAuthDone = true
-                showHiddenContentAuthScreen = false
-                scope.launch { onDismissRequest() }
-                    .invokeOnCompletion { onNavigateToRoute(Route.HIDDEN_CONTENT) }
-            },
-            useBiometric = AuthenticationManager.useBiometric()
-        )
-        return
-    }
+    val context = LocalContext.current
     Column(
         modifier =
             modifier
@@ -348,12 +366,9 @@ fun NavigationDrawerSheetContent(
                     icon = { Icon(Icons.Outlined.VisibilityOff, null, tint = ThemedIconColors.secondary) },
                     onClick = {
                         if (AuthenticationManager.isSecurityEnabled() && AuthenticationManager.isPinSet()) {
-                            hiddenContentAuthDone = false
-                            showHiddenContentAuthScreen = true
+                            onShowHiddenContentAuth()
                         } else {
-                            scope
-                                .launch { onDismissRequest() }
-                                .invokeOnCompletion { onNavigateToRoute(Route.HIDDEN_CONTENT) }
+                            context.makeToast(R.string.hidden_content_requires_app_lock)
                         }
                     },
                     selected = false,

@@ -285,10 +285,13 @@ fun NewHomePage(
         }
     }
     
-    // Get recent downloads from database - will refresh when lifecycleRefreshTrigger changes
-    val recentDownloads by remember(lifecycleRefreshTrigger) {
+    // Get recent downloads from database - Room Flow is already reactive, no trigger needed
+    val recentDownloads by remember {
         DatabaseUtil.getVisibleDownloadHistoryFlow()
     }.collectAsStateWithLifecycle(initialValue = emptyList())
+
+    // Tracks IDs that have been hidden this session for instant optimistic UI removal
+    var localHiddenIds by remember { mutableStateOf(setOf<Int>()) }
     
     // Get recent 5 downloads (remove duplicates by video URL and path to prevent duplicate cards)
     val recentFiveDownloads = remember(recentDownloads) {
@@ -369,8 +372,9 @@ fun NewHomePage(
 
     // Exclude recent-DB entries whose URL still has a live (non-completed) active task so items
     // don't appear in both sections simultaneously during the Running → Completed transition.
-    val recentFiveDownloadsFiltered = remember(recentFiveDownloads, activeTaskUrls) {
-        recentFiveDownloads.filter { it.videoUrl !in activeTaskUrls }
+    // Also exclude optimistically hidden items so the card vanishes before the DB Flow re-emits.
+    val recentFiveDownloadsFiltered = remember(recentFiveDownloads, activeTaskUrls, localHiddenIds) {
+        recentFiveDownloads.filter { it.videoUrl !in activeTaskUrls && it.id !in localHiddenIds }
     }
     
     // Handle back press to show exit confirmation
@@ -765,6 +769,8 @@ fun NewHomePage(
                         },
                         onHide = {
                             view.slightHapticFeedback()
+                            // Optimistically remove from UI immediately, then persist to DB
+                            localHiddenIds = localHiddenIds + downloadInfo.id
                             scope.launch(Dispatchers.IO) {
                                 DatabaseUtil.hideItem(downloadInfo)
                             }
