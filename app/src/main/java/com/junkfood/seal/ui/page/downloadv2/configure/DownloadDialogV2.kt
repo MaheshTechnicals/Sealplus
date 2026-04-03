@@ -17,8 +17,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -83,7 +83,6 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -417,8 +416,8 @@ private fun DownloadDialogContent(
                             size = 88.dp,
                             strokeWidth = 5.dp,
                         )
-                        Image(
-                            painter = painterResource(R.mipmap.ic_launcher_round),
+                        AsyncImage(
+                            model = R.mipmap.ic_launcher_round,
                             contentDescription = null,
                             modifier = Modifier.size(52.dp),
                         )
