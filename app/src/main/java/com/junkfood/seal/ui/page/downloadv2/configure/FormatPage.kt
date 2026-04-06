@@ -745,6 +745,8 @@ private fun FormatPageImpl(
                         Text(
                             if (!isNetworkAvailable) "No Network"
                             else if (isValidatingFormats) "Validating..."
+                            else if (selectedVideoOnlyFormat != NOT_SELECTED && selectedAudioOnlyFormats.isNotEmpty())
+                                stringResource(R.string.download_and_merge)
                             else stringResource(R.string.start_download)
                         )
                     },
@@ -1099,12 +1101,14 @@ private fun FormatPageImpl(
                         if (selectedAudioOnlyFormats.contains(index)) {
                             selectedAudioOnlyFormats.remove(index)
                         } else {
-                            if (!mergeAudioStream) {
+                            // Force single audio when merging with a video-only format;
+                            // otherwise respect the multi-audio-stream preference.
+                            if (!mergeAudioStream || selectedVideoOnlyFormat != NOT_SELECTED) {
                                 selectedAudioOnlyFormats.clear()
                             }
-                            // Clear video selections when audio is selected
+                            // Clear combined video+audio (incompatible with separate audio).
+                            // Do NOT clear selectedVideoOnlyFormat — it can coexist for merging.
                             selectedVideoAudioFormat = NOT_SELECTED
-                            selectedVideoOnlyFormat = NOT_SELECTED
                             isSuggestedFormatSelected = false
                             selectedAudioOnlyFormats.add(index)
                         }
@@ -1152,10 +1156,16 @@ private fun FormatPageImpl(
                         selectedVideoOnlyFormat =
                             if (selectedVideoOnlyFormat == index) NOT_SELECTED
                             else {
-                                // Clear all other selections
+                                // Clear combined video+audio (incompatible with video-only).
+                                // Do NOT clear selectedAudioOnlyFormats — it can coexist for merging.
                                 selectedVideoAudioFormat = NOT_SELECTED
-                                selectedAudioOnlyFormats.clear()
                                 isSuggestedFormatSelected = false
+                                // If multiple audios are selected, keep only one for a clean merge.
+                                if (selectedAudioOnlyFormats.size > 1) {
+                                    val first = selectedAudioOnlyFormats.first()
+                                    selectedAudioOnlyFormats.clear()
+                                    selectedAudioOnlyFormats.add(first)
+                                }
                                 index
                             }
                     }
@@ -1164,9 +1174,14 @@ private fun FormatPageImpl(
 
             if (!audioOnly && audioOnlyFormats.isNotEmpty() && videoOnlyFormats.isNotEmpty())
                 item(span = { GridItemSpan(maxLineSpan) }) {
+                    val isMergeActive = selectedVideoOnlyFormat != NOT_SELECTED &&
+                        selectedAudioOnlyFormats.isNotEmpty()
                     PreferenceInfo(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-                        text = stringResource(R.string.abs_hint),
+                        text = if (isMergeActive)
+                            stringResource(R.string.video_audio_merge_hint)
+                        else
+                            stringResource(R.string.abs_hint),
                         applyPaddings = false,
                     )
                 }
