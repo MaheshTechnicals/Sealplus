@@ -484,11 +484,15 @@ fun ListItemStateText(
                 }
                 is Running -> {
                     val progress = downloadState.progress
-                    CircularProgressIndicator(
-                        progress = { progress },
-                        modifier = sizeModifier,
-                        strokeWidth = 2.5.dp,
-                    )
+                    if (progress >= 0) {
+                        CircularProgressIndicator(
+                            progress = { progress },
+                            modifier = sizeModifier,
+                            strokeWidth = 2.5.dp,
+                        )
+                    } else {
+                        CircularProgressIndicator(modifier = sizeModifier, strokeWidth = 2.5.dp)
+                    }
                 }
             }
 
@@ -600,7 +604,7 @@ private fun ResumeButton(
                 .drawBehind { drawCircle(background) }
                 .clickable(onClickLabel = stringResource(R.string.cancel), onClick = onClick)
     ) {
-        if (progress != null) {
+        if (progress != null && progress >= 0) {
             CircularProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.size(IconButtonSize).align(Alignment.Center),

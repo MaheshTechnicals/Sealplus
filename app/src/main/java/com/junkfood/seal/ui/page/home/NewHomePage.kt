@@ -1126,8 +1126,8 @@ fun ActiveDownloadCard(
     val downloadState = state.downloadState
     val progress = when (downloadState) {
         is Task.DownloadState.Running -> downloadState.progress
-        is Task.DownloadState.Paused -> downloadState.progress ?: 0f
-        is Task.DownloadState.Canceled -> downloadState.progress ?: 0f
+        is Task.DownloadState.Paused -> downloadState.progress ?: -1f
+        is Task.DownloadState.Canceled -> downloadState.progress ?: -1f
         else -> 0f
     }
     
@@ -1209,15 +1209,17 @@ fun ActiveDownloadCard(
     
     val statusText = when (downloadState) {
         is Task.DownloadState.Running -> {
+            val pct = if (progress >= 0) " ${(progress * 100).toInt()}%" else ""
             when (downloadPhase) {
                 "merging" -> stringResource(R.string.status_merging)
-                "video" -> "Downloading video... ${(progress * 100).toInt()}%"
-                "audio" -> "Downloading audio... ${(progress * 100).toInt()}%"
+                "video"   -> "Downloading video...$pct"
+                "audio"   -> "Downloading audio...$pct"
                 "fetching" -> stringResource(R.string.fetching_info)
-                else -> "Downloading... ${(progress * 100).toInt()}%"
+                else -> if (progress >= 0) "Downloading... ${(progress * 100).toInt()}%"
+                        else stringResource(R.string.status_downloading)
             }
         }
-        is Task.DownloadState.Paused -> stringResource(R.string.status_paused) + " ${(progress * 100).toInt()}%"
+        is Task.DownloadState.Paused -> if (progress >= 0) stringResource(R.string.status_paused) + " ${(progress * 100).toInt()}%" else stringResource(R.string.status_paused)
         is Task.DownloadState.Canceled -> stringResource(R.string.status_canceled)
         is Task.DownloadState.Error -> stringResource(R.string.download_error)
         is Task.DownloadState.Completed -> stringResource(R.string.completed) + " 100%"
@@ -1519,19 +1521,25 @@ fun ActiveDownloadCard(
             
             // Progress bar for active and paused downloads
             if (downloadState is Task.DownloadState.Running || downloadState is Task.DownloadState.Paused) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = when (downloadState) {
-                        is Task.DownloadState.Paused -> Color(0xFFFBBF24)
-                        else -> if (isGradientDark && isDarkTheme) {
-                            GradientDarkColors.GradientPrimaryStart
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
-                    },
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
+                val barColor = when (downloadState) {
+                    is Task.DownloadState.Paused -> Color(0xFFFBBF24)
+                    else -> if (isGradientDark && isDarkTheme) GradientDarkColors.GradientPrimaryStart
+                            else MaterialTheme.colorScheme.primary
+                }
+                if (progress >= 0) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = barColor,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = barColor,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                }
             }
         }
     }
