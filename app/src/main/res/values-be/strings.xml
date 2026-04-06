@@ -200,8 +200,8 @@
     <string name="suggested">Прапанаваў</string>
     <string name="format_selection_desc">Перад пачаткам загрузкі абярыце фармат для загрузкі</string>
     <string name="abs_hint">Большасць платформаў струменевага відэа перадаюць аўдыя і відэа асобна, вы можаце выбраць і аб\'яднаць фармат толькі аўдыя з фарматам толькі відэа ў адно відэа.</string>
-    <string name="video_audio_merge_hint">Відэа і аўдыя выбраны — пры спампоўцы будуць аўтаматычна аб'яднаны.</string>
-    <string name="download_and_merge">Спампаваць і аб'яднаць</string>
+    <string name="video_audio_merge_hint">Відэа і аўдыя выбраны — пры спампоўцы будуць аўтаматычна аб\'яднаны.</string>
+    <string name="download_and_merge">Спампаваць і аб\'яднаць</string>
     <string name="video_creator_sample_text">Прыклад аўтара відэа</string>
     <string name="subtitle_desc">Мовы, убудаваныя субтытры, аўтаматычныя субтытры</string>
     <string name="format_selection">Выбар фармату</string>

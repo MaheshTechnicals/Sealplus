@@ -228,7 +228,7 @@
     <string name="auto_subtitle">ਆਟੋਮੈਟਿਕ ਸੁਰਖੀਆਂ</string>
     <string name="subtitle">ਸਬ- ਟਾਈਟਲ</string>
     <string name="abs_hint">ਜ਼ਿਆਦਾਤਰ ਵੀਡੀਓ ਸਟ੍ਰੀਮਿੰਗ ਪਲੇਟਫਾਰਮ ਆਡੀਓ ਅਤੇ ਵੀਡੀਓ ਨੂੰ ਵੱਖਰੇ ਤੌਰ \'ਤੇ ਪ੍ਰਦਾਨ ਕਰਦੇ ਹਨ, ਤੁਸੀਂ ਇੱਕ ਆਡੀਓ-ਓਨਲੀ ਫਾਰਮੈਟ ਨੂੰ ਚੁਣ ਸਕਦੇ ਹੋ ਅਤੇ ਇੱਕ ਵੀਡੀਓ ਵਿੱਚ ਕੇਵਲ-ਵੀਡੀਓ ਫਾਰਮੈਟ ਨੂੰ ਇੱਕ ਵੀਡੀਓ ਵਿੱਚ ਮਿਲਾ ਸਕਦੇ ਹੋ।</string>
-    <string name="video_audio_merge_hint">ਵੀਡੀਓ ਅਤੇ ਆਡੀਓ ਚੁਣੇ ਗਏ — ਡਾਊਨਲੋਡ ਹੋਣ 'ਤੇ ਆਪਣੇ ਆਪ ਮਿਲਾਏ ਜਾਣਗੇ।</string>
+    <string name="video_audio_merge_hint">ਵੀਡੀਓ ਅਤੇ ਆਡੀਓ ਚੁਣੇ ਗਏ — ਡਾਊਨਲੋਡ ਹੋਣ \'ਤੇ ਆਪਣੇ ਆਪ ਮਿਲਾਏ ਜਾਣਗੇ।</string>
     <string name="download_and_merge">ਡਾਊਨਲੋਡ ਅਤੇ ਮਿਲਾਓ</string>
     <string name="download_subtitles">ਸਬ- ਟਾਈਟਲ ਡਾਊਨਲੋਡ ਕਰੋ</string>
     <string name="subtitle_language">ਸਬ- ਟਾਈਟਲ ਭਾਸ਼ਾਵਾਂ</string>
