@@ -19,6 +19,27 @@ data class Sponsor(val id: Int = 0, val name: String = "")
 @Serializable
 data class SponsorsResponse(val sponsors: List<Sponsor> = emptyList())
 
+// ---------------------------------------------------------------------------
+// UI model classes used by SponsorPage to display sponsor cards and dialogs.
+// These mirror the shape of the old GitHub Sponsors GraphQL response so the
+// existing composable layer does not need changes.
+// ---------------------------------------------------------------------------
+
+data class SocialAccount(val displayName: String, val url: String)
+
+data class SocialAccounts(val nodes: List<SocialAccount>)
+
+data class SponsorEntity(
+    val login: String,
+    val name: String? = null,
+    val websiteUrl: String? = null,
+    val socialAccounts: SocialAccounts? = null,
+)
+
+data class Tier(val monthlyPriceInDollars: Int)
+
+data class SponsorShip(val sponsorEntity: SponsorEntity, val tier: Tier? = null)
+
 object SponsorUtil {
     private const val TAG = "SponsorUtil"
 
