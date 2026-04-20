@@ -110,7 +110,15 @@ class App : Application() {
         }
         if (Build.VERSION.SDK_INT >= 26) NotificationUtil.createNotificationChannel()
 
-        Thread.setDefaultUncaughtExceptionHandler { _, e -> startCrashReportActivity(e) }
+        Thread.setDefaultUncaughtExceptionHandler { _, e ->
+            try {
+                startCrashReportActivity(e)
+            } catch (secondary: Throwable) {
+                secondary.printStackTrace()
+            } finally {
+                android.os.Process.killProcess(android.os.Process.myPid())
+            }
+        }
     }
 
     private fun startCrashReportActivity(th: Throwable) {
@@ -133,7 +141,7 @@ class App : Application() {
         lateinit var connectivityManager: ConnectivityManager
         lateinit var packageInfo: PackageInfo
 
-        var isServiceRunning = false
+        @Volatile var isServiceRunning = false
 
         private val connection =
             object : ServiceConnection {
@@ -142,7 +150,10 @@ class App : Application() {
                     isServiceRunning = true
                 }
 
-                override fun onServiceDisconnected(arg0: ComponentName) {}
+                override fun onServiceDisconnected(arg0: ComponentName) {
+                    // OS killed the service unexpectedly — allow startService() to restart it.
+                    isServiceRunning = false
+                }
             }
 
         fun startService() {
@@ -185,6 +196,7 @@ class App : Application() {
 
                 Directory.CUSTOM_COMMAND -> {
                     val path = FileUtil.getRealPath(uri)
+                    PreferenceUtil.encodeString(COMMAND_DIRECTORY, path)
                 }
 
                 Directory.SDCARD -> {

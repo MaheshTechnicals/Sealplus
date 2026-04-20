@@ -7,7 +7,7 @@ import java.time.Instant
 import java.util.Date
 import java.util.Locale
 
-private val SimpleDateFormat by lazy {
+private val dateTimeFormatter by lazy {
     SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 }
 
@@ -16,6 +16,6 @@ fun Long.toLocalizedString(locale: Locale = Locale.getDefault()): String {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale)
             .format(Date.from(Instant.ofEpochMilli(this)))
     } else {
-        SimpleDateFormat.format(Date(this))
+        dateTimeFormatter.format(Date(this))
     }
 }

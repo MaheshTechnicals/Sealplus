@@ -120,7 +120,8 @@ fun ProxySettingsPage(
     var showProxyListDialog by remember { mutableStateOf(false) }
 
     // Save configuration helper
-    fun saveConfig() {
+    // validationTimeMs: pass System.currentTimeMillis() ONLY when an actual test was performed.
+    fun saveConfig(validationTimeMs: Long? = null) {
         val newConfig = proxyConfig.copy(
             enabled = proxyEnabled,
             useFreeProxy = useFreeProxy,
@@ -129,7 +130,7 @@ fun ProxySettingsPage(
             customProxyHost = customHost,
             customProxyPort = customPort.toIntOrNull() ?: 0,
             customProxyType = customType.name,
-            lastValidated = System.currentTimeMillis(),
+            lastValidated = validationTimeMs ?: proxyConfig.lastValidated,
             isWorking = connectionStatus is ProxyValidator.ValidationResult.Success
         )
         ProxyManager.saveProxyConfig(newConfig)
@@ -144,14 +145,14 @@ fun ProxySettingsPage(
             connectionStatus = ProxyValidator.ValidationResult.Testing
             try {
                 withContext(Dispatchers.Main) {
-                    context.makeToast("Fetching proxies for ${selectedCountry.displayName}...")
+                    context.makeToast(context.getString(R.string.proxy_fetching_for, selectedCountry.displayName))
                 }
                 
                 val result = ProxyManager.fetchFreeProxies(selectedCountry)
                 result.onSuccess { proxies ->
                     if (proxies.isEmpty()) {
                         withContext(Dispatchers.Main) {
-                            context.makeToast("No proxies available for ${selectedCountry.displayName}")
+                            context.makeToast(context.getString(R.string.proxy_none_available_for, selectedCountry.displayName))
                         }
                         connectionStatus = ProxyValidator.ValidationResult.Failed("No proxies available")
                         return@launch
@@ -159,7 +160,7 @@ fun ProxySettingsPage(
                     
                     freeProxyList = proxies
                     withContext(Dispatchers.Main) {
-                        context.makeToast("Testing ${proxies.size} proxies...")
+                        context.makeToast(context.getString(R.string.proxy_testing_count, proxies.size))
                     }
                     
                     // Test each proxy until we find a working one
@@ -202,7 +203,7 @@ fun ProxySettingsPage(
                             proxyConfig = newConfig
                             
                             withContext(Dispatchers.Main) {
-                                context.makeToast("✓ Connected to working proxy: $proxyAddress (${validationResult.latencyMs}ms)")
+                                context.makeToast(context.getString(R.string.proxy_connected_working, proxyAddress, validationResult.latencyMs))
                             }
                             break
                         }
@@ -211,7 +212,7 @@ fun ProxySettingsPage(
                     if (!foundWorking) {
                         connectionStatus = ProxyValidator.ValidationResult.Failed("No working proxies found")
                         withContext(Dispatchers.Main) {
-                            context.makeToast("✗ No working proxies found. Try another country.")
+                            context.makeToast(context.getString(R.string.proxy_no_working_found))
                         }
                     }
                 }.onFailure { error ->
@@ -239,7 +240,7 @@ fun ProxySettingsPage(
                         showProxyListDialog = true
                     } else {
                         withContext(Dispatchers.Main) {
-                            context.makeToast("No proxies available for ${selectedCountry.displayName}")
+                            context.makeToast(context.getString(R.string.proxy_none_available_for, selectedCountry.displayName))
                         }
                     }
                 }.onFailure { error ->
@@ -273,12 +274,12 @@ fun ProxySettingsPage(
                 when (val status = connectionStatus) {
                     is ProxyValidator.ValidationResult.Success -> {
                         withContext(Dispatchers.Main) {
-                            context.makeToast("✓ Proxy working: ${status.latencyMs}ms")
+                            context.makeToast(context.getString(R.string.proxy_working_latency, status.latencyMs))
                         }
                     }
                     is ProxyValidator.ValidationResult.Failed -> {
                         withContext(Dispatchers.Main) {
-                            context.makeToast("✗ Connection failed: ${status.error}")
+                            context.makeToast(context.getString(R.string.proxy_connection_failed, status.error))
                         }
                     }
                     else -> {}
@@ -309,11 +310,11 @@ fun ProxySettingsPage(
                 speedTestResult?.let { result ->
                     if (result.success) {
                         withContext(Dispatchers.Main) {
-                            context.makeToast("Speed test completed")
+                            context.makeToast(context.getString(R.string.proxy_speed_test_completed))
                         }
                     } else {
                         withContext(Dispatchers.Main) {
-                            context.makeToast("Speed test failed: ${result.error}")
+                            context.makeToast(context.getString(R.string.proxy_speed_test_failed, result.error))
                         }
                     }
                 }

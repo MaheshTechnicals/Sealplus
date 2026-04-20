@@ -637,6 +637,16 @@
     <string name="manual_select_proxy">Manual Select from List</string>
     <string name="proxy_info_title">How It Works</string>
     <string name="proxy_info_description">When enabled, all download requests will be routed through the configured proxy server. This can help bypass regional restrictions or improve privacy. Test the connection before enabling to ensure the proxy is working correctly.</string>
+    <!-- Proxy toast messages -->
+    <string name="proxy_fetching_for">Fetching proxies for %s…</string>
+    <string name="proxy_testing_count">Testing %d proxies…</string>
+    <string name="proxy_connected_working">✓ Connected to working proxy: %1$s (%2$dms)</string>
+    <string name="proxy_no_working_found">✗ No working proxies found. Try another country.</string>
+    <string name="proxy_none_available_for">No proxies available for %s</string>
+    <string name="proxy_working_latency">✓ Proxy working: %dms</string>
+    <string name="proxy_connection_failed">✗ Connection failed: %s</string>
+    <string name="proxy_speed_test_completed">Speed test completed</string>
+    <string name="proxy_speed_test_failed">Speed test failed: %s</string>
     
     <!-- Sponsor Support Dialog -->
     <string name="support_us">Support Us ✨</string>

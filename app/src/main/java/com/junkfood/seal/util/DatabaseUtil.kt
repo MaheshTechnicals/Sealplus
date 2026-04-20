@@ -77,8 +77,12 @@ object DatabaseUtil {
                 if (!candidate.exists()) candidate
                 else File(hiddenDir, "${info.id}_${sourceFile.name}")
             }
-            sourceFile.copyTo(destFile, overwrite = true)
-            sourceFile.delete()
+            // Prefer atomic rename (same filesystem); fall back to copy+delete across volumes
+            val moved = sourceFile.renameTo(destFile)
+            if (!moved) {
+                sourceFile.copyTo(destFile, overwrite = true)
+                sourceFile.delete()
+            }
             // Remove old path from MediaStore (index-only; file is already gone)
             removeFromMediaStore(info.videoPath)
             // Update DB: mark hidden + save new path so we can move it back later
@@ -98,9 +102,12 @@ object DatabaseUtil {
                 if (!candidate.exists()) candidate
                 else File(downloadDir, "${info.id}_${hiddenFile.name}")
             }
-            hiddenFile.copyTo(destFile, overwrite = true)
-            hiddenFile.delete()
-            // Scan restored file back into MediaStore
+            // Prefer atomic rename; fall back to copy+delete
+            val moved = hiddenFile.renameTo(destFile)
+            if (!moved) {
+                hiddenFile.copyTo(destFile, overwrite = true)
+                hiddenFile.delete()
+            }
             MediaScannerConnection.scanFile(context, arrayOf(destFile.absolutePath), null, null)
             // Update DB: mark visible + save restored path
             dao.setHiddenAndPath(info.id, false, destFile.absolutePath)
@@ -181,7 +188,7 @@ object DatabaseUtil {
                 if (templates != null) {
                     val templateList = getTemplateList()
                     dao.importTemplates(
-                        templateList
+                        templates
                             .filterNot { templateList.contains(it) }
                             .map { it.copy(id = 0) }
                             .also { cnt += it.size }

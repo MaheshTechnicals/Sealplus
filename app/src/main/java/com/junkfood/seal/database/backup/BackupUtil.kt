@@ -43,12 +43,8 @@ object BackupUtil {
     }
 
     fun getDownloadHistoryExportFilename(context: Context): String {
-        return listOf(
-                context.getString(R.string.app_name),
-                App.packageInfo.versionName.toString(),
-                Date().toString(),
-            )
-            .joinToString(separator = "-") { it }
+        val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", java.util.Locale.US).format(Date())
+        return "${context.getString(R.string.app_name)}-${App.packageInfo.versionName}-${timestamp}.json"
     }
 
     enum class BackupDestination {

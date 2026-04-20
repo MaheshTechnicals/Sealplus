@@ -40,11 +40,9 @@ class CookiesViewModel : ViewModel() {
 
     fun generateNewCookies(content: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            mutableStateFlow.update {
-                val newProfile = it.editingCookieProfile.copy(content = content)
-                DatabaseUtil.updateCookieProfile(newProfile)
-                it.copy(editingCookieProfile = newProfile)
-            }
+            val newProfile = mutableStateFlow.value.editingCookieProfile.copy(content = content)
+            DatabaseUtil.updateCookieProfile(newProfile)
+            mutableStateFlow.update { it.copy(editingCookieProfile = newProfile) }
         }
     }
 

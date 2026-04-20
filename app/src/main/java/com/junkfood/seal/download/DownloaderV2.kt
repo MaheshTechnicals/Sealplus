@@ -118,10 +118,10 @@ internal object FakeDownloaderV2 : DownloaderV2 {
 class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComponent {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val taskStateMap = mutableStateMapOf<Task, Task.State>()
-    private val resumedProgressMap = mutableMapOf<String, Float>()
+    private val resumedProgressMap = java.util.concurrent.ConcurrentHashMap<String, Float>()
     // Tracks how many auto-retries have been attempted for each task (keyed by task ID).
     // Cleared on success or after MAX_AUTO_RETRIES exhausted.
-    private val retryCountMap = mutableMapOf<String, Int>()
+    private val retryCountMap = java.util.concurrent.ConcurrentHashMap<String, Int>()
 
     companion object {
         private const val MAX_AUTO_RETRIES = 3

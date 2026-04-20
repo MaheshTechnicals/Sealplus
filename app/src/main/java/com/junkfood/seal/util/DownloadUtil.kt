@@ -8,7 +8,7 @@ import android.util.Log
 import android.webkit.CookieManager
 import androidx.annotation.CheckResult
 import com.junkfood.seal.App
-import com.junkfood.seal.App.Companion.applicationScope
+import com.junkfood.seal.BuildConfig
 import com.junkfood.seal.App.Companion.audioDownloadDir
 import com.junkfood.seal.App.Companion.context
 import com.junkfood.seal.App.Companion.videoDownloadDir
@@ -359,11 +359,11 @@ object DownloadUtil {
                     proxy = ProxyManager.isProxyActive() || PROXY.getBoolean(),
                     proxyUrl = if (ProxyManager.isProxyActive()) {
                         val proxyAddress = ProxyManager.loadProxyConfig().getProxyAddress()
-                        Log.d("DownloadUtil", "Using new proxy system: $proxyAddress")
+                        if (BuildConfig.DEBUG) Log.d("DownloadUtil", "Using new proxy system (address redacted in release)")
                         proxyAddress
                     } else if (PROXY.getBoolean()) {
                         val legacyProxy = PROXY_URL.getString()
-                        Log.d("DownloadUtil", "Using legacy proxy: $legacyProxy")
+                        if (BuildConfig.DEBUG) Log.d("DownloadUtil", "Using legacy proxy (address redacted in release)")
                         legacyProxy
                     } else {
                         ""
@@ -377,7 +377,7 @@ object DownloadUtil {
                     restrictFilenames = RESTRICT_FILENAMES.getBoolean(),
                     supportAv1HardwareDecoding = checkIfAv1HardwareAccelerated(),
                     forceIpv4 = FORCE_IPV4.getBoolean(),
-                    noCheckCertificate = NO_CHECK_CERTIFICATE.getBoolean(),
+                    noCheckCertificate = NO_CHECK_CERTIFICATE.getBoolean() && !ProxyManager.isProxyActive(),
                     mergeAudioStream = false,
                     mergeToMkv =
                         (downloadSubtitle && embedSubtitle) || MERGE_OUTPUT_MKV.getBoolean(),
@@ -709,7 +709,7 @@ object DownloadUtil {
                 id = id,
                 videoTitle = title,
                 videoAuthor = uploader ?: channel ?: uploaderId.toString(),
-                videoUrl = webpageUrl ?: originalUrl.toString(),
+                videoUrl = webpageUrl ?: originalUrl ?: "",
                 thumbnailUrl = thumbnail.toHttpsUrl(),
                 videoPath = videoPath,
                 extractor = extractorKey,

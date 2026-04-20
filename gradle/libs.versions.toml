@@ -6,7 +6,7 @@ androidxCore = "1.17.0"
 androidMaterial = "1.12.0"
 androidxAppCompat = "1.7.1"
 androidxActivity = "1.12.2"
-androidxBiometric = "1.1.0"
+androidxBiometric = "1.2.0-alpha05"
 graphics = "1.0.4"
 constraintLayout = "1.1.0"
 
@@ -26,7 +26,7 @@ kotlin = "2.0.21"
 coroutines = "1.10.1"
 datetime = "0.6.1"
 serialization = "1.7.3"
-okhttp = "5.0.0-alpha.14"
+okhttp = "4.12.0"
 
 room = "2.6.1"
 ksp = "2.0.21-1.0.28"
@@ -55,8 +55,7 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 accompanist-webview = { group = "com.google.accompanist", name = "accompanist-webview", version.ref = "accompanist" }
 accompanist-pager-indicators = { group = "com.google.accompanist", name = "accompanist-pager-indicators", version.ref = "accompanist" }
 
-#androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom-alpha", version.ref = "androidxComposeBom" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
 
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-compose-material-iconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }

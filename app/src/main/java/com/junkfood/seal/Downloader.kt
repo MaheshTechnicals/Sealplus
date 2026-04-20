@@ -185,7 +185,8 @@ object Downloader {
         return downloaderState.value is State.Idle
     }
 
-    fun makeKey(url: String, templateName: String): String = "${templateName}_$url"
+    fun makeKey(url: String, templateName: String): String =
+        "${templateName.length}\u0000${templateName}\u0000$url"
 
     fun onTaskStarted(template: CommandTemplate, url: String) =
         CustomCommandTask(
@@ -323,13 +324,19 @@ object Downloader {
 
         if (!isDownloaderAvailable()) {
             context.makeToast(R.string.task_added)
+            val maxWaitMs = 5 * 60 * 1000L // 5 minutes max — prevents permanent coroutine leak
             applicationScope
                 .launch(Dispatchers.Default) {
-                    while (!isDownloaderAvailable()) {
+                    val deadline = System.currentTimeMillis() + maxWaitMs
+                    while (!isDownloaderAvailable() && System.currentTimeMillis() < deadline) {
                         delay(3000)
                     }
                 }
                 .invokeOnCompletion {
+                    if (!isDownloaderAvailable()) {
+                        Log.w(TAG, "addToDownloadQueue: downloader never became idle; dropping task.")
+                        return@invokeOnCompletion
+                    }
                     videoInfo?.let {
                         downloadVideoWithInfo(info = videoInfo, preferences = preferences)
                     } ?: getInfoAndDownload(url, preferences)

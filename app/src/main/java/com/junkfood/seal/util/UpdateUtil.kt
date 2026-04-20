@@ -82,14 +82,13 @@ object UpdateUtil {
         }
 
     private fun getLatestRelease(): Release =
-        getClient().newCall(requestForReleases).execute().body.use {
-            val releaseList = jsonFormat.decodeFromString<List<Release>>(it.string())
+        getClient().newCall(requestForReleases).execute().use { response ->
+            val body = response.body ?: throw java.io.IOException("Empty response body from releases API")
+            val releaseList = jsonFormat.decodeFromString<List<Release>>(body.string())
             val stable = UPDATE_CHANNEL.getInt() == STABLE
-            val latestRelease =
-                releaseList
-                    .filter { if (stable) it.name.toVersion() is Version.Stable else true }
-                    .maxByOrNull { it.name.toVersion() } ?: throw Exception("null response")
-            latestRelease
+            releaseList
+                .filter { if (stable) it.name.toVersion() is Version.Stable else true }
+                .maxByOrNull { it.name.toVersion() } ?: throw Exception("No valid release found")
         }
 
     fun checkForUpdate(context: Context = App.context): Release? {
@@ -177,7 +176,7 @@ object UpdateUtil {
             val request = Request.Builder().url(targetUrl).build()
             try {
                 val response = getClient().newCall(request).execute()
-                val responseBody = response.body
+                val responseBody = response.body ?: return@withContext emptyFlow()
                 return@withContext responseBody.downloadFileWithProgress(context.getLatestApk())
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -205,7 +204,6 @@ object UpdateUtil {
                                     break
                                 }
 
-                                outputStream.channel
                                 outputStream.write(data, 0, bytes)
                                 progressBytes += bytes
                                 emit(

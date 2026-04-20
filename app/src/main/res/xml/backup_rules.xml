@@ -8,5 +8,4 @@
         state onto a new device and bypass the App Lock.
     -->
     <exclude domain="file" path="mmkv/" />
-    <exclude domain="sharedpref" path="mmkv/" />
 </full-backup-content>

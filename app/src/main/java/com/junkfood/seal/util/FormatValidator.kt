@@ -3,6 +3,9 @@ package com.junkfood.seal.util
 import android.util.Log
 import com.junkfood.seal.App
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -36,8 +39,9 @@ object FormatValidator {
     }
 
     // Known unsupported codecs that may cause issues
-    private val unsupportedVideoCodecs = setOf(
-        "av01",  // AV1 - not widely supported on older devices
+    private val unsupportedVideoCodecs = setOf<String>(
+        // AV1 (av01) is NOT blacklisted here — hardware capability is checked at download time
+        // via DownloadUtil.checkIfAv1HardwareAccelerated() and passed in DownloadPreferences.
     )
 
     private val unsupportedAudioCodecs = setOf<String>(
@@ -121,16 +125,15 @@ object FormatValidator {
     suspend fun filterValidFormats(
         formats: List<Format>,
         checkUrlAccessibility: Boolean = false
-    ): List<Format> {
-        return withContext(Dispatchers.IO) {
-            formats.filter { format ->
-                val result = validateFormat(format, checkUrlAccessibility)
-                if (!result.isValid) {
-                    Log.d(TAG, "Filtered out format ${format.formatId}: ${result.reason}")
-                }
-                result.isValid
+    ): List<Format> = coroutineScope {
+        formats
+            .map { format -> async(Dispatchers.IO) { format to validateFormat(format, checkUrlAccessibility) } }
+            .awaitAll()
+            .onEach { (format, result) ->
+                if (!result.isValid) Log.d(TAG, "Filtered out format ${format.formatId}: ${result.reason}")
             }
-        }
+            .filter { (_, result) -> result.isValid }
+            .map { (format, _) -> format }
     }
 
     /**

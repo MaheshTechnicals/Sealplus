@@ -227,13 +227,14 @@ object FileUtil {
 
     fun getRealPath(treeUri: Uri): String {
         val path: String = treeUri.path.toString()
-        Log.d(TAG, path)
-        if (!path.contains("primary:")) {
+        return if (path.contains("primary:")) {
+            val last: String = path.split("primary:").last()
+            Environment.getExternalStorageDirectory().absolutePath + "/$last"
+        } else {
+            Log.w(TAG, "Non-primary URI path: $path — caller should use DocumentFile API")
             context.makeToast(R.string.directory_not_supported)
-            return getExternalDownloadDirectory().absolutePath
+            getExternalDownloadDirectory().absolutePath
         }
-        val last: String = path.split("primary:").last()
-        return Environment.getExternalStorageDirectory().absolutePath + "/$last"
     }
 
     private const val TAG = "FileUtil"

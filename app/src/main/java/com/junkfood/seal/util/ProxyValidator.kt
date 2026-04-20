@@ -100,20 +100,13 @@ object ProxyValidator {
                 .head() // HEAD request is lightweight
                 .build()
 
-            var latency = 0L
-            val response = measureTimeMillis {
-                latency = System.currentTimeMillis()
-                client.newCall(request).execute()
-            }
-            
-            latency = System.currentTimeMillis() - latency
+            val startMs = System.currentTimeMillis()
+            val response = client.newCall(request).execute()
+            val latency = System.currentTimeMillis() - startMs
+            response.close()
 
-            if (latency > 0) {
-                Log.d(TAG, "Proxy connected successfully. Latency: ${latency}ms")
-                ValidationResult.Success(latency, "Connected (${latency}ms)")
-            } else {
-                ValidationResult.Failed("Connection failed")
-            }
+            Log.d(TAG, "Proxy connected successfully. Latency: ${latency}ms")
+            ValidationResult.Success(latency, "Connected (${latency}ms)")
         } catch (e: Exception) {
             Log.e(TAG, "Test connection failed for $url", e)
             ValidationResult.Failed(e.message ?: "Connection error")

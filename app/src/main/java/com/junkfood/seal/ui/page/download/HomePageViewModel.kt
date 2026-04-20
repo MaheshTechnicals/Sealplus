@@ -74,11 +74,13 @@ class HomePageViewModel : ViewModel() {
     private fun fetchInfoForFormatSelection(url: String) {
         Downloader.updateState(State.FetchingInfo)
         DownloadUtil.fetchVideoInfoFromUrl(url = url)
-            .onSuccess { showFormatSelectionPageOrDownload(it) }
+            .onSuccess {
+                showFormatSelectionPageOrDownload(it)
+                Downloader.updateState(State.Idle)
+            }
             .onFailure {
                 manageDownloadError(th = it, url = url, isFetchingInfo = true, isTaskAborted = true)
             }
-        Downloader.updateState(State.Idle)
     }
 
     private fun parsePlaylistInfo(url: String): Unit =
