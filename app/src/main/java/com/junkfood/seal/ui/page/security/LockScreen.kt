@@ -29,6 +29,7 @@ import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.AuthenticationManager
 import com.junkfood.seal.util.makeToast
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun LockScreen(
