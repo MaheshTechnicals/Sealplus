@@ -26,7 +26,13 @@ import java.util.concurrent.TimeUnit
 object ProxyManager {
     private const val TAG = "ProxyManager"
     private const val PROXYSCRAPE_API = "https://api.proxyscrape.com/v2/"
-    
+
+    // Shared client — reused across all fetchFreeProxies() calls to avoid thread/connection pool waste
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .build()
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -132,11 +138,6 @@ object ProxyManager {
      */
     suspend fun fetchFreeProxies(country: ProxyCountry): Result<List<String>> = withContext(Dispatchers.IO) {
         try {
-            val client = OkHttpClient.Builder()
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(15, TimeUnit.SECONDS)
-                .build()
-
             val url = buildString {
                 append(PROXYSCRAPE_API)
                 append("?request=getproxies")
@@ -152,7 +153,7 @@ object ProxyManager {
                 .get()
                 .build()
 
-            val response = client.newCall(request).execute()
+            val response = httpClient.newCall(request).execute()
             
             if (!response.isSuccessful) {
                 return@withContext Result.failure(Exception("Failed to fetch proxies: ${response.code}"))

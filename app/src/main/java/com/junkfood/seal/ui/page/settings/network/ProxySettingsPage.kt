@@ -118,6 +118,8 @@ fun ProxySettingsPage(
     
     // Dialog states
     var showProxyListDialog by remember { mutableStateOf(false) }
+    var showFreeProxySecurityWarning by remember { mutableStateOf(false) }
+    var pendingFreeProxyEnable by remember { mutableStateOf(false) }
 
     // Save configuration helper
     // validationTimeMs: pass System.currentTimeMillis() ONLY when an actual test was performed.
@@ -324,6 +326,43 @@ fun ProxySettingsPage(
         }
     }
 
+    // Security warning for free proxy
+    if (showFreeProxySecurityWarning) {
+        AlertDialog(
+            onDismissRequest = {
+                showFreeProxySecurityWarning = false
+                pendingFreeProxyEnable = false
+            },
+            icon = {
+                Icon(Icons.Outlined.Security, contentDescription = null)
+            },
+            title = { Text(stringResource(R.string.free_proxy_security_warning_title)) },
+            text = { Text(stringResource(R.string.free_proxy_security_warning_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showFreeProxySecurityWarning = false
+                    if (pendingFreeProxyEnable) {
+                        proxyEnabled = true
+                        saveConfig()
+                        if (selectedFreeProxy.isEmpty()) autoFetchAndTestProxies()
+                    } else {
+                        useFreeProxy = true
+                        connectionStatus = null
+                        speedTestResult = null
+                        saveConfig()
+                    }
+                    pendingFreeProxyEnable = false
+                }) { Text(stringResource(R.string.understand_and_continue)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showFreeProxySecurityWarning = false
+                    pendingFreeProxyEnable = false
+                }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
     // Proxy List Dialog
     if (showProxyListDialog) {
         ProxyListDialog(
@@ -406,12 +445,14 @@ fun ProxySettingsPage(
                         }
                         Switch(
                             checked = proxyEnabled,
-                            onCheckedChange = { 
-                                proxyEnabled = it
-                                saveConfig()
-                                // Auto-connect to working proxy when enabled with free proxy
-                                if (it && useFreeProxy && selectedFreeProxy.isEmpty()) {
-                                    autoFetchAndTestProxies()
+                            onCheckedChange = { newValue ->
+                                if (newValue && useFreeProxy) {
+                                    // Show security warning before enabling free proxy
+                                    showFreeProxySecurityWarning = true
+                                    pendingFreeProxyEnable = true
+                                } else {
+                                    proxyEnabled = newValue
+                                    saveConfig()
                                 }
                             }
                         )
@@ -468,11 +509,11 @@ fun ProxySettingsPage(
                             ProxyTypeButton(
                                 text = stringResource(R.string.free_proxy),
                                 selected = useFreeProxy,
-                                onClick = { 
-                                    useFreeProxy = true
-                                    connectionStatus = null
-                                    speedTestResult = null
-                                    saveConfig()
+                                onClick = {
+                                    if (!useFreeProxy) {
+                                        showFreeProxySecurityWarning = true
+                                        pendingFreeProxyEnable = false
+                                    }
                                 },
                                 modifier = Modifier.weight(1f)
                             )

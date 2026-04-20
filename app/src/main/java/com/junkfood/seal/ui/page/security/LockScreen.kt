@@ -40,6 +40,8 @@ fun LockScreen(
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var attempts by remember { mutableIntStateOf(0) }
+    var isLockedOut by remember { mutableStateOf(false) }
+    var lockoutSecondsLeft by remember { mutableIntStateOf(0) }
     val maxAttempts = 5
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -79,17 +81,33 @@ fun LockScreen(
             } else {
                 isError = true
                 attempts++
-                
+
                 if (attempts >= maxAttempts) {
+                    // Real lockout: disable pad for 30 seconds
+                    val lockoutSeconds = 30
+                    isLockedOut = true
+                    lockoutSecondsLeft = lockoutSeconds
                     errorMessage = context.getString(R.string.too_many_attempts)
-                    // Could add timeout logic here
+                    pin = ""
+                    isError = false
+                    scope.launch {
+                        for (remaining in lockoutSeconds - 1 downTo 0) {
+                            delay(1000)
+                            lockoutSecondsLeft = remaining
+                        }
+                        isLockedOut = false
+                        attempts = 0
+                        lockoutSecondsLeft = 0
+                        errorMessage = ""
+                    }
+                    return@LaunchedEffect
                 } else {
                     errorMessage = context.getString(
                         R.string.incorrect_pin_attempts,
                         maxAttempts - attempts
                     )
                 }
-                
+
                 // Clear PIN after error
                 delay(500)
                 pin = ""
@@ -152,7 +170,7 @@ fun LockScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Error Message
+                // Error Message (wrong PIN attempts)
                 AnimatedVisibility(
                     visible = isError && errorMessage.isNotEmpty(),
                     enter = fadeIn() + expandVertically(),
@@ -160,6 +178,24 @@ fun LockScreen(
                 ) {
                     Text(
                         text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+
+                // Lockout countdown message
+                AnimatedVisibility(
+                    visible = isLockedOut,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Text(
+                        text = if (lockoutSecondsLeft > 0)
+                            context.getString(R.string.too_many_attempts) + "\n" +
+                                context.getString(R.string.lockout_countdown, lockoutSecondsLeft)
+                        else errorMessage,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
@@ -174,17 +210,17 @@ fun LockScreen(
             ) {
                 NumberPad(
                     onNumberClick = { number ->
-                        if (pin.length < 4) {
+                        if (pin.length < 4 && !isLockedOut) {
                             pin += number
                         }
                     },
                     onBackspaceClick = {
-                        if (pin.isNotEmpty()) {
+                        if (pin.isNotEmpty() && !isLockedOut) {
                             pin = pin.dropLast(1)
                         }
                     },
-                    onBiometricClick = if (useBiometric && 
-                        AuthenticationManager.isBiometricAvailable(context) && 
+                    onBiometricClick = if (useBiometric &&
+                        AuthenticationManager.isBiometricAvailable(context) &&
                         context is FragmentActivity) {
                         {
                             AuthenticationManager.showBiometricPrompt(
@@ -205,7 +241,7 @@ fun LockScreen(
                             )
                         }
                     } else null,
-                    isEnabled = !isError
+                    isEnabled = !isError && !isLockedOut
                 )
             }
         }

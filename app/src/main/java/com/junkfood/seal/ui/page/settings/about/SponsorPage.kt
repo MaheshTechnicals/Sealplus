@@ -107,6 +107,7 @@ import com.junkfood.seal.util.Tier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val TAG = "SponsorPage"
 
@@ -145,24 +146,22 @@ fun GitHubSponsorsPage(onNavigateBack: () -> Unit) {
     }
 
     LaunchedEffect(Unit) {
-        launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             SHOW_SPONSOR_MSG.updateInt(0)
             SponsorUtil.getSponsors()
                 .onFailure { Log.e(TAG, "SponsorPage: ", it) }
                 .onSuccess { response ->
-                    // Map each Sponsor (name + id) to a SponsorShip for the existing tier-based UI.
-                    // The static sponsors.json does not include tier or GitHub login data,
-                    // so all sponsors are shown in the sponsors (☕) section.
-                    sponsorList.addAll(
-                        response.sponsors.map { sp ->
-                            SponsorShip(
-                                sponsorEntity = SponsorEntity(
-                                    login = sp.id.toString(),
-                                    name = sp.name,
-                                )
+                    val items = response.sponsors.map { sp ->
+                        SponsorShip(
+                            sponsorEntity = SponsorEntity(
+                                login = sp.id.toString(),
+                                name = sp.name,
                             )
-                        }
-                    )
+                        )
+                    }
+                    withContext(Dispatchers.Main) {
+                        sponsorList.addAll(items)
+                    }
                 }
         }
     }

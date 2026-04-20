@@ -20,7 +20,6 @@ import com.kyant.monet.PaletteStyle
 import com.tencent.mmkv.MMKV
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -459,15 +457,9 @@ object PreferenceUtil {
         get() = find { it.id == TEMPLATE_ID.getInt() }
 
     fun getTemplate(): CommandTemplate {
-        var template: CommandTemplate? = null
-        runBlocking {
-            for (cnt in 1..5) {
-                template = templateListStateFlow.value.selectedTemplate
-                if (template != null) return@runBlocking
-                delay(100)
-            }
-        }
-        return template ?: throw NoSuchElementException()
+        return templateListStateFlow.value.selectedTemplate
+            ?: templateListStateFlow.value.firstOrNull()
+            ?: throw NoSuchElementException("No command template found")
     }
 
     suspend fun initializeTemplateSample() {

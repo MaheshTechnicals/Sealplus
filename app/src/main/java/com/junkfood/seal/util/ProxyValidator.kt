@@ -55,6 +55,20 @@ object ProxyValidator {
     }
 
     /**
+     * Build a reusable OkHttpClient for a specific proxy.
+     * Called once per validateProxyConnection / performSpeedTest to share across requests.
+     */
+    private fun buildProxyClient(proxy: Proxy): OkHttpClient =
+        OkHttpClient.Builder()
+            .proxy(proxy)
+            .connectTimeout(8, TimeUnit.SECONDS)
+            .readTimeout(8, TimeUnit.SECONDS)
+            .writeTimeout(8, TimeUnit.SECONDS)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .build()
+
+    /**
      * Validate proxy connection by making HEAD request to test URLs
      * @param proxy The Java Proxy to test
      * @return ValidationResult with status and latency
@@ -66,14 +80,15 @@ object ProxyValidator {
 
         return@withContext withTimeoutOrNull(CONNECTION_TIMEOUT_MS) {
             try {
+                val client = buildProxyClient(proxy)
                 // Try primary URL first
-                val result = testConnection(proxy, TEST_URL_PRIMARY)
+                val result = testConnection(client, TEST_URL_PRIMARY)
                 if (result is ValidationResult.Success) {
                     return@withTimeoutOrNull result
                 }
 
                 // Fallback to secondary URL
-                testConnection(proxy, TEST_URL_FALLBACK)
+                testConnection(client, TEST_URL_FALLBACK)
             } catch (e: Exception) {
                 Log.e(TAG, "Connection validation failed", e)
                 ValidationResult.Failed(e.message ?: "Connection failed")
@@ -82,19 +97,10 @@ object ProxyValidator {
     }
 
     /**
-     * Test connection to specific URL
+     * Test connection to specific URL using a pre-built client
      */
-    private suspend fun testConnection(proxy: Proxy, url: String): ValidationResult {
+    private suspend fun testConnection(client: OkHttpClient, url: String): ValidationResult {
         return try {
-            val client = OkHttpClient.Builder()
-                .proxy(proxy)
-                .connectTimeout(8, TimeUnit.SECONDS)
-                .readTimeout(8, TimeUnit.SECONDS)
-                .writeTimeout(8, TimeUnit.SECONDS)
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .build()
-
             val request = Request.Builder()
                 .url(url)
                 .head() // HEAD request is lightweight
@@ -128,12 +134,10 @@ object ProxyValidator {
 
         return@withContext withTimeoutOrNull(20000L) {
             try {
-                val client = OkHttpClient.Builder()
-                    .proxy(proxy)
+                val client = buildProxyClient(proxy).newBuilder()
                     .connectTimeout(10, TimeUnit.SECONDS)
                     .readTimeout(10, TimeUnit.SECONDS)
                     .writeTimeout(10, TimeUnit.SECONDS)
-                    .followRedirects(true)
                     .build()
 
                 // Test 1: Measure latency with HEAD request

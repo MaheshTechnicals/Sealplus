@@ -36,7 +36,7 @@ fun AppUpdater() {
         mutableStateOf(UpdateUtil.DownloadStatus.NotYet as UpdateUtil.DownloadStatus)
     }
     val scope = rememberCoroutineScope()
-    var updateJob: Job? = null
+    var updateJob by remember { mutableStateOf<Job?>(null) }
     var release by remember { mutableStateOf(UpdateUtil.Release()) }
     val settings =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {

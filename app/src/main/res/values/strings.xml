@@ -552,6 +552,7 @@
     <string name="backspace">Backspace</string>
     <string name="incorrect_pin_attempts">Incorrect PIN. %d attempts remaining.</string>
     <string name="too_many_attempts">Too many incorrect attempts. Please try again later.</string>
+    <string name="lockout_countdown">Try again in %d seconds.</string>
     <string name="authentication_failed">Authentication failed</string>
     
     <!-- Set PIN Dialog strings -->
@@ -610,6 +611,9 @@
     <string name="proxy_toggle_description">Route all downloads through a proxy server</string>
     <string name="proxy_type">Proxy Type</string>
     <string name="free_proxy">Free Proxy</string>
+    <string name="free_proxy_security_warning_title">Security Warning — Free Proxy</string>
+    <string name="free_proxy_security_warning_body">Free proxies are operated by unknown third parties. Your download traffic — including cookies and authentication headers — may be visible to the proxy operator. There is a risk of traffic interception (MITM). Only continue if you understand and accept this risk.</string>
+    <string name="understand_and_continue">I Understand, Continue</string>
     <string name="custom_proxy">Custom Proxy</string>
     <string name="connection_status">Connection Status</string>
     <string name="not_tested">Not tested yet. Click \'Test Connection\' to validate.</string>

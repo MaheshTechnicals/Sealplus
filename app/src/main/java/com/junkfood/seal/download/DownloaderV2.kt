@@ -350,7 +350,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             title = viewState.title,
                             textId = R.string.fetch_info_error_msg,
                             notificationId = notificationId,
-                            report = throwable.stackTraceToString(),
+                            report = throwable.message ?: "Unknown error",
                         )
                     }
             }
@@ -452,7 +452,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                                 title = viewState.title,
                                 textId = R.string.download_error_msg,
                                 notificationId = notificationId,
-                                report = throwable.stackTraceToString(),
+                                report = throwable.message ?: "Unknown error",
                             )
                         }
                     }
@@ -596,7 +596,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             title = viewState.title,
                             textId = R.string.download_error_msg,
                             notificationId = notificationId,
-                            report = throwable.stackTraceToString(),
+                            report = throwable.message ?: "Unknown error",
                         )
                     }
                     .onSuccess {

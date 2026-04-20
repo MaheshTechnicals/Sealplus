@@ -31,7 +31,6 @@ import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.matchUrlFromSharedText
 import com.junkfood.seal.util.setLanguage
-import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

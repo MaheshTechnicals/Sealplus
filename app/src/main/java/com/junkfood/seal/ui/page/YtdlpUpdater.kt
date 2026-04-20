@@ -39,11 +39,15 @@ fun YtdlpUpdater() {
             return@LaunchedEffect
         }
 
-        runCatching {
-                Downloader.updateState(state = Downloader.State.Updating)
-                withContext(Dispatchers.IO) { UpdateUtil.updateYtDlp() }
-            }
-            .onFailure { it.printStackTrace() }
-        Downloader.updateState(state = Downloader.State.Idle)
+        try {
+            Downloader.updateState(state = Downloader.State.Updating)
+            withContext(Dispatchers.IO) { UpdateUtil.updateYtDlp() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            // Guaranteed to run even on CancellationException, so the downloader
+            // never gets stuck in the Updating state after the coroutine is cancelled.
+            Downloader.updateState(state = Downloader.State.Idle)
+        }
     }
 }

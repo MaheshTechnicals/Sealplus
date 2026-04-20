@@ -50,6 +50,8 @@ class HomePageViewModel : ViewModel() {
         val url = viewStateFlow.value.url
         Downloader.clearErrorState()
         if (CUSTOM_COMMAND.getBoolean()) {
+            // Intentional: applicationScope outlives the ViewModel so the background
+            // custom-command download continues even if the user navigates away.
             applicationScope.launch(Dispatchers.IO) { DownloadUtil.executeCommandInBackground(url) }
             return
         }

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -58,9 +59,13 @@ class VideoListViewModel : ViewModel() {
         }
 
     val fileSizeMapFlow =
-        videoListFlow.flowOn(Dispatchers.IO).map { list ->
-            list.associate { it.id to it.videoPath.getFileSize() }
-        }
+        videoListFlow
+            // Skip filesystem reads when only non-path fields changed (e.g. title edits).
+            .distinctUntilChanged { old, new ->
+                old.size == new.size && old.zip(new).all { (o, n) -> o.id == n.id && o.videoPath == n.videoPath }
+            }
+            .map { list -> list.associate { it.id to it.videoPath.getFileSize() } }
+            .flowOn(Dispatchers.IO)  // applies to both the upstream DB query and the map above
 
     fun clickVideoFilter() {
         if (mutableStateFlow.value.videoFilter)

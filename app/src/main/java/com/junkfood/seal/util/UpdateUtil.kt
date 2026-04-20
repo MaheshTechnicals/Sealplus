@@ -28,6 +28,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.ResponseBody
+import java.util.concurrent.TimeUnit
 
 object UpdateUtil {
 
@@ -41,6 +42,9 @@ object UpdateUtil {
 
     private fun getClient(): OkHttpClient {
         val builder = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
         ProxyManager.getActiveProxy()?.let { proxy ->
             builder.proxy(proxy)
         }

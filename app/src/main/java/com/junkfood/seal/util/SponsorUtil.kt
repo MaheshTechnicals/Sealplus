@@ -51,25 +51,30 @@ object SponsorUtil {
     private const val SPONSORS_URL =
         "https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/sponsors.json"
 
-    private fun getClient(): OkHttpClient =
-        OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .apply { ProxyManager.getActiveProxy()?.let { proxy(it) } }
-            .build()
+    private val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .apply { ProxyManager.getActiveProxy()?.let { proxy(it) } }
+        .build()
+
+    private fun getClient(): OkHttpClient = httpClient
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }
+    @Volatile
     private var cachedResponse: SponsorsResponse? = null
 
     @CheckResult
     fun getSponsors(): Result<SponsorsResponse> = runCatching {
-        cachedResponse ?: run {
-            val request = Request.Builder().url(SPONSORS_URL).get().build()
-            val body = getClient().newCall(request).execute().use { response ->
-                response.body?.string() ?: error("Empty response body from sponsors endpoint")
+        cachedResponse ?: synchronized(this) {
+            // Double-checked locking: recheck under lock after acquiring it
+            cachedResponse ?: run {
+                val request = Request.Builder().url(SPONSORS_URL).get().build()
+                val body = getClient().newCall(request).execute().use { response ->
+                    response.body?.string() ?: error("Empty response body from sponsors endpoint")
+                }
+                Log.d(TAG, "Sponsors fetched successfully")
+                jsonFormat.decodeFromString<SponsorsResponse>(body).also { cachedResponse = it }
             }
-            Log.d(TAG, "Sponsors fetched successfully")
-            jsonFormat.decodeFromString<SponsorsResponse>(body).also { cachedResponse = it }
         }
     }.onFailure { it.printStackTrace() }
 }

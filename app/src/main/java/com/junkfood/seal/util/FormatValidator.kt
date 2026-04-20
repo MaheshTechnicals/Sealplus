@@ -25,18 +25,16 @@ private const val TAG = "FormatValidator"
  */
 object FormatValidator {
 
-    private fun getClient(): OkHttpClient {
-        val builder = OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(5, TimeUnit.SECONDS)
-            .followRedirects(true)
-        
-        ProxyManager.getActiveProxy()?.let { proxy ->
-            builder.proxy(proxy)
+    // Shared client — avoids allocating a new thread/connection pool per validateFormat call.
+    // Proxy is set once at construction time; callers must call refreshClient() if the proxy changes.
+    private val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .also { builder ->
+            ProxyManager.getActiveProxy()?.let { proxy -> builder.proxy(proxy) }
         }
-        
-        return builder.build()
-    }
+        .build()
 
     // Known unsupported codecs that may cause issues
     private val unsupportedVideoCodecs = setOf<String>(
@@ -185,7 +183,7 @@ object FormatValidator {
                     .head()
                     .build()
 
-                getClient().newCall(request).execute().use { response ->
+                httpClient.newCall(request).execute().use { response ->
                     val code = response.code
                     // Accept 200 OK and 206 Partial Content (for streaming)
                     code == HttpURLConnection.HTTP_OK || code == HttpURLConnection.HTTP_PARTIAL

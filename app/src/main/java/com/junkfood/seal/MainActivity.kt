@@ -12,7 +12,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.junkfood.seal.App.Companion.context
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.SettingsProvider
 import com.junkfood.seal.ui.common.ThemedToastHost
@@ -29,7 +28,8 @@ import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.matchUrlFromSharedText
 import com.junkfood.seal.util.setLanguage
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.KoinContext
 
@@ -42,11 +42,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         if (Build.VERSION.SDK_INT < 33) {
-            runBlocking { setLanguage(PreferenceUtil.getLocaleFromPreference()) }
+            lifecycleScope.launch(Dispatchers.IO) {
+                setLanguage(PreferenceUtil.getLocaleFromPreference())
+            }
         }
         enableEdgeToEdge()
-
-        context = this.baseContext
 
         // Handle shared URL from intent on cold launch
         intent.getSharedURL()?.let { url ->

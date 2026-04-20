@@ -409,8 +409,7 @@ object DownloadUtil {
                 context.dataDir.resolve("app_webview/Default/Cookies").absolutePath,
                 null,
                 OPEN_READONLY,
-            )
-            .run {
+            ).use { db ->
                 val projection =
                     arrayOf(
                         CookieScheme.HOST,
@@ -421,14 +420,14 @@ object DownloadUtil {
                         CookieScheme.SECURE,
                     )
                 val cookieList = mutableListOf<Cookie>()
-                query("cookies", projection, null, null, null, null, null).run {
-                    while (moveToNext()) {
-                        val expiry = getLong(getColumnIndexOrThrow(CookieScheme.EXPIRY))
-                        val name = getString(getColumnIndexOrThrow(CookieScheme.NAME))
-                        val value = getString(getColumnIndexOrThrow(CookieScheme.VALUE))
-                        val path = getString(getColumnIndexOrThrow(CookieScheme.PATH))
-                        val secure = getLong(getColumnIndexOrThrow(CookieScheme.SECURE)) == 1L
-                        val hostKey = getString(getColumnIndexOrThrow(CookieScheme.HOST))
+                db.query("cookies", projection, null, null, null, null, null).use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val expiry = cursor.getLong(cursor.getColumnIndexOrThrow(CookieScheme.EXPIRY))
+                        val name = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.NAME))
+                        val value = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.VALUE))
+                        val path = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.PATH))
+                        val secure = cursor.getLong(cursor.getColumnIndexOrThrow(CookieScheme.SECURE)) == 1L
+                        val hostKey = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.HOST))
 
                         val host = if (hostKey[0] != '.') ".$hostKey" else hostKey
                         cookieList.add(
@@ -442,9 +441,7 @@ object DownloadUtil {
                             )
                         )
                     }
-                    close()
                 }
-                close()
                 cookieList
             }
     }
@@ -795,8 +792,12 @@ object DownloadUtil {
                     }
                     if (useDownloadArchive) {
                         val archiveFile = context.getArchiveFile()
-                        val archiveFileContent = archiveFile.readText()
-                        if (archiveFileContent.contains("${videoInfo.extractor} ${videoInfo.id}")) {
+                        val archiveTarget = "${videoInfo.extractor} ${videoInfo.id}"
+                        val alreadyDownloaded = archiveFile.exists() &&
+                            archiveFile.bufferedReader().useLines { lines ->
+                                lines.any { it.trimEnd() == archiveTarget }
+                            }
+                        if (alreadyDownloaded) {
                             return Result.failure(
                                 YoutubeDLException(
                                     context.getString(R.string.download_archive_error)
