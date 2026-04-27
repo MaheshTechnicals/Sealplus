@@ -5,6 +5,160 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-04-27
+
+### 🔒 Security Hardening
+
+* **PBKDF2 PIN Hashing**
+  + PIN-based App Lock now hashes passwords using **PBKDF2WithHmacSHA256** with a unique 16-byte random salt and 200,000 iterations — replacing the weak single-pass SHA-256 approach
+  + Existing PIN users are automatically migrated to the new secure hash on next unlock
+  + Industry-standard protection against brute-force and rainbow-table attacks
+
+* **Removed Overly Broad Storage Permission**
+  + `MANAGE_EXTERNAL_STORAGE` has been removed from the manifest
+  + All download paths now work without requiring the "All Files Access" permission
+
+* **ADB Backup Protection**
+  + MMKV preferences (which store your PIN hash, security settings, and download preferences) are now excluded from ADB backups via `backup_rules.xml`
+  + Prevents sensitive configuration from leaking through device backups
+
+* **NotificationActionReceiver Secured**
+  + `NotificationActionReceiver` is now explicitly set to `exported=false` in the manifest, preventing third-party apps from sending fake notification action intents
+
+* **MITM Prevention on Proxy**
+  + `--no-check-certificate` is now automatically disabled when a proxy is active, preventing man-in-the-middle attacks when routing traffic through a proxy server
+
+* **Replaced Embedded GitHub Token**
+  + Sponsor data is now fetched from a public, unauthenticated JSON URL — no API token embedded in the APK
+
+* **Proxy Security Warning Dialog**
+  + A security warning `AlertDialog` is now shown before enabling the free proxy mode, informing users of the risks of routing traffic through unknown third-party servers
+
+### 🛡️ Brute-Force Protection
+
+* **30-Second Lockout on App Lock**
+  + After 5 failed PIN attempts, the App Lock screen now shows a **30-second countdown timer** before allowing further attempts
+  + Countdown is fully animated and stored in state surviving recomposition
+
+### 🐛 Stability & Correctness (20 Fixes)
+
+* **Context Leak Fixed**
+  + `MainActivity` no longer overwrites `App.context` with the Activity context — prevents memory leaks and crashes on activity recreation
+
+* **Replaced runBlocking Calls**
+  + All `runBlocking` usages in `MainActivity` and `QuickDownloadActivity` replaced with `lifecycleScope.launch(Dispatchers.IO)`, preventing ANRs on slow devices
+  + `PreferenceUtil.getTemplate()` retry loop migrated from `runBlocking` to proper coroutine
+
+* **OkHttp Client Improvements**
+  + Added explicit connect/read/write timeouts to the `UpdateUtil` HTTP client
+  + `OkHttpClient` singletons now shared across `ProxyManager`, `ProxyValidator`, `SponsorUtil`, and `FormatValidator` — eliminates per-call thread pool churn and reduces memory pressure
+
+* **Resource Leak Fixes**
+  + `SQLiteDatabase` and `Cursor` now properly closed with `.use{}` blocks even on exception
+  + `DownloadUtil` archive file now streamed line-by-line instead of fully read into memory
+
+* **Coroutine & State Fixes**
+  + 5-minute deadline added to `addToDownloadQueue` to prevent coroutine leaks
+  + `ConcurrentHashMap` used for `resumedProgressMap` and `retryCountMap` in `DownloaderV2` to prevent race conditions
+  + `updateJob` in the updater page now held in `remember { mutableStateOf }` to survive recomposition
+  + `distinctUntilChanged` added and `flowOn` position corrected in `VideoListViewModel`
+  + Koin `get<DownloaderV2>()` moved from field initializer to `onReceive()` body in `NotificationActionReceiver`
+
+* **Error & Notification Fixes**
+  + Error notifications now use `throwable.message` instead of `stackTraceToString()` to avoid truncated/ugly system notifications
+  + `isServiceRunning` flag in `App` now `@Volatile` and correctly reset in `onServiceDisconnected`
+  + `COMMAND_DIRECTORY` path now correctly persisted when calling `updateDownloadDir`
+  + Null-safe response body handling in `UpdateUtil.getLatestRelease` and `downloadApk`
+  + OkHttp response socket properly closed in `ProxyValidator.testConnection`
+
+* **Download & Format Fixes**
+  + `av01` codec removed from the unsupported video codecs blacklist — AV1 downloads now work correctly
+  + `FormatValidator.filterValidFormats` parallelized with `async/awaitAll` for faster format page loading
+  + `makeKey()` now uses a null-char (`\0`) delimiter to prevent hash collisions between URL+template combos
+  + Fixed literal `"null"` string being stored in download records when URL was null
+  + `HomePageViewModel.updateState(Idle)` now only called inside `onSuccess`, not on every state change
+  + DB write moved before `StateFlow.update{}` in `CookiesViewModel` to prevent stale UI state
+
+* **Backup & File Fixes**
+  + Backup filename now uses `SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")` for consistent cross-platform filenames
+  + `importBackup` correctly handles template import logic
+  + `hideItem`/`unhideItem` now uses atomic `renameTo()` with copy+delete fallback for reliability
+  + `FileUtil.getRealPath` improved with `Log.w` for non-primary storage paths
+
+### 🎨 Material3 1.3.1 Stable Migration
+
+* **Upgraded from Alpha to Stable Compose BOM**
+  + Switched from `compose-bom-alpha` to the stable `compose-bom` (Material3 1.3.1)
+  + Resolved all breaking API changes introduced in the stable release
+
+* **Fixed API Breaking Changes**
+  + `SheetState`: replaced deprecated `velocityThreshold` / `positionalThreshold` parameters with `density` in `ModalBottomSheetM3`, `ActionSheet`, `DownloadDialogV2`, and `SponsorPage`
+  + `TooltipDefaults`: replaced removed `rememberTooltipPositionProvider()` with `plainTooltipPositionProvider()` in `DownloadPage` and `PlaylistSelectionPage`
+  + `ExposedDropdownMenu`: replaced alpha-only `ExposedDropdownMenuAnchorType` with stable `MenuAnchorType` in `YtdlpUpdateDialog`
+
+* **Dependency Downgrades to Stable**
+  + `OkHttp` downgraded from `5.0.0-alpha.14` → `4.12.0` (stable)
+  + `androidx.biometric` upgraded to `1.2.0-alpha05` for better OEM compatibility
+
+### 🏠 Home Page Sync Fix
+
+* **Instant Recent Downloads Sync**
+  + Replaced lifecycle-gated `collectAsStateWithLifecycle` with a composition-lifetime `LaunchedEffect` collector for the download history flow
+  + Deletions made on the VideoList page are now reflected in **Recent Downloads instantly** without needing a process restart
+  + Added `LaunchedEffect(recentDownloads)` to prune stale `localHiddenIds` entries when DB records are removed
+
+* **Real-Time Missing File Detection**
+  + File existence for each Recent Download card is now re-checked on every `ON_RESUME` event using `produceState` with a `lifecycleRefreshTrigger`
+  + Files deleted from the OS file manager now **gray out immediately** the next time you return to the home screen — no process kill required
+
+### 🌐 Sponsor Data Refactor
+
+* **New Social Account & Sponsorship Data Classes**
+  + `SocialAccount`, `SocialAccounts`, `SponsorEntity`, `Tier`, and `SponsorShip` data classes added for structured sponsor data
+  + Sponsor page now renders richer profile information from the new model
+
+* **Thread-Safe Sponsor Cache**
+  + Sponsor data cache in `SponsorUtil` is now protected with `@Volatile` + synchronized double-checked locking
+  + Compose state mutations dispatched to the Main thread in `SponsorPage` to prevent `IllegalStateException`
+
+### 🌍 Website & SEO Improvements
+
+* **Official Sealplus Website**
+  + CNAME configured for the official Sealplus domain
+  + `sitemap.xml` added and linked in `index.html` and `privacy.html`
+  + `robots.txt` added to manage web crawler access
+  + Google site verification meta tag added
+  + Canonical and sitemap links updated to reflect the new domain
+  + Title, description, and keywords updated for Sealplus branding
+
+---
+
+### 📦 Installation
+
+Download the appropriate APK for your device:
+
+* **Universal APK**: Works on all devices (recommended)
+* **arm64-v8a**: For 64-bit ARM devices (most modern phones)
+* **armeabi-v7a**: For 32-bit ARM devices
+* **x86_64**: For 64-bit x86 devices
+* **x86**: For 32-bit x86 devices
+
+### ✨ Key Features (v2.6)
+
+* 🔒 **PBKDF2 PIN Hashing** - Industry-standard 200K-iteration secure PIN protection with salt
+* 🛡️ **30-Second Brute-Force Lockout** - Countdown timer after 5 failed PIN attempts
+* 🔐 **Removed Overly Broad Storage Permission** - No more MANAGE_EXTERNAL_STORAGE required
+* 💾 **ADB Backup Protection** - MMKV sensitive data excluded from device backups
+* 🚫 **MITM Prevention** - SSL checking re-enabled when proxy is active
+* 🧹 **20 Stability & Correctness Fixes** - Context leak, runBlocking, timeouts, resource leaks, race conditions
+* 🎨 **Material3 1.3.1 Stable** - Migrated from alpha BOM, OkHttp stable 4.12.0
+* 🏠 **Instant Home Page Sync** - Recent Downloads instantly updated on deletion or file removal
+* 🌐 **Sponsor Data Refactor** - Thread-safe cache, richer profile data
+* ⏯️ **Pause/Resume downloads** with queue support
+* 🌐 Download from 1000+ sites via yt-dlp
+
+---
+
 ## [2.5.0] - 2026-04-06
 
 ### 🔒 Hidden Content & Privacy

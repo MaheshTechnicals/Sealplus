@@ -172,113 +172,132 @@ English
 ## ⬇️ Download & Installation
 
 
-### 🚀 What's New in v2.5?
+### 🚀 What's New in v2.6?
 
 <details open>
-<summary><b>📱 Click to see latest updates - Hidden Content, Download Engine Reliability & Performance (April 6, 2026)</b></summary>
+<summary><b>📱 Click to see latest updates - Security Hardening, Stability & Material3 Stable (April 27, 2026)</b></summary>
 
-## ✨ Seal Plus v2.5.0 - Hidden Content, Download Engine Reliability & Performance
-
----
-
-### 🔒 Hidden Content & Privacy
-
-* **Hidden Content Management System**
-  + New **Hidden Content** page accessible directly from the navigation drawer
-  + Mark any downloaded video as hidden — it disappears from the home page and download list instantly
-  + Hidden files are physically relocated to a **private isolated directory** inaccessible from the system file manager
-  + Access requires **PIN or biometric authentication** via the existing App Lock system
-  + If App Lock is not set up, the app shows a clear error message guiding you to Settings → SealPlus Extras → App Lock
-  + Optimistic UI: the card vanishes immediately on hide action before the database write completes
-
-### 🎨 Format Selection UI Overhaul
-
-* **Redesigned Format Cards**
-  + File size and bitrate are now shown in dedicated sections on every format card
-  + Improved visual hierarchy for codec, resolution, and quality information at a glance
-
-* **List View for Format Cards**
-  + New list-style layout option for format cards in the format selection page
-  + Toggle it on or off from Settings → SealPlus Extras
-
-* **Merge Audio Stream Option**
-  + New toggle on the Format Page to merge a separate audio stream into the selected video format
-  + Hint text is displayed when the merge option is active so you always know what will happen
-
-* **Removed Suggested Section**
-  + The "Suggested" section has been removed from the format selection page for a cleaner layout
-
-* **Download Dialog Loading State**
-  + Loading screen in the download dialog now shows a thumbnail image alongside the progress indicator instead of a plain spinner
-
-### ⬇️ Download Engine Reliability
-
-* **Auto-Retry on Network Error**
-  + Downloads failing due to network drops are automatically retried up to **3 times** with 5-second delay
-  + Progress text shows `Retrying (1/3)...` during backoff
-
-* **Resume Partial Downloads**
-  + `--continue` always passed to yt-dlp so interrupted downloads pick up from where they left off
-
-* **WiFi-Only Mode Fully Enforced**
-  + Network restriction now enforces inside the download engine itself, not just at enqueue
-  + Queued tasks **automatically resume** on network reconnect
-
-### 📊 Download Progress UI
-
-* **Active Download List Sorting**
-  + Downloads are now sorted in a strict, stable order: Running → ReadyWithInfo → Idle → Paused → Canceled/Error → Completed
-  + Within each group, newer tasks appear first
-  + Completed tasks are shown in the active list only until they appear in the recent-downloads section — no duplicates
-
-* **Speed & ETA on Home Cards** — e.g. `2.50 MiB/s  •  ETA 00:03`
-* **Merging Phase Detection** — cards correctly show **"Merging..."** during post-processing
-* **Fixed -1% / 0% Progress Bug** — smooth indeterminate animation before yt-dlp reports progress
-
-### 🗂️ Completed Downloads
-
-* **Missing File Detection**
-  + If a downloaded file has been deleted or moved, its home page card now renders **grayed out** with a broken-image icon and "File no longer available" label
-
-### ⚡ Performance Improvements
-
-* **Reduced CPU Usage During Downloads** — scheduler only fires on state changes, not every progress tick
-* **Reduced Battery & Storage Writes** — MMKV writes reduced to near zero during active downloads
-
-### 🔧 Other Fixes & Improvements
-
-* **SSL Certificate Bypass** — ignore SSL certificates for filtered networks (e.g. Netfree) — thanks to [@613avi](https://github.com/613avi)
-* Navigation drawer header polished — improved text hierarchy, spacing, and logo alignment
-* Removed & cleaned up unused imports across 24 source files
-
-### 🌍 Translations
-
-* **61 Languages Updated** — new merge-hint strings across all supported locales
-* **Complete Hebrew Translation** — thanks to [@613avi](https://github.com/613avi)
-* **Improved Turkish Translation** — thanks to [@mikropsoft](https://github.com/mikropsoft)
+## ✨ Seal Plus v2.6.0 - Security Hardening, 20 Stability Fixes & Material3 Stable
 
 ---
 
-### ✨ Key Features (v2.5)
+### 🔒 Security Hardening
 
-* 🔒 **Hidden Content System** - Biometric-protected private vault with file relocation & optimistic UI
-* 🎨 **List View & Redesigned Format Cards** - File size, bitrate, and codec info at a glance
-* 🔀 **Merge Audio Stream Option** - Combine separate audio into any video format
-* 📋 **Active Download Sorting** - Stable order: Running → ReadyWithInfo → Queued → Paused → Done
-* 🔄 **Auto-Retry on Network Error** - Up to 3 automatic retries with 5s backoff
-* ▶️ **Resume Partial Downloads** - Continue interrupted downloads, never restart from zero
-* 📶 **WiFi-Only Fully Enforced** - Network restriction respected engine-side, auto-resumes
-* 📊 **Speed & ETA on Home Cards** - Live download speed and time remaining
-* 🔀 **Merging Phase Indicator** - Cards correctly show "Merging..." during post-processing
-* 🖼️ **Missing File Detection** - Grayed-out cards for deleted/moved files
-* ⚡ **CPU & Storage Optimized** - Scheduler and MMKV writes reduced to near zero
-* 🌍 **61 Languages Updated** - New merge-hint strings across all supported locales
+* **PBKDF2 PIN Hashing**
+  + PIN-based App Lock now uses **PBKDF2WithHmacSHA256** with a unique 16-byte salt and 200,000 iterations
+  + Industry-standard protection against brute-force and rainbow-table attacks
+  + Existing PINs are automatically migrated on next unlock
+
+* **Removed Overly Broad Storage Permission**
+  + `MANAGE_EXTERNAL_STORAGE` removed from the manifest — no more "All Files Access" required
+
+* **ADB Backup Protection**
+  + MMKV preferences (PIN hash, security settings) excluded from ADB backups via `backup_rules.xml`
+
+* **NotificationActionReceiver Secured**
+  + `exported=false` set in manifest — prevents third-party apps from sending fake notification intents
+
+* **MITM Prevention on Proxy**
+  + `--no-check-certificate` disabled when a proxy is active to prevent man-in-the-middle attacks
+
+* **Proxy Security Warning Dialog**
+  + A warning `AlertDialog` is shown before enabling free proxy mode, informing users of the risks
+
+### 🛡️ Brute-Force Protection
+
+* **30-Second Lockout on App Lock**
+  + After 5 failed PIN attempts, a **30-second countdown timer** blocks further attempts
+  + Fully animated and survives recomposition
+
+### 🐛 Stability & Correctness (20 Fixes)
+
+* **Context Leak Fixed** — `MainActivity` no longer overwrites `App.context` with Activity context
+* **Replaced All runBlocking Calls** — `lifecycleScope.launch(IO)` used throughout, preventing ANRs
+* **OkHttp Client Timeouts** — connect/read/write timeouts added to `UpdateUtil` HTTP client
+* **Shared OkHttp Singletons** — `ProxyManager`, `ProxyValidator`, `SponsorUtil`, `FormatValidator` all share a single client
+* **Resource Leaks Fixed** — `SQLiteDatabase` and `Cursor` closed with `.use{}` on all paths
+* **ConcurrentHashMap for Download Maps** — race conditions fixed in `DownloaderV2`
+* **Coroutine Leak Prevented** — 5-minute deadline added to `addToDownloadQueue`
+* **AV1 Downloads Fixed** — `av01` removed from unsupported codec blacklist
+* **Format Loading Faster** — `filterValidFormats` parallelized with `async/awaitAll`
+* **Hash Collision Fixed** — `makeKey()` uses null-char delimiter
+* **Error Notifications Improved** — `throwable.message` used instead of full stack trace
+* And 9 more correctness fixes across `DatabaseUtil`, `DownloadUtil`, `HomePageViewModel`, `CookiesViewModel`, `FileUtil`
+
+### 🎨 Material3 1.3.1 Stable Migration
+
+* **Upgraded from Alpha to Stable Compose BOM**
+  + All breaking API changes from `compose-bom-alpha` → stable resolved
+  + `SheetState`, `TooltipDefaults`, and `ExposedDropdownMenu` APIs updated across 7 files
+
+* **Dependency Downgrades to Stable**
+  + `OkHttp`: `5.0.0-alpha.14` → `4.12.0` (stable)
+  + `biometric`: upgraded to `1.2.0-alpha05` for better OEM compatibility
+
+### 🏠 Home Page Sync Fix
+
+* **Instant Recent Downloads Sync**
+  + Deletions on the VideoList page now reflect in **Recent Downloads immediately** — no process restart needed
+
+* **Real-Time Missing File Detection**
+  + File existence re-checked on every `ON_RESUME` event — files deleted from the file manager **gray out instantly** on next app return
+
+### 🌐 Sponsor Data Refactor
+
+* **Richer Sponsor Profiles** — `SocialAccount`, `SponsorEntity`, `Tier`, and `SponsorShip` data classes added
+* **Thread-Safe Cache** — `@Volatile` + synchronized double-checked locking in `SponsorUtil`
+
+---
+
+### ✨ Key Features (v2.6)
+
+* 🔒 **PBKDF2 PIN Hashing** - Industry-standard 200K-iteration secure PIN with salt
+* 🛡️ **30-Second Brute-Force Lockout** - Countdown after 5 failed PIN attempts
+* 🔐 **Removed MANAGE_EXTERNAL_STORAGE** - No overbroad permission required
+* 💾 **ADB Backup Protection** - Sensitive MMKV data excluded from backups
+* 🚫 **MITM Prevention** - SSL check re-enabled when proxy is active
+* 🧹 **20 Stability Fixes** - Context leak, runBlocking, timeouts, race conditions & more
+* 🎨 **Material3 1.3.1 Stable** - Migrated from alpha BOM, OkHttp stable 4.12.0
+* 🏠 **Instant Home Sync** - Recent Downloads updated instantly on deletion or file removal
+* 🌐 **Richer Sponsor Profiles** - Thread-safe cache with structured data
 * ⏯️ **Pause/Resume downloads** with queue support
 * 🌐 Download from 1000+ sites via yt-dlp
 
 ### 📜 Full Changelog
 
 See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
+
+</details>
+
+<details>
+<summary><b>📱 Previous Release - v2.5 (April 6, 2026)</b></summary>
+
+#### ✨ Seal Plus v2.5.0 - Hidden Content, Download Engine Reliability & Performance
+
+#### 🔒 Hidden Content & Privacy
+- ✅ **Hidden Content Management System** - Private biometric-protected vault with file relocation
+- ✅ **Optimistic UI** - Card vanishes instantly before DB write completes
+
+#### 🎨 Format Selection UI Overhaul
+- ✅ **Redesigned Format Cards** - File size and bitrate in dedicated sections
+- ✅ **List View for Format Cards** - Toggle on/off in SealPlus Extras
+- ✅ **Merge Audio Stream Option** - Combine separate audio into any video format
+- ✅ **Download Dialog Thumbnail** - Shows thumbnail while fetching info
+
+#### ⬇️ Download Engine Reliability
+- ✅ **Auto-Retry on Network Error** - Up to 3 retries with 5s backoff
+- ✅ **Resume Partial Downloads** - `--continue` always passed to yt-dlp
+- ✅ **WiFi-Only Fully Enforced** - Engine-side, auto-resumes on reconnect
+
+#### 📊 Download Progress UI
+- ✅ **Active Download Sorting** - Running → ReadyWithInfo → Idle → Paused → Done
+- ✅ **Speed & ETA on Home Cards** - Live `2.50 MiB/s  •  ETA 00:03`
+- ✅ **Merging Phase Detection** - Cards show "Merging..." during post-processing
+
+#### ⚡ Performance
+- ✅ **CPU & Storage Optimized** - Near-zero overhead during active downloads
+
+[View Full Changelog →](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md)
 
 </details>
 

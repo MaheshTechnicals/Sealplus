@@ -83,68 +83,66 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## ✨ Seal Plus v2.5.0 - Hidden Content, Download Engine Reliability & Performance
+          ## ✨ Seal Plus v2.6.0 - Security Hardening, 20 Stability Fixes & Material3 Stable
           
           ---
           
-          ### 🔒 Hidden Content & Privacy
+          ### 🔒 Security Hardening
           
-          * **Hidden Content Management System**
-              + New **Hidden Content** page in the navigation drawer
-              + Mark videos as hidden — relocated to a private isolated directory
-              + Access requires PIN or biometric authentication
-              + Optimistic UI — card vanishes instantly before the database write completes
+          * **PBKDF2 PIN Hashing**
+              + PIN-based App Lock now uses PBKDF2WithHmacSHA256 with 16-byte salt and 200,000 iterations
+              + Existing PINs are automatically migrated on next unlock
           
-          ### 🎨 Format Selection UI Overhaul
+          * **Removed Overly Broad Storage Permission**
+              + `MANAGE_EXTERNAL_STORAGE` removed — no more "All Files Access" required
           
-          * **Redesigned Format Cards**
-              + File size and bitrate shown in dedicated sections on every card
+          * **ADB Backup Protection**
+              + MMKV preferences (PIN hash, settings) excluded from ADB backups via `backup_rules.xml`
           
-          * **List View for Format Cards**
-              + New list-style layout option — toggle in Settings → SealPlus Extras
+          * **NotificationActionReceiver Secured**
+              + `exported=false` set in manifest — blocks fake notification intent injection
           
-          * **Merge Audio Stream Option**
-              + New toggle to merge a separate audio stream into the selected video format
+          * **MITM Prevention on Proxy**
+              + `--no-check-certificate` disabled when proxy is active
           
-          * **Removed Suggested Section**
-              + Cleaner format selection page without the "Suggested" section
+          * **Proxy Security Warning Dialog**
+              + Warning shown before enabling free proxy mode
           
-          * **Download Dialog Loading State**
-              + Loading screen now shows a thumbnail alongside the progress indicator
+          ### 🛡️ Brute-Force Protection
           
-          ### ⬇️ Download Engine Reliability
+          * **30-Second Lockout on App Lock**
+              + Animated 30-second countdown after 5 failed PIN attempts
           
-          * **Auto-Retry on Network Error**
-              + Up to **3 automatic retries** with 5-second backoff — shows `Retrying (1/3)...`
+          ### 🐛 Stability & Correctness (20 Fixes)
           
-          * **Resume Partial Downloads**
-              + `--continue` always passed to yt-dlp — never restart an interrupted download from scratch
+          * Context leak fixed — Activity context no longer overwrites App.context
+          * All `runBlocking` calls replaced with `lifecycleScope.launch(IO)` (prevents ANRs)
+          * OkHttp timeouts added to UpdateUtil; singletons shared across 4 utilities
+          * SQLiteDatabase and Cursor properly closed with `.use{}` on all paths
+          * `ConcurrentHashMap` used for download maps — race conditions fixed
+          * 5-minute deadline added to `addToDownloadQueue` — prevents coroutine leaks
+          * `av01` removed from unsupported codec blacklist — AV1 downloads work again
+          * `filterValidFormats` parallelized with `async/awaitAll` — faster format page
+          * `makeKey()` uses null-char delimiter — hash collision fixed
+          * Error notifications use `throwable.message` instead of full stack trace
+          * And 10 more fixes in DatabaseUtil, DownloadUtil, HomePageViewModel, CookiesViewModel, FileUtil
           
-          * **WiFi-Only Mode Fully Enforced**
-              + Network restriction enforced inside the engine, queued tasks auto-resume on reconnect
+          ### 🎨 Material3 1.3.1 Stable Migration
           
-          * **Fixed Task ID Collision**
-              + Downloading the same URL twice no longer silently overwrites the first task
+          * **Upgraded from alpha to stable Compose BOM**
+              + `SheetState`, `TooltipDefaults`, `ExposedDropdownMenu` APIs updated across 7 files
+          * `OkHttp`: `5.0.0-alpha.14` → `4.12.0` (stable)
+          * `biometric` upgraded to `1.2.0-alpha05` for better OEM compatibility
           
-          ### 📊 Download Progress UI
+          ### 🏠 Home Page Sync Fix
           
-          * **Active Download List Sorting** — stable order: Running → ReadyWithInfo → Idle → Paused → Canceled/Error → Completed
-          * **Speed & ETA on Home Cards** — live `2.50 MiB/s  •  ETA 00:03`
-          * **Merging Phase Detection** — cards show **"Merging..."** during post-processing
-          * **Fixed -1% / 0% Progress Bug** — smooth indeterminate animation before yt-dlp reports progress
+          * Deletions on VideoList page now reflect in Recent Downloads **immediately** — no restart needed
+          * File existence re-checked on every `ON_RESUME` — deleted files gray out instantly
           
-          ### 🗂️ Other Fixes & Improvements
+          ### 🌐 Sponsor Data Refactor
           
-          * **Missing File Detection** — grayed-out cards for deleted/moved files
-          * **Reduced CPU & Storage Writes** — near-zero overhead during active downloads
-          * **SSL Certificate Bypass** — ignore SSL certs for filtered networks (Netfree etc.) — thanks to @613avi
-          * **Code Cleanup** — removed unused imports across 24 source files (89 lines)
-          
-          ### 🌍 Translations
-          
-          * **61 Languages Updated** — new merge-hint strings across all supported locales
-          * **Complete Hebrew Translation** — thanks to @613avi
-          * **Improved Turkish Translation** — thanks to @mikropsoft
+          * Richer sponsor profiles with `SocialAccount`, `SponsorEntity`, `Tier` data classes
+          * Thread-safe `@Volatile` + synchronized double-checked locking cache
           
           ---
           
@@ -157,19 +155,16 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### ✨ Key Features (v2.5)
-          - 🔒 **Hidden Content System** - Biometric vault with file relocation & optimistic UI
-          - 🎨 **List View & Redesigned Format Cards** - File size, bitrate, codec info at a glance
-          - 🔀 **Merge Audio Stream Option** - Combine separate audio into video
-          - 📋 **Active Download Sorting** - Stable order: Running → Queued → Paused → Done
-          - 🔄 **Auto-Retry on Network Error** - Up to 3 retries with 5s backoff
-          - ▶️ **Resume Partial Downloads** - Continue from where you left off
-          - 📶 **WiFi-Only Fully Enforced** - Engine-side, auto-resumes on reconnect
-          - 📊 **Speed & ETA on Home Cards** - Live download speed and time remaining
-          - 🔀 **Merging Phase Indicator** - "Merging..." shown during post-processing
-          - 🖼️ **Missing File Detection** - Grayed-out cards for deleted/moved files
-          - ⚡ **CPU & Storage Optimized** - Near-zero overhead during downloads
-          - 🌍 **61 Languages Updated** - New strings across all locales
+          ### ✨ Key Features (v2.6)
+          - 🔒 **PBKDF2 PIN Hashing** - Industry-standard 200K-iteration secure PIN with salt
+          - 🛡️ **30-Second Brute-Force Lockout** - Countdown after 5 failed PIN attempts
+          - 🔐 **Removed MANAGE_EXTERNAL_STORAGE** - No overbroad permission required
+          - 💾 **ADB Backup Protection** - Sensitive MMKV data excluded from backups
+          - 🚫 **MITM Prevention** - SSL check re-enabled when proxy is active
+          - 🧹 **20 Stability Fixes** - Context leak, runBlocking, timeouts, race conditions & more
+          - 🎨 **Material3 1.3.1 Stable** - Migrated from alpha BOM, OkHttp stable 4.12.0
+          - 🏠 **Instant Home Sync** - Recent Downloads updated instantly on deletion or file removal
+          - 🌐 **Richer Sponsor Profiles** - Thread-safe cache with structured data
           - ⏯️ **Pause/Resume downloads** with queue support
           - 🌐 Download from 1000+ sites via yt-dlp
           
@@ -210,49 +205,49 @@ jobs:
         MESSAGE+="📱 <b>App Name:</b> Seal Plus\n\n"
         MESSAGE+="🏷️ <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📋 <b>Changelog (v2.5):</b>\n\n"
-        MESSAGE+="<b>🔒 Hidden Content & Privacy</b>\n"
-        MESSAGE+="  ➤ New Hidden Content page — private biometric-protected vault\n"
-        MESSAGE+="  ➤ Hidden files relocated to isolated directory, invisible to file manager\n"
-        MESSAGE+="  ➤ Optimistic UI — card vanishes instantly before DB write completes\n\n"
-        MESSAGE+="<b>🎨 Format Selection UI Overhaul</b>\n"
-        MESSAGE+="  ➤ Redesigned Format Cards with file size and bitrate displayed\n"
-        MESSAGE+="  ➤ New List View option for format cards (toggle in SealPlus Extras)\n"
-        MESSAGE+="  ➤ New Merge Audio Stream toggle on the Format Page\n"
-        MESSAGE+="  ➤ Removed Suggested section for a cleaner layout\n"
-        MESSAGE+="  ➤ Download dialog shows thumbnail while fetching info\n\n"
-        MESSAGE+="<b>⬇️ Download Engine Reliability</b>\n"
-        MESSAGE+="  ➤ Auto-Retry on network error — up to 3 retries with 5s backoff\n"
-        MESSAGE+="  ➤ Resume partial downloads — --continue always passed to yt-dlp\n"
-        MESSAGE+="  ➤ WiFi-Only mode enforced inside the engine, auto-resumes on reconnect\n"
-        MESSAGE+="  ➤ Fixed task ID collision for duplicate URL downloads\n\n"
-        MESSAGE+="<b>📊 Download Progress UI</b>\n"
-        MESSAGE+="  ➤ Active download sorting: Running → ReadyWithInfo → Idle → Paused → Done\n"
-        MESSAGE+="  ➤ Speed &amp; ETA shown on home cards: 2.50 MiB/s • ETA 00:03\n"
-        MESSAGE+="  ➤ Cards correctly show Merging... during post-processing\n"
-        MESSAGE+="  ➤ Fixed -1% / 0% progress bug with smooth indeterminate animation\n\n"
-        MESSAGE+="<b>⚡ Performance &amp; Fixes</b>\n"
-        MESSAGE+="  ➤ Missing file detection — grayed-out cards for deleted/moved files\n"
-        MESSAGE+="  ➤ CPU &amp; storage writes reduced to near zero during downloads\n"
-        MESSAGE+="  ➤ SSL certificate bypass for filtered networks (Netfree etc.)\n"
-        MESSAGE+="  ➤ Removed &amp; cleaned up unused imports across 24 source files\n\n"
-        MESSAGE+="<b>🌍 Translations</b>\n"
-        MESSAGE+="  ➤ 61 languages updated with new merge-hint strings\n"
-        MESSAGE+="  ➤ Complete Hebrew translation — thanks to @613avi\n"
-        MESSAGE+="  ➤ Improved Turkish translation — thanks to @mikropsoft\n\n"
+        MESSAGE+="📋 <b>Changelog (v2.6):</b>\n\n"
+        MESSAGE+="<b>🔒 Security Hardening</b>\n"
+        MESSAGE+="  ➤ PBKDF2WithHmacSHA256 PIN hashing — 200K iterations, 16-byte salt\n"
+        MESSAGE+="  ➤ MANAGE_EXTERNAL_STORAGE removed — no overbroad permission required\n"
+        MESSAGE+="  ➤ ADB backup protection — MMKV excluded via backup_rules.xml\n"
+        MESSAGE+="  ➤ NotificationActionReceiver exported=false — blocks fake intents\n"
+        MESSAGE+="  ➤ MITM prevention — SSL check re-enabled when proxy is active\n"
+        MESSAGE+="  ➤ Proxy security warning dialog before enabling free proxy\n\n"
+        MESSAGE+="<b>🛡️ Brute-Force Protection</b>\n"
+        MESSAGE+="  ➤ 30-second animated countdown lockout after 5 failed PIN attempts\n\n"
+        MESSAGE+="<b>🐛 Stability &amp; Correctness (20 Fixes)</b>\n"
+        MESSAGE+="  ➤ Activity context leak fixed in MainActivity\n"
+        MESSAGE+="  ➤ All runBlocking calls replaced with lifecycleScope.launch(IO)\n"
+        MESSAGE+="  ➤ OkHttp timeouts added; singletons shared across 4 utilities\n"
+        MESSAGE+="  ➤ SQLiteDatabase/Cursor closed with .use{} on all paths\n"
+        MESSAGE+="  ➤ ConcurrentHashMap for download maps — race conditions fixed\n"
+        MESSAGE+="  ➤ av01 removed from unsupported codec blacklist — AV1 works again\n"
+        MESSAGE+="  ➤ filterValidFormats parallelized — faster format page loading\n"
+        MESSAGE+="  ➤ Hash collision in makeKey() fixed with null-char delimiter\n"
+        MESSAGE+="  ➤ Error notifications use throwable.message (not full stack trace)\n"
+        MESSAGE+="  ➤ 11 more fixes in DatabaseUtil, DownloadUtil, FileUtil, and more\n\n"
+        MESSAGE+="<b>🎨 Material3 1.3.1 Stable Migration</b>\n"
+        MESSAGE+="  ➤ Upgraded from alpha to stable Compose BOM\n"
+        MESSAGE+="  ➤ SheetState, TooltipDefaults, ExposedDropdownMenu APIs updated\n"
+        MESSAGE+="  ➤ OkHttp 5.0.0-alpha.14 → 4.12.0 stable\n"
+        MESSAGE+="  ➤ biometric upgraded to 1.2.0-alpha05 for OEM compatibility\n\n"
+        MESSAGE+="<b>🏠 Home Page Sync Fix</b>\n"
+        MESSAGE+="  ➤ Deletions reflected in Recent Downloads instantly — no restart needed\n"
+        MESSAGE+="  ➤ File existence re-checked on ON_RESUME — deleted files gray out live\n\n"
+        MESSAGE+="<b>🌐 Sponsor Data Refactor</b>\n"
+        MESSAGE+="  ➤ SocialAccount, SponsorEntity, Tier data classes for richer profiles\n"
+        MESSAGE+="  ➤ Thread-safe @Volatile + synchronized double-checked locking cache\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="✨ <b>Key Features (v2.5):</b>\n"
-        MESSAGE+="🔒 Hidden Content System — biometric vault with file relocation\n"
-        MESSAGE+="🎨 List View &amp; Redesigned Format Cards — size &amp; bitrate at a glance\n"
-        MESSAGE+="🔀 Merge Audio Stream Option\n"
-        MESSAGE+="📋 Active Download Sorting — stable, priority-based order\n"
-        MESSAGE+="🔄 Auto-Retry — 3 retries with 5s backoff\n"
-        MESSAGE+="▶️ Resume Partial Downloads\n"
-        MESSAGE+="📶 WiFi-Only fully engine-enforced\n"
-        MESSAGE+="📊 Speed &amp; ETA on home cards\n"
-        MESSAGE+="🖼️ Missing file detection\n"
-        MESSAGE+="⚡ CPU &amp; storage optimized\n"
-        MESSAGE+="🌍 61 languages updated\n"
+        MESSAGE+="✨ <b>Key Features (v2.6):</b>\n"
+        MESSAGE+="🔒 PBKDF2 PIN Hashing — 200K-iteration secure PIN with salt\n"
+        MESSAGE+="🛡️ 30-Second Brute-Force Lockout — countdown after 5 failed attempts\n"
+        MESSAGE+="🔐 Removed MANAGE_EXTERNAL_STORAGE — no overbroad permission\n"
+        MESSAGE+="💾 ADB Backup Protection — MMKV sensitive data excluded\n"
+        MESSAGE+="🚫 MITM Prevention — SSL check re-enabled when proxy active\n"
+        MESSAGE+="🧹 20 Stability Fixes — context leak, runBlocking, timeouts, races\n"
+        MESSAGE+="🎨 Material3 1.3.1 Stable — from alpha BOM, OkHttp 4.12.0 stable\n"
+        MESSAGE+="🏠 Instant Home Sync — Recent Downloads updated on deletion live\n"
+        MESSAGE+="🌐 Richer Sponsor Profiles — thread-safe structured data\n"
         MESSAGE+="⏯️ Pause/Resume with queue\n"
         MESSAGE+="🌐 1000+ sites via yt-dlp\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -265,7 +260,7 @@ jobs:
         MESSAGE+="🔗 <b>Download Now:</b>\n"
         MESSAGE+="<a href=\"${RELEASE_URL}\">Click here to download v${{ steps.version.outputs.VERSION }}</a>\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="💡 <b>Note:</b> v2.5 brings a biometric-protected hidden content vault with optimistic UI, list view for format cards, active download sorting, auto-retry on network errors, yt-dlp resume support, WiFi-only fully enforced engine-side, live speed/ETA on cards, redesigned format cards with merge audio option, removed Suggested section, and near-zero CPU/storage overhead during downloads.\n\n"
+        MESSAGE+="💡 <b>Note:</b> v2.6 is a major security and stability release — PBKDF2 PIN hashing, MANAGE_EXTERNAL_STORAGE removed, ADB backup protection, 30-second brute-force lockout, 20 stability/correctness fixes, Material3 1.3.1 stable migration (OkHttp 4.12.0 stable), instant Recent Downloads sync, and richer sponsor profiles with thread-safe cache.\n\n"
         MESSAGE+="🕐 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues
