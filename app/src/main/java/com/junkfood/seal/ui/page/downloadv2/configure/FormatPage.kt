@@ -100,8 +100,14 @@ import com.junkfood.seal.util.FORMAT_LIST_VIEW
 import com.junkfood.seal.util.Format
 import com.junkfood.seal.util.FormatValidator
 import com.junkfood.seal.util.MERGE_MULTI_AUDIO_STREAM
+import com.junkfood.seal.util.AUDIO_CONVERSION_FORMAT
+import com.junkfood.seal.util.AUDIO_CONVERT
+import com.junkfood.seal.util.CONVERT_MP3
+import com.junkfood.seal.util.CONVERT_M4A
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getString
+import com.junkfood.seal.util.PreferenceUtil.updateBoolean
+import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.PreferenceUtil.updateString
 import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.SUBTITLE_LANGUAGE
@@ -173,6 +179,17 @@ private fun getQualityScore(format: Format): Int {
     // Fallback: use fileSizeApprox if available
     val fileSize = format.fileSizeApprox ?: format.fileSize ?: 0.0
     return fileSize.toInt()
+}
+
+/**
+ * Calculate an audio quality score (higher is better).
+ */
+private fun getAudioQualityScore(format: Format): Double {
+    return format.abr
+        ?: format.tbr
+        ?: format.fileSizeApprox
+        ?: format.fileSize
+        ?: 0.0
 }
 
 /**
@@ -414,7 +431,12 @@ private fun FormatPageImpl(
         try {
             // Validate all format categories
             validatedVideoOnlyFormats = FormatValidator.filterValidFormats(rawVideoOnlyFormats, checkUrlAccessibility = false)
-            validatedAudioOnlyFormats = FormatValidator.filterValidFormats(rawAudioOnlyFormats, checkUrlAccessibility = false)
+            validatedAudioOnlyFormats =
+                FormatValidator.filterValidFormats(rawAudioOnlyFormats, checkUrlAccessibility = false)
+                    .sortedWith(
+                        compareByDescending<Format> { getAudioQualityScore(it) }
+                            .thenByDescending { it.fileSizeApprox ?: it.fileSize ?: 0.0 }
+                    )
             validatedVideoAudioFormats = FormatValidator.filterValidFormats(rawVideoAudioFormats, checkUrlAccessibility = false)
             
             // Deduplicate by resolution to avoid showing multiple formats for same resolution
@@ -486,13 +508,18 @@ private fun FormatPageImpl(
 
     val isListView = FORMAT_LIST_VIEW.getBoolean()
 
+    var convertAudio by remember { mutableStateOf(AUDIO_CONVERT.getBoolean()) }
+    var audioConvertFormat by remember { mutableIntStateOf(AUDIO_CONVERSION_FORMAT.getInt()) }
+
     var videoOnlyItemLimit by remember { mutableIntStateOf(6) }
     var audioOnlyItemLimit by remember { mutableIntStateOf(6) }
     // Show all video formats by default (including merged high-quality ones)
     var videoAudioItemLimit by remember { mutableIntStateOf(Int.MAX_VALUE) }
 
     val isSuggestedFormatAvailable =
-        !videoInfo.requestedFormats.isNullOrEmpty() || !videoInfo.requestedDownloads.isNullOrEmpty()
+        !audioOnly &&
+            (!videoInfo.requestedFormats.isNullOrEmpty() ||
+                !videoInfo.requestedDownloads.isNullOrEmpty())
 
     var isSuggestedFormatSelected by remember { mutableStateOf(isSuggestedFormatAvailable) }
 
@@ -1079,6 +1106,61 @@ private fun FormatPageImpl(
                         ) {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             audioOnlyItemLimit = Int.MAX_VALUE
+                        }
+                    }
+                }
+
+                if (audioOnly) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                            Text(
+                                text = stringResource(R.string.audio_format),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                contentPadding = PaddingValues(bottom = 8.dp)
+                            ) {
+                                item {
+                                    val selected = !convertAudio
+                                    VideoFilterChip(
+                                        selected = selected,
+                                        onClick = {
+                                            convertAudio = false
+                                            AUDIO_CONVERT.updateBoolean(false)
+                                        },
+                                        label = stringResource(R.string.original)
+                                    )
+                                }
+                                item {
+                                    val selected = convertAudio && audioConvertFormat == CONVERT_MP3
+                                    VideoFilterChip(
+                                        selected = selected,
+                                        onClick = {
+                                            convertAudio = true
+                                            audioConvertFormat = CONVERT_MP3
+                                            AUDIO_CONVERT.updateBoolean(true)
+                                            AUDIO_CONVERSION_FORMAT.updateInt(CONVERT_MP3)
+                                        },
+                                        label = "MP3"
+                                    )
+                                }
+                                item {
+                                    val selected = convertAudio && audioConvertFormat == CONVERT_M4A
+                                    VideoFilterChip(
+                                        selected = selected,
+                                        onClick = {
+                                            convertAudio = true
+                                            audioConvertFormat = CONVERT_M4A
+                                            AUDIO_CONVERT.updateBoolean(true)
+                                            AUDIO_CONVERSION_FORMAT.updateInt(CONVERT_M4A)
+                                        },
+                                        label = "M4A"
+                                    )
+                                }
+                            }
                         }
                     }
                 }

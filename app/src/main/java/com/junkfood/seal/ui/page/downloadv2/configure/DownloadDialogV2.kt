@@ -136,6 +136,7 @@ import com.junkfood.seal.util.DownloadType.Playlist
 import com.junkfood.seal.util.DownloadType.Video
 import com.junkfood.seal.util.DownloadType.entries
 import com.junkfood.seal.util.DownloadUtil
+import com.junkfood.seal.util.EXTRACT_AUDIO
 import com.junkfood.seal.util.FORMAT_SELECTION
 import com.junkfood.seal.util.PreferenceStrings
 import com.junkfood.seal.util.PreferenceUtil
@@ -569,7 +570,10 @@ private fun ConfigurePage(
             DownloadTypeSelectionGroup(
                 typeEntries = config.typeEntries,
                 selectedType = selectedType,
-                onSelect = { selectedType = it },
+                onSelect = {
+                    selectedType = it
+                    EXTRACT_AUDIO.updateBoolean(it == Audio)
+                },
             )
             Column(modifier = Modifier.animateContentSize()) {
                 if (selectedType != Command) {
@@ -718,7 +722,10 @@ fun ConfigurePagePlaylistVariant(
             DownloadTypeSelectionGroup(
                 typeEntries = listOf(Video, Audio),
                 selectedType = selectedType,
-                onSelect = { selectedType = it },
+                onSelect = {
+                    selectedType = it
+                    EXTRACT_AUDIO.updateBoolean(it == Audio)
+                },
             )
             DrawerSheetSubtitle(
                 text = stringResource(id = R.string.format_selection),
