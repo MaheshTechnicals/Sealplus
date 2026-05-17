@@ -316,6 +316,7 @@ fun SupportDeveloperPage(
             item {
                 DonationOptionCard(
                     icon = Icons.Outlined.Group,
+                    iconTint = Color.Black,
                     title = "Our Sponsors",
                     description = "View our amazing supporters",
                     gradient = if (isDarkTheme && isGradientDark) {
@@ -425,6 +426,7 @@ private fun openUpiPayment(
 private fun DonationOptionCard(
     @DrawableRes iconRes: Int? = null,
     icon: ImageVector? = null,
+    iconTint: Color = Color.White,
     title: String,
     description: String,
     gradient: Brush,
@@ -470,7 +472,7 @@ private fun DonationOptionCard(
                                 Icon(
                                     imageVector = icon,
                                     contentDescription = null,
-                                    tint = Color.White,
+                                    tint = iconTint,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }

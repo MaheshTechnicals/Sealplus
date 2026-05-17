@@ -335,11 +335,18 @@ private fun SponsorListItem(
 private fun SponsorMethodIcon(method: String, modifier: Modifier = Modifier) {
     val iconRes = sponsorMethodIconRes(method)
     if (iconRes != null) {
-        Image(
-            painter = painterResource(iconRes),
-            contentDescription = null,
+        Box(
             modifier = modifier
-        )
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+        }
     } else {
         Spacer(modifier = modifier)
     }
