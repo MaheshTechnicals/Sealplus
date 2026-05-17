@@ -451,7 +451,7 @@ private fun DonationOptionCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White.copy(alpha = 0.2f),
+                    color = Color.White,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Box(
