@@ -2,6 +2,7 @@ package com.junkfood.seal.util
 
 import android.util.Log
 import androidx.annotation.CheckResult
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -13,7 +14,11 @@ import java.util.concurrent.TimeUnit
  * Tier information can be added to sponsors.json as needed.
  */
 @Serializable
-data class Sponsor(val id: Int = 0, val name: String = "")
+data class Sponsor(
+    val id: Int = 0,
+    val name: String = "",
+    @SerialName("METHOD") val method: String = ""
+)
 
 /** Top-level wrapper matching the sponsors.json schema. */
 @Serializable

@@ -1,6 +1,8 @@
 package com.junkfood.seal.ui.page.settings.about
 
 import android.util.Log
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,9 +49,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.junkfood.seal.ui.theme.GradientBrushes
@@ -316,6 +320,7 @@ private fun SponsorListItem(
                 color = if (isDarkTheme && isGradientDark) Color.White
                 else MaterialTheme.colorScheme.onSurface
             )
+            SponsorMethodIcon(method = sponsor.method, modifier = Modifier.size(24.dp))
             Icon(
                 imageVector = Icons.Outlined.Favorite,
                 contentDescription = null,
@@ -323,6 +328,30 @@ private fun SponsorListItem(
                 modifier = Modifier.size(24.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun SponsorMethodIcon(method: String, modifier: Modifier = Modifier) {
+    val iconRes = sponsorMethodIconRes(method)
+    if (iconRes != null) {
+        Image(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            modifier = modifier
+        )
+    } else {
+        Spacer(modifier = modifier)
+    }
+}
+
+@DrawableRes
+private fun sponsorMethodIconRes(method: String): Int? {
+    return when (method.trim().uppercase()) {
+        "UPI" -> R.drawable.google_pay
+        "PAYPAL" -> R.drawable.paypal
+        "COFEE" -> R.drawable.coffee_cup
+        else -> null
     }
 }
 

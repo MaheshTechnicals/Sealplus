@@ -2,43 +2,53 @@
   "sponsors": [
     {
       "id": 1,
-      "name": "ABDUL KADAR K"
+      "name": "ABDUL KADAR K",
+      "METHOD": "UPI"
     },
     {
       "id": 2,
-      "name": "Peter Ciomer"
+      "name": "Peter Ciomer",
+      "METHOD": "COFEE"
     },
     {
       "id": 3,
-      "name": "Rami Maunula"
+      "name": "Rami Maunula",
+      "METHOD": "PAYPAL"
     },
     {
       "id": 4,
-      "name": "Jeremy Badillo"
+      "name": "Jeremy Badillo",
+      "METHOD": "PAYPAL"
     },
     {
       "id": 5,
-      "name": "Johannes Kathol"
+      "name": "Johannes Kathol",
+      "METHOD": "PAYPAL"
     },
     {
       "id": 6,
-      "name": "Atsu Kulewosi"
+      "name": "Atsu Kulewosi",
+      "METHOD": "PAYPAL"
     },
     {
       "id": 7,
-      "name": "Edson Francisco Borjas Amador"
+      "name": "Edson Francisco Borjas Amador",
+      "METHOD": "PAYPAL"
     },
     {
       "id": 8,
-      "name": "belgian_orange"
+      "name": "belgian_orange",
+      "METHOD": "COFEE"
     },
     {
       "id": 9,
-      "name": "Raxus"
+      "name": "Raxus",
+      "METHOD": "COFEE"
     },
     {
       "id": 10,
-      "name": "dealex82"
+      "name": "dealex82",
+      "METHOD": "COFEE"
     }
   ]
 }
