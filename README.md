@@ -519,6 +519,8 @@ No need to manually check for updates anymore!
 | **x86** | Older Intel/AMD devices |
 | **universal** | Works on all devices (larger file size) |
 
+This project is tested with BrowserStack
+
 **Don't know?** Download the **universal** APK - it works on all devices!
 </details>
 
