@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
 import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshotFlow
@@ -22,6 +23,7 @@ import com.junkfood.seal.download.Task.DownloadState.Running
 import com.junkfood.seal.download.Task.RestartableAction.Download
 import com.junkfood.seal.download.Task.RestartableAction.FetchInfo
 import com.junkfood.seal.download.Task.TypeInfo
+import com.junkfood.seal.download.Task.PauseReason
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
 import com.junkfood.seal.util.MAX_CONCURRENT_DOWNLOADS
@@ -122,6 +124,8 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     // Tracks how many auto-retries have been attempted for each task (keyed by task ID).
     // Cleared on success or after MAX_AUTO_RETRIES exhausted.
     private val retryCountMap = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    private var networkPauseJob: Job? = null
+    @Volatile private var networkDegradedAtMs: Long = 0L
 
     companion object {
         private const val MAX_AUTO_RETRIES = 3
@@ -139,7 +143,31 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         // (e.g. WiFi reconnects after the restriction blocked queued tasks).
         App.connectivityManager.registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) = doYourWork()
+                override fun onAvailable(network: Network) {
+                    clearNetworkDegraded()
+                    resumeNetworkPausedTasks()
+                    doYourWork()
+                }
+
+                override fun onLost(network: Network) {
+                    markNetworkDegraded()
+                }
+
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities,
+                ) {
+                    val validated =
+                        networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                            networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    if (validated) {
+                        clearNetworkDegraded()
+                        resumeNetworkPausedTasks()
+                        doYourWork()
+                    } else {
+                        markNetworkDegraded()
+                    }
+                }
             }
         )
 
@@ -323,6 +351,76 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         }
     }
 
+    private fun isNetworkError(throwable: Throwable): Boolean {
+        return throwable.message?.let { msg ->
+            NETWORK_ERROR_KEYWORDS.any { msg.contains(it, ignoreCase = true) }
+        } ?: false
+    }
+
+    private fun scheduleNetworkPause() {
+        networkPauseJob?.cancel()
+        val startAt = networkDegradedAtMs
+        if (startAt == 0L) return
+        val pauseDelayMs = PreferenceUtil.getNetworkPauseDelayMs()
+        networkPauseJob =
+            scope.launch {
+                val elapsed = System.currentTimeMillis() - startAt
+                val remaining = (pauseDelayMs - elapsed).coerceAtLeast(0L)
+                delay(remaining)
+                if (!PreferenceUtil.isNetworkAvailableForDownload() && networkDegradedAtMs == startAt) {
+                    pauseRunningTasksForNetwork()
+                }
+            }
+    }
+
+    private fun markNetworkDegraded() {
+        if (networkDegradedAtMs == 0L) {
+            networkDegradedAtMs = System.currentTimeMillis()
+        }
+        scheduleNetworkPause()
+    }
+
+    private fun ensureNetworkDegradedStart() {
+        if (networkDegradedAtMs == 0L) {
+            networkDegradedAtMs = System.currentTimeMillis()
+            scheduleNetworkPause()
+        }
+    }
+
+    private fun clearNetworkDegraded() {
+        networkDegradedAtMs = 0L
+        networkPauseJob?.cancel()
+    }
+
+    private fun isWithinNetworkGracePeriod(): Boolean {
+        val startAt = networkDegradedAtMs
+        if (startAt == 0L) return false
+        return System.currentTimeMillis() - startAt < PreferenceUtil.getNetworkPauseDelayMs()
+    }
+
+    private fun pauseRunningTasksForNetwork() {
+        taskStateMap.entries.forEach { (task, state) ->
+            val downloadState = state.downloadState
+            if (downloadState is DownloadState.Cancelable) {
+                task.pauseForReason(downloadState, PauseReason.Network)
+            }
+        }
+    }
+
+    private fun resumeNetworkPausedTasks() {
+        if (!PreferenceUtil.isNetworkAvailableForDownload()) return
+        taskStateMap.entries.forEach { (task, state) ->
+            val downloadState = state.downloadState
+            if (downloadState is DownloadState.Paused && downloadState.reason == PauseReason.Network) {
+                task.downloadState =
+                    when (downloadState.action) {
+                        Download -> ReadyWithInfo
+                        FetchInfo -> Idle
+                    }
+            }
+        }
+    }
+
     private fun Task.fetchInfo() {
         check(downloadState == Idle)
         val task = this
@@ -343,6 +441,29 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                     }
                     .onFailure { throwable ->
                         if (throwable is YoutubeDL.CanceledException) {
+                            return@onFailure
+                        }
+                        if (isNetworkError(throwable) && !PreferenceUtil.isNetworkAvailableForDownload()) {
+                            ensureNetworkDegradedStart()
+                            if (isWithinNetworkGracePeriod()) {
+                                delay(2_000L)
+                                if (!PreferenceUtil.isNetworkAvailableForDownload()) {
+                                    task.downloadState = Idle
+                                }
+                                return@onFailure
+                            }
+                            when (val preState = downloadState) {
+                                is FetchingInfo -> {
+                                    downloadState =
+                                        Paused(action = FetchInfo, progress = null, reason = PauseReason.Network)
+                                    NotificationUtil.updateNotification(
+                                        notificationId = notificationId,
+                                        title = viewState.title,
+                                        text = appContext.getString(R.string.status_paused),
+                                    )
+                                }
+                                else -> {}
+                            }
                             return@onFailure
                         }
                         task.downloadState = Error(throwable = throwable, action = FetchInfo)
@@ -424,11 +545,41 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             return@onFailure
                         }
                         val retries = retryCountMap.getOrDefault(id, 0)
-                        val isNetworkError = throwable.message?.let { msg ->
-                            NETWORK_ERROR_KEYWORDS.any { msg.contains(it, ignoreCase = true) }
-                        } ?: false
-
-                        if (isNetworkError && retries < MAX_AUTO_RETRIES) {
+                        val isNetworkError = isNetworkError(throwable)
+                        if (isNetworkError && !PreferenceUtil.isNetworkAvailableForDownload()) {
+                            ensureNetworkDegradedStart()
+                            retryCountMap.remove(id)
+                            if (isWithinNetworkGracePeriod()) {
+                                when (val preState = downloadState) {
+                                    is Running -> {
+                                        downloadState =
+                                            preState.copy(progressText = "Waiting for network...")
+                                    }
+                                    else -> {}
+                                }
+                                delay(2_000L)
+                                if (downloadState is Running && !PreferenceUtil.isNetworkAvailableForDownload()) {
+                                    downloadState = ReadyWithInfo
+                                }
+                                return@onFailure
+                            }
+                            when (val preState = downloadState) {
+                                is Running -> {
+                                    downloadState =
+                                        Paused(
+                                            action = Download,
+                                            progress = preState.progress,
+                                            reason = PauseReason.Network,
+                                        )
+                                    NotificationUtil.updateNotification(
+                                        notificationId = notificationId,
+                                        title = viewState.title,
+                                        text = appContext.getString(R.string.status_paused),
+                                    )
+                                }
+                                else -> {}
+                            }
+                        } else if (isNetworkError && retries < MAX_AUTO_RETRIES) {
                             val attempt = retries + 1
                             retryCountMap[id] = attempt
                             Log.d(TAG, "Network error — retrying ($attempt/$MAX_AUTO_RETRIES) in ${RETRY_DELAY_MS}ms: ${throwable.message}")
@@ -467,25 +618,32 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     private fun Task.pauseImpl(): Boolean {
         when (val preState = downloadState) {
             is DownloadState.Cancelable -> {
-                val res = YoutubeDL.destroyProcessById(preState.taskId)
-                if (res) {
-                    preState.job.cancel()
-                    val progress = if (preState is Running) preState.progress else null
-                    NotificationUtil.updateNotification(
-                        notificationId = notificationId,
-                        title = viewState.title,
-                        text = appContext.getString(R.string.status_paused),
-                    )
-                    downloadState =
-                        DownloadState.Paused(action = preState.action, progress = progress)
-                }
-                return res
+                return pauseForReason(preState, PauseReason.User)
             }
             else -> {
                 return false
             }
         }
         return true
+    }
+
+    private fun Task.pauseForReason(
+        preState: DownloadState.Cancelable,
+        reason: PauseReason,
+    ): Boolean {
+        val res = YoutubeDL.destroyProcessById(preState.taskId)
+        if (res) {
+            preState.job.cancel()
+            val progress = if (preState is Running) preState.progress else null
+            NotificationUtil.updateNotification(
+                notificationId = notificationId,
+                title = viewState.title,
+                text = appContext.getString(R.string.status_paused),
+            )
+            downloadState =
+                DownloadState.Paused(action = preState.action, progress = progress, reason = reason)
+        }
+        return res
     }
 
     private fun Task.resumeImpl(): Boolean {

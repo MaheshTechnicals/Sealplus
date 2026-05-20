@@ -38,6 +38,12 @@ data class Task(
     }
 
     @Serializable
+    enum class PauseReason {
+        User,
+        Network,
+    }
+
+    @Serializable
     sealed interface TypeInfo {
 
         @Serializable data class Playlist(val index: Int = 0) : TypeInfo
@@ -90,7 +96,11 @@ data class Task(
         }
 
         @Serializable
-        data class Paused(override val action: RestartableAction, val progress: Float? = null) :
+        data class Paused(
+            override val action: RestartableAction,
+            val progress: Float? = null,
+            val reason: PauseReason = PauseReason.User,
+        ) :
             DownloadState, Restartable
 
         @Serializable

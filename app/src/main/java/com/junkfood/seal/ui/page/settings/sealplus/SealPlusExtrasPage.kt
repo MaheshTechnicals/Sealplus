@@ -50,6 +50,7 @@ import com.junkfood.seal.util.FORMAT_LIST_VIEW
 import com.junkfood.seal.util.MAX_CONCURRENT_DOWNLOADS
 import com.junkfood.seal.util.NETWORK_ANY
 import com.junkfood.seal.util.NETWORK_MOBILE_ONLY
+import com.junkfood.seal.util.NETWORK_PAUSE_DELAY_SECONDS
 import com.junkfood.seal.util.NETWORK_TYPE_RESTRICTION
 import com.junkfood.seal.util.NETWORK_WIFI_ONLY
 import com.junkfood.seal.util.NOTIFICATION_ERROR_SOUND
@@ -80,6 +81,9 @@ fun SealPlusExtrasPage(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var networkTypeRestriction by remember { mutableStateOf(NETWORK_TYPE_RESTRICTION.getInt()) }
     var showNetworkDialog by remember { mutableStateOf(false) }
+    var networkPauseDelaySeconds by remember {
+        mutableStateOf(NETWORK_PAUSE_DELAY_SECONDS.getInt())
+    }
     
     var notificationSound by remember { mutableStateOf(NOTIFICATION_SOUND.getBoolean()) }
     var notificationVibrate by remember { mutableStateOf(NOTIFICATION_VIBRATE.getBoolean()) }
@@ -371,6 +375,73 @@ fun SealPlusExtrasPage(
                     },
                     onClick = { showNetworkDialog = true }
                 )
+            }
+
+            item {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.network_pause_delay_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text =
+                                    stringResource(
+                                        R.string.network_pause_delay_desc,
+                                        networkPauseDelaySeconds,
+                                    ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = networkPauseDelaySeconds.toString(),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    androidx.compose.material3.Slider(
+                        value = networkPauseDelaySeconds.toFloat(),
+                        onValueChange = { newValue ->
+                            networkPauseDelaySeconds = newValue.roundToInt().coerceIn(5, 120)
+                        },
+                        onValueChangeFinished = {
+                            NETWORK_PAUSE_DELAY_SECONDS.updateInt(networkPauseDelaySeconds)
+                        },
+                        valueRange = 5f..120f,
+                        steps = 114,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = "5",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = "120",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
             
             item {

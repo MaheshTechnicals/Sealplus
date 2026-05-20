@@ -128,6 +128,7 @@ private const val DOWNLOAD_TYPE = "download_type"
 
 // Network Type Restriction
 const val NETWORK_TYPE_RESTRICTION = "network_type_restriction"
+const val NETWORK_PAUSE_DELAY_SECONDS = "network_pause_delay_seconds"
 
 // Download Control
 const val MAX_CONCURRENT_DOWNLOADS = "max_concurrent_downloads"
@@ -296,6 +297,7 @@ private val IntPreferenceDefaults =
         YT_DLP_UPDATE_CHANNEL to YT_DLP_STABLE,
         DOWNLOAD_TYPE to DownloadType.Video.ordinal,
         NETWORK_TYPE_RESTRICTION to NETWORK_ANY,
+        NETWORK_PAUSE_DELAY_SECONDS to 25,
         MAX_CONCURRENT_DOWNLOADS to 1,
         ARIA2C_CONNECTIONS to 16,
         PROXY_CUSTOM_PORT to 8080,
@@ -374,7 +376,8 @@ object PreferenceUtil {
         val connectivityManager = App.connectivityManager
         val activeNetwork = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
-        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     fun isNetworkAvailableForDownload(): Boolean {
@@ -392,6 +395,11 @@ object PreferenceUtil {
             NETWORK_ANY -> true  // Allow any network type (both WiFi and Mobile)
             else -> CELLULAR_DOWNLOAD.getBoolean() || !isMetered
         }
+    }
+
+    fun getNetworkPauseDelayMs(): Long {
+        val seconds = NETWORK_PAUSE_DELAY_SECONDS.getInt().coerceIn(5, 120)
+        return seconds.toLong() * 1000L
     }
 
     fun getNetworkErrorMessage(): Int {

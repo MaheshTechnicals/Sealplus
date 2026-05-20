@@ -469,6 +469,8 @@
     <string name="format_list_view_desc">Switch from grid cards to a compact list layout in the format selection page</string>
     <string name="network_type_restriction">Network type restriction</string>
     <string name="network_type_restriction_desc">Control which network types are allowed for downloads. Choose between WiFi only, mobile data only, or any network type.</string>
+    <string name="network_pause_delay_title">Network pause delay</string>
+    <string name="network_pause_delay_desc">Wait %1$d sec before pausing downloads when the network drops</string>
     <string name="any_network">Any network</string>
     <string name="wifi_only">WiFi only</string>
     <string name="mobile_only">Mobile data only</string>
