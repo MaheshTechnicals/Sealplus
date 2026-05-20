@@ -125,6 +125,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     // Tracks how many auto-retries have been attempted for each task (keyed by task ID).
     // Cleared on success or after MAX_AUTO_RETRIES exhausted.
     private val retryCountMap = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    private val waitingForNetwork = java.util.concurrent.ConcurrentHashMap<String, Task.RestartableAction>()
     private var networkPauseJob: Job? = null
     @Volatile private var networkDegradedAtMs: Long = 0L
 
@@ -146,6 +147,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     clearNetworkDegraded()
+                    waitingForNetwork.clear()
                     resumeNetworkPausedTasks()
                     doYourWork()
                 }
@@ -163,6 +165,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     if (validated) {
                         clearNetworkDegraded()
+                        waitingForNetwork.clear()
                         resumeNetworkPausedTasks()
                         doYourWork()
                     } else {
@@ -404,6 +407,12 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
             val downloadState = state.downloadState
             if (downloadState is DownloadState.Cancelable) {
                 task.pauseForReason(downloadState, PauseReason.Network)
+            } else {
+                val waitingAction = waitingForNetwork[task.id]
+                if (waitingAction != null && (downloadState is ReadyWithInfo || downloadState is Idle)) {
+                    task.downloadState =
+                        Paused(action = waitingAction, progress = null, reason = PauseReason.Network)
+                }
             }
         }
     }
@@ -413,6 +422,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         taskStateMap.entries.forEach { (task, state) ->
             val downloadState = state.downloadState
             if (downloadState is DownloadState.Paused && downloadState.reason == PauseReason.Network) {
+                waitingForNetwork.remove(task.id)
                 task.downloadState =
                     when (downloadState.action) {
                         Download -> ReadyWithInfo
@@ -447,6 +457,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                         if (isNetworkError(throwable) && !PreferenceUtil.isNetworkAvailableForDownload()) {
                             ensureNetworkDegradedStart()
                             if (isWithinNetworkGracePeriod()) {
+                                waitingForNetwork[id] = FetchInfo
                                 delay(2_000L)
                                 if (!PreferenceUtil.isNetworkAvailableForDownload()) {
                                     task.downloadState = Idle
@@ -551,6 +562,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             ensureNetworkDegradedStart()
                             retryCountMap.remove(id)
                             if (isWithinNetworkGracePeriod()) {
+                                waitingForNetwork[id] = Download
                                 when (val preState = downloadState) {
                                     is Running -> {
                                         downloadState =
