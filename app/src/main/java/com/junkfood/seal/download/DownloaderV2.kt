@@ -408,10 +408,17 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
             if (downloadState is DownloadState.Cancelable) {
                 task.pauseForReason(downloadState, PauseReason.Network)
             } else {
-                val waitingAction = waitingForNetwork[task.id]
-                if (waitingAction != null && (downloadState is ReadyWithInfo || downloadState is Idle)) {
-                    task.downloadState =
-                        Paused(action = waitingAction, progress = null, reason = PauseReason.Network)
+                if (downloadState is ReadyWithInfo || downloadState is Idle) {
+                    val action =
+                        when (downloadState) {
+                            is ReadyWithInfo -> Download
+                            is Idle -> FetchInfo
+                            else -> null
+                        }
+                    if (action != null) {
+                        task.downloadState =
+                            Paused(action = action, progress = null, reason = PauseReason.Network)
+                    }
                 }
             }
         }

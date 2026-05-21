@@ -709,6 +709,7 @@ object DownloadUtil {
                 videoUrl = webpageUrl ?: originalUrl ?: "",
                 thumbnailUrl = thumbnail.toHttpsUrl(),
                 videoPath = videoPath,
+                videoId = this.id,
                 extractor = extractorKey,
                 downloadTimeMillis = downloadTimeMillis,
                 averageSpeedBytesPerSec = averageSpeedBytesPerSec,
@@ -869,8 +870,9 @@ object DownloadUtil {
                     if (newTitle.isNotEmpty()) {
                         addCommands(listOf("--replace-in-metadata", "title", ".+", newTitle))
                     }
-                    if (Build.VERSION.SDK_INT > 23 && !sdcard)
-                        addOption("-P", "temp:" + getExternalTempDir())
+                    if (Build.VERSION.SDK_INT > 23 && !sdcard) {
+                        addOption("-P", "temp:" + getExternalTempDir(videoInfo.id))
+                    }
 
                     if (splitByChapter) {
                         addOption("-o", OUTPUT_TEMPLATE_CHAPTERS)

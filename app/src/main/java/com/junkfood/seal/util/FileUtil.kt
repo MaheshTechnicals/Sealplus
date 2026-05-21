@@ -26,6 +26,18 @@ const val SUBTITLE_REGEX = "\\.(lrc|vtt|srt|ass|json3|srv.|ttml)$"
 private const val PRIVATE_DIRECTORY_SUFFIX = ".SealPlus"
 
 object FileUtil {
+    private val TEMP_SUFFIXES =
+        listOf(
+            ".part",
+            ".ytdl",
+            ".aria2",
+            ".tmp",
+            ".temp",
+            ".partial",
+            ".download",
+            ".info.json",
+        )
+
     fun openFileFromResult(downloadResult: Result<List<String>>) {
         val filePaths = downloadResult.getOrNull()
         if (filePaths.isNullOrEmpty()) return
@@ -186,10 +198,10 @@ object FileUtil {
         val tempDir = getExternalTempDir()
         var count = 0
         tempDir.walkTopDown().forEach {
-            if (it.name.contains(safeName, ignoreCase = true)) {
+            if (matchesTempBaseName(it.name, safeName)) {
                 if (it.isDirectory) {
                     if (it.deleteRecursively()) count++
-                } else if (it.delete()) {
+                } else if (shouldDeleteTempFile(it.name) && it.delete()) {
                     count++
                 }
             }
@@ -198,15 +210,32 @@ object FileUtil {
     }
 
     fun deleteTempFilesForTask(baseName: String, videoId: String?): Int {
-        var count = deleteTempFilesByBaseName(baseName)
         val safeId = videoId?.trim().orEmpty()
+        var count = 0
         if (safeId.isNotEmpty()) {
             val idDir = getExternalTempDir().resolve(safeId)
             if (idDir.exists() && idDir.deleteRecursively()) {
                 count++
             }
+            return count
         }
-        return count
+        return deleteTempFilesByBaseName(baseName)
+    }
+
+    private fun matchesTempBaseName(name: String, baseName: String): Boolean {
+        val prefixMatch = name.startsWith(baseName, ignoreCase = true)
+        if (!prefixMatch) return false
+        if (name.length == baseName.length) return true
+        val next = name[baseName.length]
+        return next == '.' || next == '_' || next == '-' || next == ' ' || next == '[' || next == '('
+    }
+
+    private fun shouldDeleteTempFile(name: String): Boolean {
+        if (TEMP_SUFFIXES.any { suffix -> name.endsWith(suffix, ignoreCase = true) }) return true
+        val lowerName = name.lowercase()
+        return lowerName.contains(".part") ||
+            lowerName.contains(".ytdl") ||
+            lowerName.contains(".aria2")
     }
 
     fun Context.getConfigDirectory(): File = cacheDir
@@ -219,6 +248,12 @@ object FileUtil {
         File(getExternalDownloadDirectory(), "tmp").apply {
             mkdirs()
             createEmptyFile(".nomedia")
+        }
+
+    fun getExternalTempDir(child: String?): File =
+        getExternalTempDir().run {
+            child?.takeIf { it.isNotBlank() }?.let { resolve(it).also { dir -> dir.mkdirs() } }
+                ?: this
         }
 
     fun Context.getSdcardTempDir(child: String?): File =

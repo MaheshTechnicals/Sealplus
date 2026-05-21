@@ -39,11 +39,19 @@ private val MIGRATION_6_7 = object : Migration(6, 7) {
     }
 }
 
+private val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            "ALTER TABLE DownloadedVideoInfo ADD COLUMN videoId TEXT NOT NULL DEFAULT ''"
+        )
+    }
+}
+
 object DatabaseUtil {
     private const val DATABASE_NAME = "app_database"
     private val db =
         Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
-            .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
             .build()
     private val dao = db.videoInfoDao()
 
@@ -155,7 +163,14 @@ object DatabaseUtil {
     suspend fun deleteInfoList(infoList: List<DownloadedVideoInfo>, deleteFile: Boolean = false) =
         withContext(Dispatchers.IO) {
             dao.deleteInfoList(infoList)
-            infoList.forEach { info -> if (deleteFile) FileUtil.deleteFile(info.videoPath) }
+            infoList.forEach { info ->
+                if (deleteFile) {
+                    val baseName =
+                        File(info.videoPath).nameWithoutExtension.ifEmpty { info.videoTitle }
+                    FileUtil.deleteTempFilesForTask(baseName, info.videoId)
+                    FileUtil.deleteFile(info.videoPath)
+                }
+            }
         }
 
     suspend fun getInfoById(id: Int): DownloadedVideoInfo = dao.getInfoById(id)

@@ -251,7 +251,18 @@ fun DownloadPageV2(
             UiAction.Pause -> downloader.pause(task)
             UiAction.Cancel -> downloader.cancel(task)
             UiAction.Retry -> downloader.restart(task)
-            UiAction.Delete -> downloader.remove(task)
+            UiAction.Delete -> {
+                scope.launch(Dispatchers.IO) {
+                    val state = downloader.getTaskStateMap()[task]
+                    val baseName =
+                        state?.videoInfo?.title
+                            ?.ifBlank { state.viewState.title.ifBlank { task.url } }
+                            ?: state?.viewState?.title
+                            ?: task.url
+                    FileUtil.deleteTempFilesForTask(baseName, state?.videoInfo?.id)
+                    downloader.remove(task)
+                }
+            }
             UiAction.Resume -> downloader.resume(task)
             is UiAction.CopyErrorReport -> {
                 clipboardManager.setText(

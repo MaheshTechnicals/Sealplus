@@ -778,7 +778,10 @@ fun NewHomePage(
                                     showActiveDeleteDialog = false
                                     scope.launch(Dispatchers.IO) {
                                         val videoId = state.videoInfo?.id
-                                        FileUtil.deleteTempFilesForTask(deleteTitle, videoId)
+                                        val baseName =
+                                            state.videoInfo?.title?.ifBlank { deleteTitle }
+                                                ?: deleteTitle
+                                        FileUtil.deleteTempFilesForTask(baseName, videoId)
                                         downloader.remove(task)
                                     }
                                 }
@@ -869,7 +872,7 @@ fun NewHomePage(
                                             File(downloadInfo.videoPath)
                                                 .nameWithoutExtension
                                                 .ifEmpty { downloadInfo.videoTitle }
-                                        FileUtil.deleteTempFilesForTask(baseName, null)
+                                        FileUtil.deleteTempFilesForTask(baseName, downloadInfo.videoId)
                                         DatabaseUtil.deleteInfoList(
                                             infoList = listOf(downloadInfo),
                                             deleteFile = false

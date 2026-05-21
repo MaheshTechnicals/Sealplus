@@ -16,7 +16,7 @@ import com.junkfood.seal.database.objects.OptionShortcut
             CookieProfile::class,
             OptionShortcut::class,
         ],
-    version = 7,
+    version = 8,
     autoMigrations =
         [
             AutoMigration(from = 1, to = 2),
