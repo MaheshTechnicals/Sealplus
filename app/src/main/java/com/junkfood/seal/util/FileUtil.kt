@@ -197,6 +197,18 @@ object FileUtil {
         return count
     }
 
+    fun deleteTempFilesForTask(baseName: String, videoId: String?): Int {
+        var count = deleteTempFilesByBaseName(baseName)
+        val safeId = videoId?.trim().orEmpty()
+        if (safeId.isNotEmpty()) {
+            val idDir = getExternalTempDir().resolve(safeId)
+            if (idDir.exists() && idDir.deleteRecursively()) {
+                count++
+            }
+        }
+        return count
+    }
+
     fun Context.getConfigDirectory(): File = cacheDir
 
     fun Context.getConfigFile(suffix: String = "") = File(getConfigDirectory(), "config$suffix.txt")

@@ -696,6 +696,7 @@ fun NewHomePage(
                     var showDetailsDialog by remember { mutableStateOf(false) }
                     var detailsTask by remember { mutableStateOf<Task?>(null) }
                     var detailsState by remember { mutableStateOf<Task.State?>(null) }
+                    var showActiveDeleteDialog by remember { mutableStateOf(false) }
                     
                     ActiveDownloadCard(
                         task = task,
@@ -705,7 +706,7 @@ fun NewHomePage(
                             when (action) {
                                 UiAction.Pause -> downloader.pause(task)
                                 UiAction.Cancel -> downloader.cancel(task)
-                                UiAction.Delete -> downloader.remove(task)
+                                UiAction.Delete -> showActiveDeleteDialog = true
                                 UiAction.Resume -> downloader.resume(task)
                                 UiAction.Retry -> downloader.restart(task)
                                 is UiAction.CopyErrorReport -> {
@@ -751,6 +752,38 @@ fun NewHomePage(
                             task = detailsTask!!,
                             state = detailsState!!,
                             onDismiss = { showDetailsDialog = false }
+                        )
+                    }
+
+                    if (showActiveDeleteDialog) {
+                        val deleteTitle = state.viewState.title.ifBlank { task.url }
+                        SealDialog(
+                            onDismissRequest = { showActiveDeleteDialog = false },
+                            title = { Text(text = stringResource(R.string.delete_info)) },
+                            icon = {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    null,
+                                    tint = MaterialTheme.colorScheme.tertiary
+                                )
+                            },
+                            text = {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                                    text = stringResource(R.string.delete_info_msg).format(deleteTitle),
+                                )
+                            },
+                            confirmButton = {
+                                ConfirmButton {
+                                    showActiveDeleteDialog = false
+                                    scope.launch(Dispatchers.IO) {
+                                        val videoId = state.videoInfo?.id
+                                        FileUtil.deleteTempFilesForTask(deleteTitle, videoId)
+                                        downloader.remove(task)
+                                    }
+                                }
+                            },
+                            dismissButton = { DismissButton { showActiveDeleteDialog = false } },
                         )
                     }
                 }
@@ -836,7 +869,7 @@ fun NewHomePage(
                                             File(downloadInfo.videoPath)
                                                 .nameWithoutExtension
                                                 .ifEmpty { downloadInfo.videoTitle }
-                                        FileUtil.deleteTempFilesByBaseName(baseName)
+                                        FileUtil.deleteTempFilesForTask(baseName, null)
                                         DatabaseUtil.deleteInfoList(
                                             infoList = listOf(downloadInfo),
                                             deleteFile = false
