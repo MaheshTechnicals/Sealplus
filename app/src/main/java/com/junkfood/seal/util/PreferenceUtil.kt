@@ -149,7 +149,6 @@ const val SPONSOR_DIALOG_LAST_SHOWN = "sponsor_dialog_last_shown"
 const val SPONSOR_FREQ_OFF = 0
 const val SPONSOR_FREQ_WEEKLY = 1
 const val SPONSOR_FREQ_MONTHLY = 2
-const val SPONSOR_URL = "https://buymeacoffee.com/maheshtechnical"
 
 const val YT_DLP_UPDATE_CHANNEL = "yt-dlp_update_channel"
 const val YT_DLP_UPDATE_TIME = "yt-dlp_last_update"

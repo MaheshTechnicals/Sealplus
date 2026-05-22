@@ -294,24 +294,6 @@ fun SupportDeveloperPage(
                 )
             }
             
-            // Buy Me a Coffee
-            item {
-                DonationOptionCard(
-                    iconRes = R.drawable.coffee_cup,
-                    title = "Buy Me a Coffee",
-                    description = "Support with a coffee",
-                    gradient = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFFF813F),
-                            Color(0xFFFF5E00)
-                        )
-                    ),
-                    onClick = {
-                        uriHandler.openUri("https://buymeacoffee.com/maheshtechnical")
-                    }
-                )
-            }
-            
             // Our Sponsors
             item {
                 DonationOptionCard(
