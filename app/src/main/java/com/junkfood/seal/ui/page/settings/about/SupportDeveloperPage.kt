@@ -294,6 +294,24 @@ fun SupportDeveloperPage(
                 )
             }
             
+            // GitHub Sponsors
+            item {
+                DonationOptionCard(
+                    iconRes = R.drawable.github,
+                    title = "GitHub Sponsors",
+                    description = "Support via GitHub Sponsors",
+                    gradient = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF333333),
+                            Color(0xFF000000)
+                        )
+                    ),
+                    onClick = {
+                        uriHandler.openUri("https://github.com/sponsors/MaheshTechnicals")
+                    }
+                )
+            }
+            
             // Our Sponsors
             item {
                 DonationOptionCard(
