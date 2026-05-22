@@ -172,94 +172,54 @@ English
 ## ⬇️ Download & Installation
 
 
-### 🚀 What's New in v2.6?
+### 🚀 What's New in v2.7?
 
 <details open>
-<summary><b>📱 Click to see latest updates - Security Hardening, Stability & Material3 Stable (April 27, 2026)</b></summary>
+<summary><b>📱 Click to see latest updates - GitHub Sponsors, Database Enhancement & Better UX (May 22, 2026)</b></summary>
 
-## ✨ Seal Plus v2.6.0 - Security Hardening, 20 Stability Fixes & Material3 Stable
-
----
-
-### 🔒 Security Hardening
-
-* **PBKDF2 PIN Hashing**
-  + PIN-based App Lock now uses **PBKDF2WithHmacSHA256** with a unique 16-byte salt and 200,000 iterations
-  + Industry-standard protection against brute-force and rainbow-table attacks
-  + Existing PINs are automatically migrated on next unlock
-
-* **Removed Overly Broad Storage Permission**
-  + `MANAGE_EXTERNAL_STORAGE` removed from the manifest — no more "All Files Access" required
-
-* **ADB Backup Protection**
-  + MMKV preferences (PIN hash, security settings) excluded from ADB backups via `backup_rules.xml`
-
-* **NotificationActionReceiver Secured**
-  + `exported=false` set in manifest — prevents third-party apps from sending fake notification intents
-
-* **MITM Prevention on Proxy**
-  + `--no-check-certificate` disabled when a proxy is active to prevent man-in-the-middle attacks
-
-* **Proxy Security Warning Dialog**
-  + A warning `AlertDialog` is shown before enabling free proxy mode, informing users of the risks
-
-### 🛡️ Brute-Force Protection
-
-* **30-Second Lockout on App Lock**
-  + After 5 failed PIN attempts, a **30-second countdown timer** blocks further attempts
-  + Fully animated and survives recomposition
-
-### 🐛 Stability & Correctness (20 Fixes)
-
-* **Context Leak Fixed** — `MainActivity` no longer overwrites `App.context` with Activity context
-* **Replaced All runBlocking Calls** — `lifecycleScope.launch(IO)` used throughout, preventing ANRs
-* **OkHttp Client Timeouts** — connect/read/write timeouts added to `UpdateUtil` HTTP client
-* **Shared OkHttp Singletons** — `ProxyManager`, `ProxyValidator`, `SponsorUtil`, `FormatValidator` all share a single client
-* **Resource Leaks Fixed** — `SQLiteDatabase` and `Cursor` closed with `.use{}` on all paths
-* **ConcurrentHashMap for Download Maps** — race conditions fixed in `DownloaderV2`
-* **Coroutine Leak Prevented** — 5-minute deadline added to `addToDownloadQueue`
-* **AV1 Downloads Fixed** — `av01` removed from unsupported codec blacklist
-* **Format Loading Faster** — `filterValidFormats` parallelized with `async/awaitAll`
-* **Hash Collision Fixed** — `makeKey()` uses null-char delimiter
-* **Error Notifications Improved** — `throwable.message` used instead of full stack trace
-* And 9 more correctness fixes across `DatabaseUtil`, `DownloadUtil`, `HomePageViewModel`, `CookiesViewModel`, `FileUtil`
-
-### 🎨 Material3 1.3.1 Stable Migration
-
-* **Upgraded from Alpha to Stable Compose BOM**
-  + All breaking API changes from `compose-bom-alpha` → stable resolved
-  + `SheetState`, `TooltipDefaults`, and `ExposedDropdownMenu` APIs updated across 7 files
-
-* **Dependency Downgrades to Stable**
-  + `OkHttp`: `5.0.0-alpha.14` → `4.12.0` (stable)
-  + `biometric`: upgraded to `1.2.0-alpha05` for better OEM compatibility
-
-### 🏠 Home Page Sync Fix
-
-* **Instant Recent Downloads Sync**
-  + Deletions on the VideoList page now reflect in **Recent Downloads immediately** — no process restart needed
-
-* **Real-Time Missing File Detection**
-  + File existence re-checked on every `ON_RESUME` event — files deleted from the file manager **gray out instantly** on next app return
-
-### 🌐 Sponsor Data Refactor
-
-* **Richer Sponsor Profiles** — `SocialAccount`, `SponsorEntity`, `Tier`, and `SponsorShip` data classes added
-* **Thread-Safe Cache** — `@Volatile` + synchronized double-checked locking in `SponsorUtil`
+## ✨ Seal Plus v2.7.0 - GitHub Sponsors Integration, Enhanced File Management & UI Improvements
 
 ---
 
-### ✨ Key Features (v2.6)
+### 🎁 Monetization & Support
 
-* 🔒 **PBKDF2 PIN Hashing** - Industry-standard 200K-iteration secure PIN with salt
-* 🛡️ **30-Second Brute-Force Lockout** - Countdown after 5 failed PIN attempts
-* 🔐 **Removed MANAGE_EXTERNAL_STORAGE** - No overbroad permission required
-* 💾 **ADB Backup Protection** - Sensitive MMKV data excluded from backups
-* 🚫 **MITM Prevention** - SSL check re-enabled when proxy is active
-* 🧹 **20 Stability Fixes** - Context leak, runBlocking, timeouts, race conditions & more
-* 🎨 **Material3 1.3.1 Stable** - Migrated from alpha BOM, OkHttp stable 4.12.0
-* 🏠 **Instant Home Sync** - Recent Downloads updated instantly on deletion or file removal
-* 🌐 **Richer Sponsor Profiles** - Thread-safe cache with structured data
+* **GitHub Sponsors Integration**
+  + New **GitHub Sponsors** donation option in Support Developer page
+  + Support development directly via https://github.com/sponsors/MaheshTechnicals
+  + Removed outdated "Buy Me a Coffee" option for cleaner interface
+
+### 📦 Database & File Management
+
+* **Database Schema Upgrade (v7 → v8)**
+  + Added `videoId` field to download history for better tracking
+  + Improved video identification and temp file cleanup
+  + Seamless automatic migration with default values
+
+* **Enhanced Temp File Deletion**
+  + Better temp file cleanup using videoId for accuracy
+  + More reliable identification of associated temporary files
+  + Proper cleanup of edge cases
+
+### 🗑️ User Experience Improvements
+
+* **Task Deletion Confirmation Dialog**
+  + New confirmation dialog before deleting active downloads
+  + Prevents accidental task deletion
+  + Smart temp file cleanup
+
+* **Improved Download State Management**
+  + Better network pause handling and state transitions
+  + Enhanced waiting state logic for network availability
+
+---
+
+### ✨ Key Features (v2.7)
+
+* 🎁 **GitHub Sponsors Integration** - Direct support option in UI
+* 📦 **Database v8** - Enhanced videoId tracking for better file management
+* 🗑️ **Delete Confirmation Dialog** - Prevent accidental task deletion
+* 🧹 **Smarter Temp Cleanup** - VideoId-based file identification
+* 🔄 **Better Network State Handling** - Improved pause/resume logic
 * ⏯️ **Pause/Resume downloads** with queue support
 * 🌐 Download from 1000+ sites via yt-dlp
 
@@ -270,32 +230,32 @@ See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGE
 </details>
 
 <details>
-<summary><b>📱 Previous Release - v2.5 (April 6, 2026)</b></summary>
+<summary><b>📱 Previous Release - v2.6 (April 27, 2026)</b></summary>
 
-#### ✨ Seal Plus v2.5.0 - Hidden Content, Download Engine Reliability & Performance
+#### ✨ Seal Plus v2.6.0 - Security Hardening, 20 Stability Fixes & Material3 Stable
 
-#### 🔒 Hidden Content & Privacy
-- ✅ **Hidden Content Management System** - Private biometric-protected vault with file relocation
-- ✅ **Optimistic UI** - Card vanishes instantly before DB write completes
+#### 🔒 Security Hardening
+- ✅ **PBKDF2 PIN Hashing** - Industry-standard 200K-iteration secure PIN with salt
+- ✅ **30-Second Brute-Force Lockout** - Countdown after 5 failed PIN attempts
+- ✅ **Removed MANAGE_EXTERNAL_STORAGE** - No overbroad permission required
+- ✅ **ADB Backup Protection** - Sensitive MMKV data excluded from backups
+- ✅ **MITM Prevention** - SSL check re-enabled when proxy is active
 
-#### 🎨 Format Selection UI Overhaul
-- ✅ **Redesigned Format Cards** - File size and bitrate in dedicated sections
-- ✅ **List View for Format Cards** - Toggle on/off in SealPlus Extras
-- ✅ **Merge Audio Stream Option** - Combine separate audio into any video format
-- ✅ **Download Dialog Thumbnail** - Shows thumbnail while fetching info
+#### 🐛 20 Stability Fixes
+- ✅ **Context Leak Fixed** - Prevents memory leaks on activity recreation
+- ✅ **Replaced runBlocking** - No more ANRs from blocking calls
+- ✅ **OkHttp Timeouts** - Explicit connect/read/write timeouts
+- ✅ **Resource Leaks Fixed** - Proper SQLite cleanup
+- ✅ **ConcurrentHashMap** - Race conditions fixed
+- ✅ **AV1 Support** - av01 codec now supported
 
-#### ⬇️ Download Engine Reliability
-- ✅ **Auto-Retry on Network Error** - Up to 3 retries with 5s backoff
-- ✅ **Resume Partial Downloads** - `--continue` always passed to yt-dlp
-- ✅ **WiFi-Only Fully Enforced** - Engine-side, auto-resumes on reconnect
+#### 🎨 Material3 1.3.1 Stable
+- ✅ **Stable Compose BOM** - Migrated from alpha to stable
+- ✅ **OkHttp 4.12.0** - Stable HTTP client
 
-#### 📊 Download Progress UI
-- ✅ **Active Download Sorting** - Running → ReadyWithInfo → Idle → Paused → Done
-- ✅ **Speed & ETA on Home Cards** - Live `2.50 MiB/s  •  ETA 00:03`
-- ✅ **Merging Phase Detection** - Cards show "Merging..." during post-processing
-
-#### ⚡ Performance
-- ✅ **CPU & Storage Optimized** - Near-zero overhead during active downloads
+#### 🏠 Home Page Improvements
+- ✅ **Instant Sync** - Recent Downloads updated instantly
+- ✅ **Real-Time File Detection** - Missing files gray out immediately
 
 [View Full Changelog →](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md)
 

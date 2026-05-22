@@ -83,66 +83,41 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## ✨ Seal Plus v2.6.0 - Security Hardening, 20 Stability Fixes & Material3 Stable
+          ## ✨ Seal Plus v2.7.0 - GitHub Sponsors Integration, Enhanced File Management & UI Improvements
           
           ---
           
-          ### 🔒 Security Hardening
+          ### 🎁 Monetization & Support
           
-          * **PBKDF2 PIN Hashing**
-              + PIN-based App Lock now uses PBKDF2WithHmacSHA256 with 16-byte salt and 200,000 iterations
-              + Existing PINs are automatically migrated on next unlock
+          * **GitHub Sponsors Integration**
+              + New **GitHub Sponsors** donation option in Support Developer page
+              + Support development directly via https://github.com/sponsors/MaheshTechnicals
+              + Updated gradient colors for GitHub Sponsors button (blue to gray)
+              + Removed outdated "Buy Me a Coffee" option for cleaner interface
           
-          * **Removed Overly Broad Storage Permission**
-              + `MANAGE_EXTERNAL_STORAGE` removed — no more "All Files Access" required
+          ### 📦 Database & File Management
           
-          * **ADB Backup Protection**
-              + MMKV preferences (PIN hash, settings) excluded from ADB backups via `backup_rules.xml`
+          * **Database Schema Upgrade (v7 → v8)**
+              + Added `videoId` field to `DownloadedVideoInfo` entity for better tracking
+              + Enhanced download history with unique video identifiers
+              + Automatic migration from schema v7 to v8 with proper default values
           
-          * **NotificationActionReceiver Secured**
-              + `exported=false` set in manifest — blocks fake notification intent injection
+          * **Enhanced Temp File Deletion**
+              + Improved `FileUtil.deleteTempFilesForTask()` to use both `baseName` and `videoId`
+              + Temp files associated with downloads more reliably identified and removed
+              + Better handling of edge cases where files were renamed or moved
           
-          * **MITM Prevention on Proxy**
-              + `--no-check-certificate` disabled when proxy is active
+          ### 🗑️ User Experience Improvements
           
-          * **Proxy Security Warning Dialog**
-              + Warning shown before enabling free proxy mode
+          * **Task Deletion Confirmation Dialog**
+              + New confirmation dialog before deleting active download tasks
+              + Displays task title/URL for confirmation
+              + Prevents accidental task deletion with automatic temp file cleanup
           
-          ### 🛡️ Brute-Force Protection
-          
-          * **30-Second Lockout on App Lock**
-              + Animated 30-second countdown after 5 failed PIN attempts
-          
-          ### 🐛 Stability & Correctness (20 Fixes)
-          
-          * Context leak fixed — Activity context no longer overwrites App.context
-          * All `runBlocking` calls replaced with `lifecycleScope.launch(IO)` (prevents ANRs)
-          * OkHttp timeouts added to UpdateUtil; singletons shared across 4 utilities
-          * SQLiteDatabase and Cursor properly closed with `.use{}` on all paths
-          * `ConcurrentHashMap` used for download maps — race conditions fixed
-          * 5-minute deadline added to `addToDownloadQueue` — prevents coroutine leaks
-          * `av01` removed from unsupported codec blacklist — AV1 downloads work again
-          * `filterValidFormats` parallelized with `async/awaitAll` — faster format page
-          * `makeKey()` uses null-char delimiter — hash collision fixed
-          * Error notifications use `throwable.message` instead of full stack trace
-          * And 10 more fixes in DatabaseUtil, DownloadUtil, HomePageViewModel, CookiesViewModel, FileUtil
-          
-          ### 🎨 Material3 1.3.1 Stable Migration
-          
-          * **Upgraded from alpha to stable Compose BOM**
-              + `SheetState`, `TooltipDefaults`, `ExposedDropdownMenu` APIs updated across 7 files
-          * `OkHttp`: `5.0.0-alpha.14` → `4.12.0` (stable)
-          * `biometric` upgraded to `1.2.0-alpha05` for better OEM compatibility
-          
-          ### 🏠 Home Page Sync Fix
-          
-          * Deletions on VideoList page now reflect in Recent Downloads **immediately** — no restart needed
-          * File existence re-checked on every `ON_RESUME` — deleted files gray out instantly
-          
-          ### 🌐 Sponsor Data Refactor
-          
-          * Richer sponsor profiles with `SocialAccount`, `SponsorEntity`, `Tier` data classes
-          * Thread-safe `@Volatile` + synchronized double-checked locking cache
+          * **Improved Download State Management**
+              + Better network pause state handling and transitions
+              + Improved logic for tasks waiting for network availability
+              + Correct action determination based on current download state
           
           ---
           
@@ -155,16 +130,12 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### ✨ Key Features (v2.6)
-          - 🔒 **PBKDF2 PIN Hashing** - Industry-standard 200K-iteration secure PIN with salt
-          - 🛡️ **30-Second Brute-Force Lockout** - Countdown after 5 failed PIN attempts
-          - 🔐 **Removed MANAGE_EXTERNAL_STORAGE** - No overbroad permission required
-          - 💾 **ADB Backup Protection** - Sensitive MMKV data excluded from backups
-          - 🚫 **MITM Prevention** - SSL check re-enabled when proxy is active
-          - 🧹 **20 Stability Fixes** - Context leak, runBlocking, timeouts, race conditions & more
-          - 🎨 **Material3 1.3.1 Stable** - Migrated from alpha BOM, OkHttp stable 4.12.0
-          - 🏠 **Instant Home Sync** - Recent Downloads updated instantly on deletion or file removal
-          - 🌐 **Richer Sponsor Profiles** - Thread-safe cache with structured data
+          ### ✨ Key Features (v2.7)
+          - 🎁 **GitHub Sponsors Integration** - Direct support option in UI
+          - 📦 **Database v8** - Enhanced videoId tracking for better file management
+          - 🗑️ **Delete Confirmation Dialog** - Prevent accidental task deletion
+          - 🧹 **Smarter Temp Cleanup** - VideoId-based file identification
+          - 🔄 **Better Network State Handling** - Improved pause/resume logic
           - ⏯️ **Pause/Resume downloads** with queue support
           - 🌐 Download from 1000+ sites via yt-dlp
           
@@ -205,51 +176,35 @@ jobs:
         MESSAGE+="📱 <b>App Name:</b> Seal Plus\n\n"
         MESSAGE+="🏷️ <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📋 <b>Changelog (v2.6):</b>\n\n"
-        MESSAGE+="<b>🔒 Security Hardening</b>\n"
-        MESSAGE+="  ➤ PBKDF2WithHmacSHA256 PIN hashing — 200K iterations, 16-byte salt\n"
-        MESSAGE+="  ➤ MANAGE_EXTERNAL_STORAGE removed — no overbroad permission required\n"
-        MESSAGE+="  ➤ ADB backup protection — MMKV excluded via backup_rules.xml\n"
-        MESSAGE+="  ➤ NotificationActionReceiver exported=false — blocks fake intents\n"
-        MESSAGE+="  ➤ MITM prevention — SSL check re-enabled when proxy is active\n"
-        MESSAGE+="  ➤ Proxy security warning dialog before enabling free proxy\n\n"
-        MESSAGE+="<b>🛡️ Brute-Force Protection</b>\n"
-        MESSAGE+="  ➤ 30-second animated countdown lockout after 5 failed PIN attempts\n\n"
-        MESSAGE+="<b>🐛 Stability &amp; Correctness (20 Fixes)</b>\n"
-        MESSAGE+="  ➤ Activity context leak fixed in MainActivity\n"
-        MESSAGE+="  ➤ All runBlocking calls replaced with lifecycleScope.launch(IO)\n"
-        MESSAGE+="  ➤ OkHttp timeouts added; singletons shared across 4 utilities\n"
-        MESSAGE+="  ➤ SQLiteDatabase/Cursor closed with .use{} on all paths\n"
-        MESSAGE+="  ➤ ConcurrentHashMap for download maps — race conditions fixed\n"
-        MESSAGE+="  ➤ av01 removed from unsupported codec blacklist — AV1 works again\n"
-        MESSAGE+="  ➤ filterValidFormats parallelized — faster format page loading\n"
-        MESSAGE+="  ➤ Hash collision in makeKey() fixed with null-char delimiter\n"
-        MESSAGE+="  ➤ Error notifications use throwable.message (not full stack trace)\n"
-        MESSAGE+="  ➤ 11 more fixes in DatabaseUtil, DownloadUtil, FileUtil, and more\n\n"
-        MESSAGE+="<b>🎨 Material3 1.3.1 Stable Migration</b>\n"
-        MESSAGE+="  ➤ Upgraded from alpha to stable Compose BOM\n"
-        MESSAGE+="  ➤ SheetState, TooltipDefaults, ExposedDropdownMenu APIs updated\n"
-        MESSAGE+="  ➤ OkHttp 5.0.0-alpha.14 → 4.12.0 stable\n"
-        MESSAGE+="  ➤ biometric upgraded to 1.2.0-alpha05 for OEM compatibility\n\n"
-        MESSAGE+="<b>🏠 Home Page Sync Fix</b>\n"
-        MESSAGE+="  ➤ Deletions reflected in Recent Downloads instantly — no restart needed\n"
-        MESSAGE+="  ➤ File existence re-checked on ON_RESUME — deleted files gray out live\n\n"
-        MESSAGE+="<b>🌐 Sponsor Data Refactor</b>\n"
-        MESSAGE+="  ➤ SocialAccount, SponsorEntity, Tier data classes for richer profiles\n"
-        MESSAGE+="  ➤ Thread-safe @Volatile + synchronized double-checked locking cache\n\n"
+        MESSAGE+="📋 <b>Changelog (v2.7):</b>\n\n"
+        MESSAGE+="<b>🎁 Monetization &amp; Support</b>\n"
+        MESSAGE+="  ➤ GitHub Sponsors integration added — support development directly\n"
+        MESSAGE+="  ➤ New donation option in Support Developer page\n"
+        MESSAGE+="  ➤ Removed outdated Buy Me a Coffee option\n"
+        MESSAGE+="  ➤ Updated GitHub Sponsors button gradient (blue to gray)\n\n"
+        MESSAGE+="<b>📦 Database &amp; File Management</b>\n"
+        MESSAGE+="  ➤ Database schema upgraded from v7 to v8\n"
+        MESSAGE+="  ➤ Added videoId field to DownloadedVideoInfo entity\n"
+        MESSAGE+="  ➤ Better video tracking and identification\n"
+        MESSAGE+="  ➤ Automatic migration with proper default values\n\n"
+        MESSAGE+="<b>🧹 Enhanced Temp File Deletion</b>\n"
+        MESSAGE+="  ➤ FileUtil.deleteTempFilesForTask() now uses videoId + baseName\n"
+        MESSAGE+="  ➤ More reliable temp file cleanup and identification\n"
+        MESSAGE+="  ➤ Better handling of renamed or moved files\n\n"
+        MESSAGE+="<b>🗑️ User Experience Improvements</b>\n"
+        MESSAGE+="  ➤ New confirmation dialog before deleting active tasks\n"
+        MESSAGE+="  ➤ Prevents accidental download deletion\n"
+        MESSAGE+="  ➤ Automatic temp file cleanup\n"
+        MESSAGE+="  ➤ Improved network state handling and transitions\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="✨ <b>Key Features (v2.6):</b>\n"
-        MESSAGE+="🔒 PBKDF2 PIN Hashing — 200K-iteration secure PIN with salt\n"
-        MESSAGE+="🛡️ 30-Second Brute-Force Lockout — countdown after 5 failed attempts\n"
-        MESSAGE+="🔐 Removed MANAGE_EXTERNAL_STORAGE — no overbroad permission\n"
-        MESSAGE+="💾 ADB Backup Protection — MMKV sensitive data excluded\n"
-        MESSAGE+="🚫 MITM Prevention — SSL check re-enabled when proxy active\n"
-        MESSAGE+="🧹 20 Stability Fixes — context leak, runBlocking, timeouts, races\n"
-        MESSAGE+="🎨 Material3 1.3.1 Stable — from alpha BOM, OkHttp 4.12.0 stable\n"
-        MESSAGE+="🏠 Instant Home Sync — Recent Downloads updated on deletion live\n"
-        MESSAGE+="🌐 Richer Sponsor Profiles — thread-safe structured data\n"
-        MESSAGE+="⏯️ Pause/Resume with queue\n"
-        MESSAGE+="🌐 1000+ sites via yt-dlp\n\n"
+        MESSAGE+="✨ <b>Key Features (v2.7):</b>\n"
+        MESSAGE+="🎁 GitHub Sponsors Integration — direct support option\n"
+        MESSAGE+="📦 Database v8 — enhanced videoId tracking\n"
+        MESSAGE+="🗑️ Delete Confirmation Dialog — prevent accidental deletion\n"
+        MESSAGE+="🧹 Smarter Temp Cleanup — videoId-based identification\n"
+        MESSAGE+="🔄 Better Network State Handling — improved pause/resume\n"
+        MESSAGE+="⏯️ Pause/Resume with queue — continue interrupted downloads\n"
+        MESSAGE+="🌐 1000+ sites via yt-dlp — YouTube, TikTok, Instagram, and more\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         MESSAGE+="📦 <b>Available APKs:</b>\n"
         MESSAGE+="  ➤ Universal (All devices)\n"
@@ -260,7 +215,7 @@ jobs:
         MESSAGE+="🔗 <b>Download Now:</b>\n"
         MESSAGE+="<a href=\"${RELEASE_URL}\">Click here to download v${{ steps.version.outputs.VERSION }}</a>\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="💡 <b>Note:</b> v2.6 is a major security and stability release — PBKDF2 PIN hashing, MANAGE_EXTERNAL_STORAGE removed, ADB backup protection, 30-second brute-force lockout, 20 stability/correctness fixes, Material3 1.3.1 stable migration (OkHttp 4.12.0 stable), instant Recent Downloads sync, and richer sponsor profiles with thread-safe cache.\n\n"
+        MESSAGE+="💡 <b>Note:</b> v2.7 brings GitHub Sponsors integration, database schema v8 with videoId tracking, enhanced temp file cleanup, task deletion confirmation, and improved network state handling.\n\n"
         MESSAGE+="🕐 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues

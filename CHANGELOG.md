@@ -5,6 +5,43 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-05-22
+
+### 🎁 Monetization & Support
+
+* **GitHub Sponsors Integration**
+  + Added **GitHub Sponsors** as a new donation option in the Support Developer page
+  + Links directly to https://github.com/sponsors/MaheshTechnicals for supporting development
+  + Updated gradient colors for the GitHub Sponsors button (bright blue to dark gray)
+  + Removed outdated "Buy Me a Coffee" donation option and cleaned up related constants
+
+### 📦 Database & File Management
+
+* **Database Schema Upgrade (v7 → v8)**
+  + Added `videoId` field to `DownloadedVideoInfo` entity for better video tracking
+  + Enhanced download history with unique video identifiers
+  + Automatic migration from schema v7 to v8 with proper default values
+
+* **Enhanced Temp File Deletion**
+  + Improved `FileUtil.deleteTempFilesForTask()` to use both `baseName` and `videoId` for more accurate cleanup
+  + Temp files associated with downloads are now more reliably identified and removed
+  + Better handling of edge cases where files were renamed or moved
+
+### 🗑️ User Experience
+
+* **Task Deletion Confirmation Dialog**
+  + New confirmation dialog shown before deleting active download tasks
+  + Displays task title/URL and requires explicit user confirmation before removal
+  + Prevents accidental deletion of ongoing downloads
+  + Properly cleans up associated temp files before removing the task
+
+* **Improved Download State Management**
+  + Network pause state now correctly determines appropriate action (Download or FetchInfo) based on current download state
+  + Better handling of tasks waiting for network availability
+  + Fixed `waitingForNetwork` logic to prevent stale states
+
+---
+
 ## [2.6.0] - 2026-04-27
 
 ### 🔒 Security Hardening
