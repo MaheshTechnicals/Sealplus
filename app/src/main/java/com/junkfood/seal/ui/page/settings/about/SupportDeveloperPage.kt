@@ -302,8 +302,8 @@ fun SupportDeveloperPage(
                     description = "Support via GitHub Sponsors",
                     gradient = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF333333),
-                            Color(0xFF000000)
+                            Color(0xFF4078C0),
+                            Color(0xFF333333)
                         )
                     ),
                     onClick = {
