@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ── Meta ─────────────────────────────────────────── -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <title>Support the Developer — Seal Plus</title>
+
+  <meta name="description"
+    content="Support Seal Plus development. Your help funds updates, testing, and long-term maintenance." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://sealplus.in/support.html" />
+  <link rel="sitemap" type="application/xml" href="https://sealplus.in/sitemap.xml" />
+
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://sealplus.in/support.html" />
+  <meta property="og:title"       content="Support the Developer — Seal Plus" />
+  <meta property="og:description" content="Help fund Seal Plus updates, testing, and long-term maintenance." />
+  <meta property="og:image"       content="https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/fastlane/metadata/android/en-US/images/icon.png" />
+
+  <link rel="icon" type="image/png"
+    href="https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/fastlane/metadata/android/en-US/images/icon.png" />
+
+  <!-- ── Fonts ─────────────────────────────────────────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- ── Shared Stylesheet ─────────────────────────────── -->
+  <link rel="stylesheet" href="site/assets/css/style.css" />
+
+  <!-- ── Support-page-specific styles ─────────────────── -->
+  <style>
+    .support-hero {
+      padding: 140px 5% 60px;
+      text-align: center;
+    }
+    .support-hero .section-tag { margin-bottom: 18px; }
+    .support-hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -.5px;
+      margin-bottom: 12px;
+    }
+    .support-hero p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .support-content {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 5% 90px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .support-card {
+      padding: 28px;
+    }
+
+    .support-card h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .support-card h2 .card-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(79,172,254,.12);
+      font-size: .95rem;
+      flex-shrink: 0;
+    }
+
+    .support-card p, .support-card li {
+      font-size: .95rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    .support-card ul {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .support-card li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .support-card li::before {
+      content: '•';
+      color: var(--accent-green);
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .methods-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .method-card {
+      background: rgba(79,172,254,.08);
+      border: 1px solid rgba(79,172,254,.18);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+      min-height: 160px;
+    }
+
+    .method-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .method-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      border: 1px solid rgba(255,255,255,.65);
+      box-shadow: 0 6px 16px rgba(0,0,0,.25);
+      flex-shrink: 0;
+      padding: 6px;
+    }
+
+    .method-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .method-logo.paypal {
+      background: #ffffff;
+    }
+
+    .method-logo.github {
+      background: #ffffff;
+    }
+
+    .method-label {
+      font-size: .85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-cyan);
+    }
+
+    .method-value {
+      font-size: .98rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+
+    .method-note {
+      font-size: .85rem;
+      color: var(--text-muted);
+    }
+
+    .method-actions {
+      margin-top: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .method-actions .btn {
+      padding: 10px 16px;
+      font-size: .85rem;
+    }
+
+    .back-bar {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 980px) {
+      .methods-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .support-content { padding: 0 5% 70px; }
+      .support-card { padding: 22px; }
+      .methods-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Animated Background ──────────────────────────── -->
+  <div class="bg-canvas" aria-hidden="true">
+    <div class="bg-star"></div>
+  </div>
+
+  <!-- ── Navigation ───────────────────────────────────── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <a href="index.html" class="nav-brand" aria-label="Seal Plus home">
+      <img
+        src="https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/fastlane/metadata/android/en-US/images/icon.png"
+        alt="Seal Plus app icon" width="38" height="38" loading="eager"
+      />
+      <span>Seal Plus</span>
+    </a>
+
+    <ul class="nav-links" role="list">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="index.html#releases">Releases</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="support.html" class="active">Support</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="index.html#releases" class="btn-sponsor-nav" aria-label="Download Seal Plus">
+        Download
+      </a>
+      <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── Support Hero ─────────────────────────────────── -->
+  <header class="support-hero" role="banner">
+    <div class="section-tag">Support</div>
+    <h1>
+      Keep <span class="grad-text">Seal Plus</span> Growing
+    </h1>
+    <p>
+      Seal Plus is built and maintained independently. Your support keeps the project
+      fast, secure, and regularly updated for everyone.
+    </p>
+  </header>
+
+  <!-- ── Support Content ──────────────────────────────── -->
+  <main class="support-content" role="main" aria-label="Support the developer">
+
+    <section class="glass-card support-card">
+      <h2><span class="card-icon" aria-hidden="true">1</span> Why support is needed</h2>
+      <p>
+        Seal Plus is free and open source. Supporting the project helps cover the
+        real costs of building a reliable downloader and keeping it updated as platforms
+        change frequently.
+      </p>
+      <ul>
+        <li>Development time for new features and bug fixes</li>
+        <li>Testing across devices and Android versions</li>
+        <li>Domain, hosting, and release maintenance</li>
+        <li>Design, translations, and accessibility improvements</li>
+      </ul>
+    </section>
+
+    <section class="glass-card support-card">
+      <h2><span class="card-icon" aria-hidden="true">2</span> How your support helps</h2>
+      <p>
+        Every contribution directly improves the app. It keeps updates flowing and
+        helps ensure the project stays independent and community focused.
+      </p>
+      <ul>
+        <li>Faster updates when websites change</li>
+        <li>Stable releases with better QA</li>
+        <li>Long-term maintenance and security updates</li>
+      </ul>
+    </section>
+
+    <section class="glass-card support-card">
+      <h2><span class="card-icon" aria-hidden="true">3</span> Payment methods</h2>
+      <p>
+        Choose any option below. All support is optional, and every contribution is
+        appreciated.
+      </p>
+
+      <div class="methods-grid" aria-label="Support payment options">
+        <div class="method-card">
+          <div class="method-header">
+            <div class="method-logo">
+              <img src="site/assets/img/google_pay.png" alt="UPI logo" width="36" height="36" loading="lazy" />
+            </div>
+            <div class="method-label">UPI</div>
+          </div>
+          <div class="method-value">maheshtechnicals@apl</div>
+          <div class="method-note">Works with any UPI app.</div>
+          <div class="method-actions">
+            <a class="btn btn-primary" href="upi://pay?pa=maheshtechnicals@apl&pn=Mahesh%20Technicals" aria-label="Pay via UPI">
+              Pay via UPI
+            </a>
+          </div>
+        </div>
+
+        <div class="method-card">
+          <div class="method-header">
+            <div class="method-logo paypal">
+              <img src="site/assets/img/paypal.png" alt="PayPal logo" width="36" height="36" loading="lazy" />
+            </div>
+            <div class="method-label">PayPal</div>
+          </div>
+          <div class="method-value">paypal.me/Varma161</div>
+          <div class="method-note">International support via PayPal.</div>
+          <div class="method-actions">
+            <a class="btn btn-primary" href="https://www.paypal.com/paypalme/Varma161" target="_blank" rel="noopener" aria-label="Pay via PayPal">
+              Pay with PayPal
+            </a>
+          </div>
+        </div>
+
+        <div class="method-card">
+          <div class="method-header">
+            <div class="method-logo github">
+              <img src="site/assets/img/github.png" alt="GitHub logo" width="36" height="36" loading="lazy" />
+            </div>
+            <div class="method-label">GitHub Sponsors</div>
+          </div>
+          <div class="method-value">github.com/sponsors/MaheshTechnicals</div>
+          <div class="method-note">Monthly or one-time sponsorships.</div>
+          <div class="method-actions">
+            <a class="btn btn-primary" href="https://github.com/sponsors/MaheshTechnicals" target="_blank" rel="noopener" aria-label="Sponsor on GitHub">
+              Sponsor on GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="glass-card support-card">
+      <h2><span class="card-icon" aria-hidden="true">4</span> Current sponsors</h2>
+      <p>
+        Your support keeps Seal Plus moving forward. Thank you to everyone who helps.
+      </p>
+      <div class="sponsors-grid" id="sponsors-support-list" aria-label="Current sponsors">
+        <!-- Dynamically populated from sponsors.json -->
+      </div>
+    </section>
+
+    <section class="glass-card support-card">
+      <h2><span class="card-icon" aria-hidden="true">5</span> Thank you</h2>
+      <p>
+        Thanks for supporting independent software. Your help keeps Seal Plus open
+        and free for everyone.
+      </p>
+      <div class="back-bar">
+        <a class="btn btn-secondary" href="index.html">Back to Home</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Scripts ─────────────────────────────────────────── -->
+  <script src="site/assets/js/main.js" defer></script>
+
+</body>
+</html>

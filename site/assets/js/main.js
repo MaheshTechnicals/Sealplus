@@ -123,8 +123,9 @@ const toast = (() => {
 (function loadSponsors() {
   const stripContainer = document.getElementById('sponsors-strip-list');
   const modalContainer = document.getElementById('sponsors-modal-list');
+  const supportContainer = document.getElementById('sponsors-support-list');
   const viewAllBtn     = document.getElementById('sponsors-view-all');
-  if (!stripContainer && !modalContainer) return;
+  if (!stripContainer && !modalContainer && !supportContainer) return;
 
   /* Palette for avatar backgrounds */
   const avatarColors = [
@@ -191,6 +192,20 @@ const toast = (() => {
           </div>`;
         }).join('');
         modalContainer.innerHTML = modalHTML;
+      }
+
+      /* ── Support page: full profile cards ── */
+      if (supportContainer) {
+        const supportHTML = sponsors.map((s, i) => {
+          const bg = avatarColors[i % avatarColors.length];
+          const initials = getInitials(s.name);
+          return `<div class="sponsor-card">
+            <div class="sponsor-avatar" style="background:${bg}">${initials}</div>
+            <div class="sponsor-name">${s.name}</div>
+            <div class="sponsor-badge"><span class="heart" aria-hidden="true">❤️</span> Sponsor</div>
+          </div>`;
+        }).join('');
+        supportContainer.innerHTML = supportHTML;
       }
     })
     .catch(err => console.error('Sponsors load error:', err));

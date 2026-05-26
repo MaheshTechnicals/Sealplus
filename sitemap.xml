@@ -6,7 +6,7 @@
   <!-- Home Page -->
   <url>
     <loc>https://sealplus.in/</loc>
-    <lastmod>2026-04-11</lastmod>
+    <lastmod>2026-05-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -18,7 +18,15 @@
   <!-- Privacy Policy Page -->
   <url>
     <loc>https://sealplus.in/privacy.html</loc>
-    <lastmod>2026-04-11</lastmod>
+    <lastmod>2026-05-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Support Page -->
+  <url>
+    <loc>https://sealplus.in/support.html</loc>
+    <lastmod>2026-05-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
