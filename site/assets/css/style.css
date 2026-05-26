@@ -1546,6 +1546,9 @@ footer {
   transform: translateY(20px) scale(.97);
   transition: transform var(--transition);
   position: relative;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
 }
 .modal-overlay.open .modal-box {
   transform: translateY(0) scale(1);
@@ -1564,6 +1567,7 @@ footer {
   color: var(--text-muted);
   font-size: 1.1rem;
   transition: var(--transition);
+  z-index: 2;
 }
 .modal-close-x:hover {
   background: rgba(247,37,133,.15);
@@ -1594,6 +1598,20 @@ footer {
   color: var(--text-muted);
   line-height: 1.75;
   margin-bottom: 28px;
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-top: 8px;
+  padding-right: 6px;
+  scrollbar-width: none;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .modal-sponsors {
@@ -1753,6 +1771,23 @@ footer {
   .modal-box { padding: 30px 24px; }
 
   .releases-controls { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .modal-box {
+    margin-top: 0;
+    max-height: calc(100vh - 32px);
+  }
+
+  .modal-body {
+    padding-right: 2px;
+  }
 }
 
 @media (max-width: 480px) {

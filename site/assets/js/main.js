@@ -142,7 +142,7 @@ const toast = (() => {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  const VISIBLE_LIMIT = 6;
+  const VISIBLE_LIMIT = 10;
 
   fetch('sponsors.json')
     .then(res => {
