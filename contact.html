@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ── Meta ─────────────────────────────────────────── -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <title>Contact Us — Seal Plus</title>
+
+  <meta name="description"
+    content="Contact the Seal Plus team. Send questions, feedback, or support requests." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://sealplus.in/contact.html" />
+  <link rel="sitemap" type="application/xml" href="https://sealplus.in/sitemap.xml" />
+
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://sealplus.in/contact.html" />
+  <meta property="og:title"       content="Contact Us — Seal Plus" />
+  <meta property="og:description" content="Send questions, feedback, or support requests to Seal Plus." />
+  <meta property="og:image"       content="https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/fastlane/metadata/android/en-US/images/icon.png" />
+
+  <link rel="icon" type="image/png"
+    href="https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/fastlane/metadata/android/en-US/images/icon.png" />
+
+  <!-- ── Fonts ─────────────────────────────────────────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- ── Shared Stylesheet ─────────────────────────────── -->
+  <link rel="stylesheet" href="site/assets/css/style.css" />
+
+  <!-- ── Contact-page-specific styles ─────────────────── -->
+  <style>
+    .contact-hero {
+      padding: 140px 5% 70px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .contact-hero::before {
+      content: "";
+      position: absolute;
+      inset: -120px 10% auto 10%;
+      height: 280px;
+      background: radial-gradient(circle at 50% 40%, rgba(79,172,254,.28), transparent 70%);
+      opacity: .7;
+      pointer-events: none;
+    }
+    .contact-hero .section-tag { margin-bottom: 18px; }
+    .contact-hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -.5px;
+      margin-bottom: 12px;
+    }
+    .contact-hero p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .contact-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 5% 90px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 26px;
+    }
+
+    .contact-card {
+      padding: 30px;
+      background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+
+    .contact-card.contact-side {
+      background: linear-gradient(145deg, rgba(79,172,254,.12), rgba(123,47,247,.08));
+      border-color: rgba(79,172,254,.25);
+    }
+
+    .contact-card h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .contact-card h2 .card-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(79,172,254,.12);
+      font-size: .95rem;
+      flex-shrink: 0;
+    }
+
+    .contact-card p {
+      font-size: .95rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+
+    .contact-form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .contact-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: .2px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: var(--text-primary);
+      padding: 12px 14px;
+      font-size: .95rem;
+      font-family: var(--font);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .form-group textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: rgba(79,172,254,.6);
+      box-shadow: 0 0 0 2px rgba(79,172,254,.2);
+    }
+
+    .form-note {
+      font-size: .85rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .contact-info-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .contact-info-item {
+      display: grid;
+      gap: 4px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .contact-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: rgba(79,172,254,.15);
+      border: 1px solid rgba(79,172,254,.25);
+      margin-bottom: 12px;
+    }
+
+    .contact-info-item span {
+      font-size: .8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .9px;
+      font-weight: 600;
+    }
+
+    .contact-info-item strong {
+      font-size: .95rem;
+      color: var(--text-primary);
+    }
+
+    .contact-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 960px) {
+      .contact-content { grid-template-columns: 1fr; }
+      .contact-card { padding: 26px; }
+    }
+
+    @media (max-width: 640px) {
+      .contact-content { padding: 0 5% 70px; }
+      .contact-card { padding: 22px; }
+      .contact-form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Animated Background ──────────────────────────── -->
+  <div class="bg-canvas" aria-hidden="true">
+    <div class="bg-star"></div>
+  </div>
+
+  <!-- ── Navigation ───────────────────────────────────── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <a href="index.html" class="nav-brand" aria-label="Seal Plus home">
+      <img
+        src="https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/fastlane/metadata/android/en-US/images/icon.png"
+        alt="Seal Plus app icon" width="38" height="38" loading="eager"
+      />
+      <span>Seal Plus</span>
+    </a>
+
+    <ul class="nav-links" role="list">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="index.html#releases">Releases</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="support.html">Support</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="index.html#releases" class="btn-sponsor-nav" aria-label="Download Seal Plus">
+        Download
+      </a>
+      <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── Contact Hero ─────────────────────────────────── -->
+  <header class="contact-hero" role="banner">
+    <div class="section-tag">Contact</div>
+    <h1>
+      Get in <span class="grad-text">Touch</span>
+    </h1>
+    <p>
+      Have a question, feature request, or feedback? Send a message and we will
+      get back to you as soon as possible.
+    </p>
+  </header>
+
+  <!-- ── Contact Content ──────────────────────────────── -->
+  <main class="contact-content" role="main" aria-label="Contact form">
+
+    <section class="glass-card contact-card">
+      <h2><span class="card-icon" aria-hidden="true">1</span> Send a message</h2>
+      <p>
+        Messages are delivered to <strong>support@sealplus.in</strong>. Please share
+        as much detail as possible so we can help quickly.
+      </p>
+
+      <div class="contact-pill">✨ Average response: 24-48 hours</div>
+
+      <form class="contact-form" action="https://formspree.io/f/xlgvpzdk" method="POST">
+        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+        <input type="hidden" name="_subject" value="Seal Plus Contact Request" />
+
+        <div class="contact-form-grid">
+          <div class="form-group">
+            <label for="contact-name">Your Name</label>
+            <input id="contact-name" name="name" type="text" placeholder="Enter your name" required />
+          </div>
+
+          <div class="form-group">
+            <label for="contact-email">Email Address</label>
+            <input id="contact-email" name="email" type="email" placeholder="you@example.com" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="contact-message">Message</label>
+          <textarea id="contact-message" name="message" placeholder="Tell us how we can help" required></textarea>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Send Message</button>
+        <div class="form-note">
+          By submitting, you agree to send your message to the Seal Plus support team.
+        </div>
+      </form>
+    </section>
+
+    <section class="glass-card contact-card contact-side">
+      <h2><span class="card-icon" aria-hidden="true">2</span> Support details</h2>
+      <p>
+        For faster help, include your device model, Android version, and a short
+        description of the issue.
+      </p>
+      <div class="contact-info-list">
+        <div class="contact-info-item">
+          <span>Email</span>
+          <strong>support@sealplus.in</strong>
+        </div>
+        <div class="contact-info-item">
+          <span>Response Time</span>
+          <strong>Usually within 24-48 hours</strong>
+        </div>
+        <div class="contact-info-item">
+          <span>Support Options</span>
+          <strong>Bug reports, feedback, and feature requests</strong>
+        </div>
+      </div>
+      <div class="contact-actions">
+        <a class="btn btn-secondary" href="support.html">Support the Developer</a>
+        <a class="btn btn-secondary" href="index.html#releases">Download Updates</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Scripts ─────────────────────────────────────────── -->
+  <script src="site/assets/js/main.js" defer></script>
+
+</body>
+</html>
