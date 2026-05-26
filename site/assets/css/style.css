@@ -1308,6 +1308,76 @@ section {
   border-bottom: 1px solid var(--glass-border);
 }
 
+/* ── ADS ───────────────────────────────────────────────────── */
+.ad-section {
+  padding: 70px 5%;
+}
+
+.ad-card {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 22px 24px 24px;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.ad-label {
+  display: inline-block;
+  font-size: .7rem;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.ad-slot {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.ad-slot.ad-loading {
+  background: rgba(255,255,255,.04);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ad-slot.ad-loading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,.03), rgba(255,255,255,.12), rgba(255,255,255,.03));
+  animation: adShimmer 1.6s infinite;
+}
+
+.ad-slot iframe {
+  border: 0;
+}
+
+.ad-728 { min-height: 90px; }
+.ad-320 { min-height: 50px; }
+.ad-native { min-height: 90px; }
+
+.ads-desktop { display: block; }
+.ads-mobile { display: none; }
+
+@media (max-width: 767px) {
+  .ads-desktop { display: none; }
+  .ads-mobile { display: block; }
+}
+
+@keyframes adShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* Sponsors Profile Card Grid */
 .sponsors-grid {
   display: grid;

@@ -186,6 +186,37 @@
     <p class="reveal delay-2">Last Updated: March 2026</p>
   </header>
 
+  <!-- ── Ad: Top Placement ─────────────────────────── -->
+  <section class="ad-section ad-page-top" aria-label="Advertisement">
+    <div class="ad-card">
+      <div class="ad-label" aria-hidden="true">Sponsored</div>
+      <div class="ad-slot ads-desktop ad-728">
+        <script>
+          atOptions = {
+            'key' : '5a47548e546c589ad99b0cd6f43d6451',
+            'format' : 'iframe',
+            'height' : 90,
+            'width' : 728,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/5a47548e546c589ad99b0cd6f43d6451/invoke.js"></script>
+      </div>
+      <div class="ad-slot ads-mobile ad-320">
+        <script>
+          atOptions = {
+            'key' : '39db61e33c13a730373234119c20b834',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/39db61e33c13a730373234119c20b834/invoke.js"></script>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Policy Content ───────────────────────────────── -->
   <main class="privacy-content" role="main" aria-label="Privacy policy content">
 
@@ -286,6 +317,17 @@
 
   </main>
 
+  <!-- ── Ad: Pre-footer Placement ───────────────────── -->
+  <section class="ad-section ad-prefooter" aria-label="Advertisement">
+    <div class="ad-card">
+      <div class="ad-label" aria-hidden="true">Sponsored</div>
+      <div class="ad-slot ad-native">
+        <script async="async" data-cfasync="false" src="https://pl29556224.effectivecpmnetwork.com/881e4fe1f2d7431e4b89b201d97c3517/invoke.js"></script>
+        <div id="container-881e4fe1f2d7431e4b89b201d97c3517"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Footer ───────────────────────────────────────── -->
   <footer role="contentinfo" style="padding: 30px 5%; text-align: center; border-top: 1px solid var(--glass-border);">
     <p style="font-size:.85rem; color:var(--text-muted);">
@@ -299,35 +341,10 @@
   </footer>
 
   <!-- ── Scripts ──────────────────────────────────────── -->
-  <script>
-    /* Navbar scroll */
-    const navbar = document.querySelector('.navbar');
-    window.addEventListener('scroll', () => {
-      navbar?.classList.toggle('scrolled', window.scrollY > 40);
-    }, { passive: true });
+  <script src="site/assets/js/main.js" defer></script>
 
-    /* Mobile nav toggle */
-    const toggle = document.querySelector('.nav-toggle');
-    const links  = document.querySelector('.nav-links');
-    toggle?.addEventListener('click', () => {
-      toggle.classList.toggle('open');
-      links.classList.toggle('mobile-open');
-      toggle.setAttribute('aria-expanded',
-        toggle.classList.contains('open') ? 'true' : 'false');
-    });
-
-    /* Scroll-reveal */
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  </script>
+  <!-- ── Adsterra Social Bar ─────────────────────────────── -->
+  <script src="https://pl29556223.effectivecpmnetwork.com/df/b5/1c/dfb51c4a0f71f2d919f3f6cbc987c5c2.js"></script>
 
 </body>
 </html>

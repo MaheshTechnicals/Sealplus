@@ -42,6 +42,7 @@ const $ = id => document.getElementById(id);
   toggle.addEventListener('click', () => {
     toggle.classList.toggle('open');
     links.classList.toggle('mobile-open');
+    toggle.setAttribute('aria-expanded', toggle.classList.contains('open') ? 'true' : 'false');
   });
 
   // Close on link click
@@ -49,6 +50,7 @@ const $ = id => document.getElementById(id);
     a.addEventListener('click', () => {
       toggle.classList.remove('open');
       links.classList.remove('mobile-open');
+      toggle.setAttribute('aria-expanded', 'false');
     });
   });
 })();
@@ -504,6 +506,47 @@ function toggleOlderReleases(btn) {
 }
 window.toggleOlderReleases = toggleOlderReleases;
 
+/* ── Ad skeletons ─────────────────────────────────────────── */
+function initAdSkeletons() {
+  const slots = document.querySelectorAll('.ad-slot');
+  if (!slots.length) return;
+
+  slots.forEach(slot => {
+    slot.classList.add('ad-loading');
+
+    let cleared = false;
+    const clear = () => {
+      if (cleared) return;
+      cleared = true;
+      slot.classList.remove('ad-loading');
+    };
+
+    const existingIframe = slot.querySelector('iframe');
+    if (existingIframe) {
+      existingIframe.addEventListener('load', clear, { once: true });
+      try {
+        if (existingIframe.contentDocument && existingIframe.contentDocument.readyState === 'complete') {
+          clear();
+        }
+      } catch {
+        // Cross-origin iframe; rely on load event or timeout.
+      }
+      setTimeout(clear, 12000);
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      const iframe = slot.querySelector('iframe');
+      if (!iframe) return;
+      iframe.addEventListener('load', clear, { once: true });
+      observer.disconnect();
+    });
+
+    observer.observe(slot, { childList: true, subtree: true });
+    setTimeout(clear, 12000);
+  });
+}
+
 /* ── Main: Load Releases ────────────────────────────────────── */
 async function loadReleases(forceRefresh = false) {
   const list       = document.querySelector('.releases-list');
@@ -769,4 +812,5 @@ const ssSlider = (() => {
 document.addEventListener('DOMContentLoaded', () => {
   loadReleases();
   ssSlider.init();
+  initAdSkeletons();
 });
