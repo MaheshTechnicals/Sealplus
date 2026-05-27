@@ -2008,3 +2008,474 @@ footer {
 .older-releases-list.open {
   display: flex;
 }
+
+/* ══════════════════════════════════════════════════════
+   HOW TO INSTALL — Steps
+═══════════════════════════════════════════════════════ */
+.install-wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 26px;
+  align-items: start;
+}
+
+.install-main {
+  display: grid;
+  gap: 24px;
+}
+
+.install-steps {
+  list-style: none;
+  display: grid;
+  gap: 18px;
+  padding: 0;
+}
+
+.install-step {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 22px 24px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition);
+}
+
+.install-step:hover {
+  border-color: rgba(79,172,254,.35);
+}
+
+.step-num {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.step-body strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.step-body p {
+  font-size: .9rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.step-body code {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: .85rem;
+  font-family: monospace;
+  color: var(--accent-cyan);
+}
+
+.install-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.install-aside {
+  padding: 24px;
+  position: relative;
+}
+
+.install-aside-header {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.install-checklist {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.install-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: .9rem;
+}
+
+.install-checklist .check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(79,172,254,.15);
+  color: var(--accent-cyan);
+  font-size: .75rem;
+  font-weight: 700;
+  border: 1px solid rgba(79,172,254,.25);
+}
+
+.install-tip {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(123,47,247,.12);
+  border: 1px solid rgba(123,47,247,.25);
+  color: var(--text-muted);
+  font-size: .88rem;
+  line-height: 1.6;
+}
+
+/* ══════════════════════════════════════════════════════
+   COMPARISON TABLE
+═══════════════════════════════════════════════════════ */
+.comparison-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 5%;
+  display: grid;
+  gap: 20px;
+}
+
+.comparison-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.comparison-card {
+  padding: 18px 20px;
+}
+
+.comparison-card-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.comparison-card-text {
+  color: var(--text-muted);
+  font-size: .9rem;
+  line-height: 1.7;
+}
+
+.comparison-table-wrap {
+  overflow-x: auto;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  min-width: 640px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 13px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.comparison-table thead th {
+  background: rgba(79,172,254,.1);
+  color: var(--accent-blue);
+  font-weight: 700;
+  font-size: .85rem;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  border-bottom: 2px solid rgba(79,172,254,.25);
+}
+
+.comparison-table thead th:first-child {
+  border-radius: var(--radius-sm) 0 0 0;
+}
+
+.comparison-table thead th:last-child {
+  border-radius: 0 var(--radius-sm) 0 0;
+}
+
+.comparison-table tbody tr:nth-child(odd) {
+  background: rgba(255,255,255,.02);
+}
+
+.comparison-table tbody tr:hover {
+  background: rgba(79,172,254,.06);
+}
+
+.comparison-table td:first-child {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.comparison-table td:nth-child(2) {
+  color: var(--accent-green);
+}
+
+.comparison-table td:nth-child(3) {
+  color: var(--text-muted);
+}
+
+.comparison-note {
+  margin-top: 28px;
+  color: var(--text-muted);
+  font-size: .95rem;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.comparison-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* ══════════════════════════════════════════════════════
+   FAQ ACCORDION
+═══════════════════════════════════════════════════════ */
+.faq-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 5%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 22px;
+  align-items: start;
+}
+
+.faq-list {
+  display: grid;
+  gap: 12px;
+}
+
+.faq-item {
+  border-radius: var(--radius-lg) !important;
+  padding: 0 !important;
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+
+.faq-item[open] {
+  border-color: rgba(79,172,254,.35) !important;
+}
+
+.faq-question {
+  padding: 20px 24px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+  transition: color var(--transition);
+}
+
+.faq-question::marker { content: ""; }
+.faq-question::-webkit-details-marker { display: none; }
+
+.faq-question::after {
+  content: '+';
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: var(--accent-blue);
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+
+.faq-item[open] .faq-question::after {
+  transform: rotate(45deg);
+}
+
+.faq-item[open] .faq-question {
+  color: var(--accent-blue);
+}
+
+.faq-answer {
+  padding: 0 24px 20px;
+  border-top: 1px solid var(--glass-border);
+  margin-top: 0;
+}
+
+.faq-answer p {
+  font-size: .93rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-top: 14px;
+}
+
+.faq-aside {
+  padding: 22px;
+}
+
+.faq-aside-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.faq-aside-text {
+  color: var(--text-muted);
+  font-size: .9rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.faq-aside-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Subtle card reveal for new side panels */
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.install-aside,
+.faq-aside,
+.comparison-card {
+  animation: card-rise .65s ease both;
+}
+
+.comparison-card:nth-child(2) { animation-delay: .1s; }
+.comparison-card:nth-child(3) { animation-delay: .2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .install-aside,
+  .faq-aside,
+  .comparison-card {
+    animation: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .install-wrap,
+  .faq-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .comparison-highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-table {
+    min-width: 0;
+  }
+
+  .comparison-table thead {
+    display: none;
+  }
+
+  .comparison-table,
+  .comparison-table tbody,
+  .comparison-table tr,
+  .comparison-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .comparison-table tr {
+    margin-bottom: 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: rgba(255,255,255,.02);
+  }
+
+  .comparison-table td {
+    border-bottom: 1px solid var(--glass-border);
+    padding: 12px 16px;
+  }
+
+  .comparison-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .comparison-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: .72rem;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .comparison-table td:first-child {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 640px) {
+  .section-title {
+    line-height: 1.12;
+    margin-bottom: 12px;
+    letter-spacing: -.4px;
+  }
+
+  .section-sub {
+    font-size: .98rem;
+    line-height: 1.65;
+  }
+
+  .step-body p,
+  .faq-answer p,
+  .comparison-note {
+    font-size: .9rem;
+    line-height: 1.65;
+  }
+
+  .install-step {
+    flex-direction: column;
+  }
+
+  .install-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .faq-question {
+    padding: 18px 18px;
+  }
+
+  .faq-answer {
+    padding: 0 18px 18px;
+  }
+}
