@@ -50,6 +50,15 @@
       opacity: .7;
       pointer-events: none;
     }
+    .contact-hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 15% -140px 15%;
+      height: 240px;
+      background: radial-gradient(circle at 50% 50%, rgba(123,47,247,.22), transparent 70%);
+      opacity: .6;
+      pointer-events: none;
+    }
     .contact-hero .section-tag { margin-bottom: 18px; }
     .contact-hero h1 {
       font-size: clamp(2rem, 5vw, 3rem);
@@ -69,7 +78,7 @@
       margin: 0 auto;
       padding: 0 5% 90px;
       display: grid;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
       gap: 26px;
     }
 
@@ -78,6 +87,20 @@
       background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.12);
       box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+
+    .contact-card.contact-main {
+      border-color: rgba(79,172,254,.28);
+      background: linear-gradient(160deg, rgba(79,172,254,.12), rgba(255,255,255,.02));
+    }
+
+    .contact-card .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
     }
 
     .contact-card.contact-side {
@@ -195,6 +218,47 @@
       margin-bottom: 12px;
     }
 
+    .contact-highlights {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .contact-highlight {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .highlight-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(79,172,254,.15);
+      border: 1px solid rgba(79,172,254,.25);
+      color: var(--accent-cyan);
+      flex-shrink: 0;
+    }
+
+    .highlight-title {
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .highlight-desc {
+      font-size: .78rem;
+      color: var(--text-muted);
+    }
+
     .contact-info-item span {
       font-size: .8rem;
       color: var(--text-muted);
@@ -215,9 +279,16 @@
       flex-wrap: wrap;
     }
 
+    .btn .btn-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
     @media (max-width: 960px) {
       .contact-content { grid-template-columns: 1fr; }
       .contact-card { padding: 26px; }
+      .contact-highlights { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
@@ -275,6 +346,49 @@
       Have a question, feature request, or feedback? Send a message and we will
       get back to you as soon as possible.
     </p>
+    <div class="contact-highlights" aria-label="Contact highlights">
+      <div class="contact-highlight">
+        <span class="highlight-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4" />
+            <path d="M12 18v4" />
+            <path d="M4.93 4.93l2.83 2.83" />
+            <path d="M16.24 16.24l2.83 2.83" />
+            <path d="M2 12h4" />
+            <path d="M18 12h4" />
+            <path d="M4.93 19.07l2.83-2.83" />
+            <path d="M16.24 7.76l2.83-2.83" />
+          </svg>
+        </span>
+        <div>
+          <div class="highlight-title">Fast replies</div>
+          <div class="highlight-desc">Usually within 24-48 hours</div>
+        </div>
+      </div>
+      <div class="contact-highlight">
+        <span class="highlight-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="14" rx="2" />
+            <path d="M3 6l9 6 9-6" />
+          </svg>
+        </span>
+        <div>
+          <div class="highlight-title">Direct email</div>
+          <div class="highlight-desc">support@sealplus.in</div>
+        </div>
+      </div>
+      <div class="contact-highlight">
+        <span class="highlight-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
+          </svg>
+        </span>
+        <div>
+          <div class="highlight-title">Secure form</div>
+          <div class="highlight-desc">Protected from spam</div>
+        </div>
+      </div>
+    </div>
   </header>
 
   <!-- ── Ad: Top Placement ─────────────────────────── -->
@@ -311,14 +425,15 @@
   <!-- ── Contact Content ──────────────────────────────── -->
   <main class="contact-content" role="main" aria-label="Contact form">
 
-    <section class="glass-card contact-card">
-      <h2><span class="card-icon" aria-hidden="true">1</span> Send a message</h2>
+    <section class="glass-card contact-card contact-main">
+      <div class="card-header">
+        <h2><span class="card-icon" aria-hidden="true">1</span> Send a message</h2>
+        <span class="contact-pill">✨ Average response: 24-48 hours</span>
+      </div>
       <p>
         Messages are delivered to <strong>support@sealplus.in</strong>. Please share
         as much detail as possible so we can help quickly.
       </p>
-
-      <div class="contact-pill">✨ Average response: 24-48 hours</div>
 
       <form class="contact-form" action="https://formspree.io/f/xlgvpzdk" method="POST">
         <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
@@ -341,7 +456,13 @@
           <textarea id="contact-message" name="message" placeholder="Tell us how we can help" required></textarea>
         </div>
 
-        <button class="btn btn-primary" type="submit">Send Message</button>
+        <button class="btn btn-primary" type="submit">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 2L11 13" />
+            <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+          </svg>
+          Send Message
+        </button>
         <div class="form-note">
           By submitting, you agree to send your message to the Seal Plus support team.
         </div>
@@ -369,8 +490,20 @@
         </div>
       </div>
       <div class="contact-actions">
-        <a class="btn btn-secondary" href="support.html">Support the Developer</a>
-        <a class="btn btn-secondary" href="index.html#releases">Download Updates</a>
+        <a class="btn btn-secondary" href="support.html">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 21s-6-4.3-9-8.5C1 9 2.5 6 6 6c2 0 3.4 1 4 2 0.6-1 2-2 4-2 3.5 0 5 3 3 6.5-3 4.2-9 8.5-9 8.5z" />
+          </svg>
+          Support the Developer
+        </a>
+        <a class="btn btn-secondary" href="index.html#releases">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <path d="M7 10l5 5 5-5" />
+            <path d="M12 15V3" />
+          </svg>
+          Download Updates
+        </a>
       </div>
     </section>
 
