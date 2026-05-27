@@ -1313,6 +1313,14 @@ section {
   padding: 70px 5%;
 }
 
+.ad-inline {
+  padding: 24px 0;
+}
+
+.ad-inline {
+  grid-column: 1 / -1;
+}
+
 .ad-card {
   max-width: 1100px;
   margin: 0 auto;
@@ -1362,13 +1370,22 @@ section {
 }
 
 .ad-728 { min-height: 90px; }
+.ad-468 { min-height: 60px; }
 .ad-320 { min-height: 50px; }
+.ad-300 { min-height: 250px; }
 .ad-native { min-height: 90px; }
 
 .ads-desktop { display: block; }
+.ads-tablet { display: none; }
 .ads-mobile { display: none; }
 
+@media (max-width: 1024px) {
+  .ads-desktop { display: none; }
+  .ads-tablet { display: block; }
+}
+
 @media (max-width: 767px) {
+  .ads-tablet { display: none; }
   .ads-desktop { display: none; }
   .ads-mobile { display: block; }
 }
