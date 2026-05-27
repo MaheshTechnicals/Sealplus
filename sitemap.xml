@@ -46,20 +46,6 @@
     <priority>0.6</priority>
   </url>
 
-  <!-- Download Page (recommended new page) -->
-  <url>
-    <loc>https://sealplus.in/download.html</loc>
-    <lastmod>2026-05-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- How to Install Page (recommended new page) -->
-  <url>
-    <loc>https://sealplus.in/how-to-install.html</loc>
-    <lastmod>2026-05-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  <!-- Note: only include pages that exist in the site root -->
 
 </urlset>

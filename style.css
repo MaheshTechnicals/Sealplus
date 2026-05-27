@@ -2012,6 +2012,20 @@ footer {
 /* ══════════════════════════════════════════════════════
    HOW TO INSTALL — Steps
 ═══════════════════════════════════════════════════════ */
+.install-wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 26px;
+  align-items: start;
+}
+
+.install-main {
+  display: grid;
+  gap: 24px;
+}
+
 .install-steps {
   list-style: none;
   display: grid;
@@ -2073,13 +2087,110 @@ footer {
   color: var(--accent-cyan);
 }
 
+.install-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.install-aside {
+  padding: 24px;
+  position: relative;
+}
+
+.install-aside-header {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.install-checklist {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.install-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: .9rem;
+}
+
+.install-checklist .check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(79,172,254,.15);
+  color: var(--accent-cyan);
+  font-size: .75rem;
+  font-weight: 700;
+  border: 1px solid rgba(79,172,254,.25);
+}
+
+.install-tip {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(123,47,247,.12);
+  border: 1px solid rgba(123,47,247,.25);
+  color: var(--text-muted);
+  font-size: .88rem;
+  line-height: 1.6;
+}
+
 /* ══════════════════════════════════════════════════════
    COMPARISON TABLE
 ═══════════════════════════════════════════════════════ */
+.comparison-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 5%;
+  display: grid;
+  gap: 20px;
+}
+
+.comparison-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.comparison-card {
+  padding: 18px 20px;
+}
+
+.comparison-card-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.comparison-card-text {
+  color: var(--text-muted);
+  font-size: .9rem;
+  line-height: 1.7;
+}
+
+.comparison-table-wrap {
+  overflow-x: auto;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
 .comparison-table {
   width: 100%;
   border-collapse: collapse;
   font-size: .92rem;
+  min-width: 640px;
 }
 
 .comparison-table th,
@@ -2131,9 +2242,33 @@ footer {
   color: var(--text-muted);
 }
 
+.comparison-note {
+  margin-top: 28px;
+  color: var(--text-muted);
+  font-size: .95rem;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.comparison-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
 /* ══════════════════════════════════════════════════════
    FAQ ACCORDION
 ═══════════════════════════════════════════════════════ */
+.faq-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 5%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 22px;
+  align-items: start;
+}
+
 .faq-list {
   display: grid;
   gap: 12px;
@@ -2195,5 +2330,111 @@ footer {
   color: var(--text-muted);
   line-height: 1.8;
   margin-top: 14px;
+}
+
+.faq-aside {
+  padding: 22px;
+}
+
+.faq-aside-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.faq-aside-text {
+  color: var(--text-muted);
+  font-size: .9rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.faq-aside-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 980px) {
+  .install-wrap,
+  .faq-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .comparison-highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-table {
+    min-width: 0;
+  }
+
+  .comparison-table thead {
+    display: none;
+  }
+
+  .comparison-table,
+  .comparison-table tbody,
+  .comparison-table tr,
+  .comparison-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .comparison-table tr {
+    margin-bottom: 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: rgba(255,255,255,.02);
+  }
+
+  .comparison-table td {
+    border-bottom: 1px solid var(--glass-border);
+    padding: 12px 16px;
+  }
+
+  .comparison-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .comparison-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: .72rem;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .comparison-table td:first-child {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 640px) {
+  .install-step {
+    flex-direction: column;
+  }
+
+  .install-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .faq-question {
+    padding: 18px 18px;
+  }
+
+  .faq-answer {
+    padding: 0 18px 18px;
+  }
 }
 

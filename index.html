@@ -667,8 +667,8 @@
       </p>
     </div>
 
-    <div class="about-inner reveal">
-      <div class="about-content" style="max-width:720px; margin:0 auto;">
+    <div class="install-wrap reveal">
+      <div class="install-main">
         <ol class="install-steps">
           <li class="install-step">
             <span class="step-num">1</span>
@@ -707,11 +707,24 @@
           </li>
         </ol>
 
-        <div class="about-links" style="margin-top:32px;">
+        <div class="install-actions">
           <a href="#releases" class="btn btn-primary">Download Seal Plus APK</a>
           <a href="contact.html" class="btn btn-secondary">Need Help? Contact Us</a>
         </div>
       </div>
+
+      <aside class="install-aside glass-card" aria-label="Install checklist">
+        <div class="install-aside-header">Quick Checklist</div>
+        <ul class="install-checklist">
+          <li><span class="check">OK</span> Android 7.0+ supported</li>
+          <li><span class="check">OK</span> Universal APK works everywhere</li>
+          <li><span class="check">OK</span> No root required</li>
+          <li><span class="check">OK</span> Safe, open-source build</li>
+        </ul>
+        <div class="install-tip">
+          Prefer smaller downloads? Use the architecture-specific APK for your device.
+        </div>
+      </aside>
     </div>
 
     <script type="application/ld+json">
@@ -774,8 +787,24 @@
       </p>
     </div>
 
-    <div class="reveal" style="max-width:860px; margin:0 auto; overflow-x:auto; padding: 0 5%;">
-      <table class="comparison-table" aria-label="Feature comparison between Seal Plus and Seal app">
+    <div class="comparison-wrap reveal">
+      <div class="comparison-highlights">
+        <div class="glass-card comparison-card">
+          <div class="comparison-card-title">Security</div>
+          <p class="comparison-card-text">App Lock, biometric unlock, and a private vault for sensitive downloads.</p>
+        </div>
+        <div class="glass-card comparison-card">
+          <div class="comparison-card-title">Updates</div>
+          <p class="comparison-card-text">In-app update flow keeps Seal Plus current without manual installs.</p>
+        </div>
+        <div class="glass-card comparison-card">
+          <div class="comparison-card-title">Design</div>
+          <p class="comparison-card-text">Exclusive gradient glassmorphism UI with premium polish.</p>
+        </div>
+      </div>
+
+      <div class="comparison-table-wrap" aria-label="Feature comparison between Seal Plus and Seal app">
+        <table class="comparison-table">
         <thead>
           <tr>
             <th scope="col">Feature</th>
@@ -785,72 +814,73 @@
         </thead>
         <tbody>
           <tr>
-            <td>UI Theme</td>
-            <td>✅ Exclusive gradient glassmorphism dark theme</td>
-            <td>Standard Material You theme</td>
+            <td data-label="Feature">UI Theme</td>
+            <td data-label="Seal Plus">Exclusive gradient glassmorphism dark theme</td>
+            <td data-label="Seal (Original)">Standard Material You theme</td>
           </tr>
           <tr>
-            <td>Auto-Update</td>
-            <td>✅ In-app update system</td>
-            <td>❌ Manual update via GitHub</td>
+            <td data-label="Feature">Auto-Update</td>
+            <td data-label="Seal Plus">In-app update system</td>
+            <td data-label="Seal (Original)">Manual update via GitHub</td>
           </tr>
           <tr>
-            <td>App Lock / PIN Security</td>
-            <td>✅ PIN + biometric (PBKDF2-secured)</td>
-            <td>❌ Not available</td>
+            <td data-label="Feature">App Lock / PIN Security</td>
+            <td data-label="Seal Plus">PIN + biometric (PBKDF2-secured)</td>
+            <td data-label="Seal (Original)">Not available</td>
           </tr>
           <tr>
-            <td>Hidden Content Vault</td>
-            <td>✅ Lock-gated private download vault</td>
-            <td>❌ Not available</td>
+            <td data-label="Feature">Hidden Content Vault</td>
+            <td data-label="Seal Plus">Lock-gated private download vault</td>
+            <td data-label="Seal (Original)">Not available</td>
           </tr>
           <tr>
-            <td>Proxy Support</td>
-            <td>✅ Free proxy fetching + custom SOCKS4/5</td>
-            <td>Basic proxy URL only</td>
+            <td data-label="Feature">Proxy Support</td>
+            <td data-label="Seal Plus">Free proxy fetching + custom SOCKS4/5</td>
+            <td data-label="Seal (Original)">Basic proxy URL only</td>
           </tr>
           <tr>
-            <td>Network Type Restriction</td>
-            <td>✅ WiFi only / Mobile only / Any</td>
-            <td>❌ Not available</td>
+            <td data-label="Feature">Network Type Restriction</td>
+            <td data-label="Seal Plus">WiFi only / Mobile only / Any</td>
+            <td data-label="Seal (Original)">Not available</td>
           </tr>
           <tr>
-            <td>Max Concurrent Downloads</td>
-            <td>✅ Configurable 1–5 or unlimited</td>
-            <td>❌ Fixed at 1</td>
+            <td data-label="Feature">Max Concurrent Downloads</td>
+            <td data-label="Seal Plus">Configurable 1–5 or unlimited</td>
+            <td data-label="Seal (Original)">Fixed at 1</td>
           </tr>
           <tr>
-            <td>Aria2c Connection Control</td>
-            <td>✅ 2 / 4 / 8 / 16 / 32 connections</td>
-            <td>Basic aria2c support</td>
+            <td data-label="Feature">Aria2c Connection Control</td>
+            <td data-label="Seal Plus">2 / 4 / 8 / 16 / 32 connections</td>
+            <td data-label="Seal (Original)">Basic aria2c support</td>
           </tr>
           <tr>
-            <td>Notification Customization</td>
-            <td>✅ Sound, vibrate, LED, success/error alerts</td>
-            <td>❌ Standard only</td>
+            <td data-label="Feature">Notification Customization</td>
+            <td data-label="Seal Plus">Sound, vibrate, LED, success/error alerts</td>
+            <td data-label="Seal (Original)">Standard only</td>
           </tr>
           <tr>
-            <td>Base Download Engine</td>
-            <td>yt-dlp (always latest)</td>
-            <td>yt-dlp</td>
+            <td data-label="Feature">Base Download Engine</td>
+            <td data-label="Seal Plus">yt-dlp (always latest)</td>
+            <td data-label="Seal (Original)">yt-dlp</td>
           </tr>
           <tr>
-            <td>Supported Sites</td>
-            <td>1000+</td>
-            <td>1000+</td>
+            <td data-label="Feature">Supported Sites</td>
+            <td data-label="Seal Plus">1000+</td>
+            <td data-label="Seal (Original)">1000+</td>
           </tr>
           <tr>
-            <td>License</td>
-            <td>GPL-3.0, Free &amp; Open Source</td>
-            <td>GPL-3.0, Free &amp; Open Source</td>
+            <td data-label="Feature">License</td>
+            <td data-label="Seal Plus">GPL-3.0, Free &amp; Open Source</td>
+            <td data-label="Seal (Original)">GPL-3.0, Free &amp; Open Source</td>
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
 
-      <p style="margin-top:28px; color:var(--text-muted); font-size:.95rem; line-height:1.8; text-align:center;">
+      <p class="comparison-note">
         If you're looking for a <strong>Seal app alternative</strong> with more control and security features, <strong>Seal Plus</strong> is the clear upgrade. It keeps everything great about the original Seal app and adds the features power users actually want — all still 100% free and open source.
       </p>
-      <div style="display:flex; justify-content:center; margin-top:24px;">
+      <div class="comparison-cta">
         <a href="#releases" class="btn btn-primary" aria-label="Download Seal Plus APK">Download Seal Plus APK Free</a>
       </div>
     </div>
@@ -870,63 +900,73 @@
       </p>
     </div>
 
-    <div class="faq-list reveal" style="max-width:800px; margin:0 auto; padding:0 5%;">
-
-      <details class="faq-item glass-card">
+    <div class="faq-wrap reveal">
+      <div class="faq-list">
+        <details class="faq-item glass-card">
         <summary class="faq-question">What is Seal Plus?</summary>
         <div class="faq-answer">
           <p>Seal Plus (also written as "sealplus") is a free, open-source Android video and audio downloader app maintained by Mahesh Technicals. It is built on top of the original <strong>Seal app</strong> by JunkFood02 and extends it with exclusive premium features including App Lock, a gradient dark theme, proxy support, and a hidden content vault. Like the Seal app, Seal Plus is powered by yt-dlp and supports downloading from 1000+ websites.</p>
         </div>
-      </details>
+        </details>
 
-      <details class="faq-item glass-card">
+        <details class="faq-item glass-card">
         <summary class="faq-question">How do I download the Seal Plus APK?</summary>
         <div class="faq-answer">
           <p>You can download the latest <strong>Seal Plus APK</strong> directly from the <a href="#releases" style="color:var(--accent-blue);">Releases section</a> on this page (sealplus.in), which fetches the latest build live from GitHub. You can also visit the <a href="https://github.com/MaheshTechnicals/Sealplus/releases/latest" target="_blank" rel="noopener" style="color:var(--accent-blue);">GitHub Releases page</a> directly. The universal APK works on all devices; architecture-specific APKs (arm64-v8a, armeabi-v7a, x86_64) are available for a smaller file size.</p>
         </div>
-      </details>
+        </details>
 
-      <details class="faq-item glass-card">
+        <details class="faq-item glass-card">
         <summary class="faq-question">Is Seal Plus safe to install?</summary>
         <div class="faq-answer">
           <p>Yes, Seal Plus is completely safe. The full source code is publicly available on <a href="https://github.com/MaheshTechnicals/Sealplus" target="_blank" rel="noopener" style="color:var(--accent-blue);">GitHub</a> and can be audited by anyone. The app collects no personal data, requires no account, and does all downloading and processing locally on your device. The APK is built directly from the open-source repository — there is no closed source or hidden code.</p>
         </div>
-      </details>
+        </details>
 
-      <details class="faq-item glass-card">
+        <details class="faq-item glass-card">
         <summary class="faq-question">What is the difference between Seal Plus and Seal app?</summary>
         <div class="faq-answer">
           <p>Both apps share the same yt-dlp download engine and GPL-3.0 open-source license. <strong>Seal Plus</strong> adds many features not found in the original Seal app: an exclusive gradient glassmorphism dark theme, in-app auto-update system, App Lock with PIN and biometric security, a hidden content vault, free proxy fetching with SOCKS4/5 support, configurable concurrent downloads, customizable notifications, and network type restrictions. See the full <a href="#comparison" style="color:var(--accent-blue);">comparison table above</a> for a detailed breakdown.</p>
         </div>
-      </details>
+        </details>
 
-      <details class="faq-item glass-card">
+        <details class="faq-item glass-card">
         <summary class="faq-question">How do I install Seal Plus on Android?</summary>
         <div class="faq-answer">
           <p>To install the <strong>Seal Plus APK</strong> on Android: (1) Go to Settings → Security and enable "Install unknown apps" for your browser or file manager. (2) Download the APK from the <a href="#releases" style="color:var(--accent-blue);">Releases section</a> on this page. (3) Open your file manager, tap the downloaded APK file, and tap Install. The full step-by-step guide is available in the <a href="#how-to-install" style="color:var(--accent-blue);">installation guide above</a>.</p>
         </div>
-      </details>
+        </details>
 
-      <details class="faq-item glass-card">
+        <details class="faq-item glass-card">
         <summary class="faq-question">Does Seal Plus support YouTube downloads?</summary>
         <div class="faq-answer">
           <p>Yes, Seal Plus supports YouTube through yt-dlp, including video downloads in multiple resolutions, audio-only extraction (MP3, M4A, OGG), subtitle downloads, and playlist downloads. Seal Plus also supports 1000+ other websites including TikTok, Instagram, Twitter/X, Reddit, Vimeo, SoundCloud, and many more. Please ensure you only download content you have the right to download and comply with each platform's terms of service.</p>
         </div>
-      </details>
+        </details>
 
-      <details class="faq-item glass-card">
+        <details class="faq-item glass-card">
         <summary class="faq-question">What Android version does Seal Plus require?</summary>
         <div class="faq-answer">
           <p>Seal Plus requires Android 7.0 (API level 24) or higher. It is optimized for modern Android versions and targets Android API 36 (Android 16). The app works on all Android phones and tablets running Android Nougat or newer, including devices from Samsung, OnePlus, Xiaomi, Google Pixel, and other manufacturers.</p>
         </div>
-      </details>
+        </details>
 
-      <details class="faq-item glass-card">
+        <details class="faq-item glass-card">
         <summary class="faq-question">Where is the Seal Plus source code on GitHub?</summary>
         <div class="faq-answer">
           <p>The complete <strong>Seal Plus source code</strong> is publicly hosted on GitHub at <a href="https://github.com/MaheshTechnicals/Sealplus" target="_blank" rel="noopener" style="color:var(--accent-blue);">github.com/MaheshTechnicals/Sealplus</a>. You can find all releases, the changelog, issue tracker, and contribution guidelines there. The project is open source under the GPL-3.0 license, meaning anyone can view, fork, and contribute to the code.</p>
         </div>
-      </details>
+        </details>
+      </div>
+
+      <aside class="faq-aside glass-card" aria-label="FAQ help">
+        <h3 class="faq-aside-title">Still have questions?</h3>
+        <p class="faq-aside-text">Check the install guide or reach out if you need device-specific help.</p>
+        <div class="faq-aside-actions">
+          <a href="#how-to-install" class="btn btn-secondary">Install Guide</a>
+          <a href="contact.html" class="btn btn-primary">Contact Support</a>
+        </div>
+      </aside>
 
     </div>
 
