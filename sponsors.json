@@ -59,6 +59,11 @@
       "id": 12,
       "name": "Benoit Barret",
       "METHOD": "PAYPAL"
+    },
+    {
+      "id": 13,
+      "name": "@devildog2621",
+      "METHOD": "GITHUB"
     }
   ]
 }
