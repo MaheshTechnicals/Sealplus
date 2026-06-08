@@ -12,7 +12,7 @@ kotlin {
     jvmToolchain(21)
 }
 android {
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         minSdk = 21
     }

@@ -26,7 +26,7 @@ val baseVersionName = currentVersion.name
 val currentVersionCode = currentVersion.code.toInt()
 
 android {
-    compileSdk = 36
+    compileSdk = 37
 
     if (keystorePropertiesFile.exists()) {
         val keystoreProperties = Properties()
@@ -46,7 +46,7 @@ android {
     defaultConfig {
         applicationId = "com.maheshtechnicals.sealplus"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 207_000_400
         check(versionCode == currentVersionCode)
 
