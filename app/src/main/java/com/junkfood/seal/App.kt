@@ -51,6 +51,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
@@ -113,6 +114,7 @@ class App : Application() {
 
         Thread.setDefaultUncaughtExceptionHandler { _, e ->
             try {
+                GlobalContext.getOrNull()?.get<DownloaderV2>()?.cleanup()
                 startCrashReportActivity(e)
             } catch (secondary: Throwable) {
                 secondary.printStackTrace()
@@ -120,6 +122,11 @@ class App : Application() {
                 android.os.Process.killProcess(android.os.Process.myPid())
             }
         }
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        GlobalContext.getOrNull()?.get<DownloaderV2>()?.cleanup()
     }
 
     private fun startCrashReportActivity(th: Throwable) {

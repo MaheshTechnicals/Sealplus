@@ -56,13 +56,12 @@ object SponsorUtil {
     private const val SPONSORS_URL =
         "https://raw.githubusercontent.com/MaheshTechnicals/Sealplus/main/sponsors.json"
 
-    private val httpClient: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .apply { ProxyManager.getActiveProxy()?.let { proxy(it) } }
-        .build()
-
-    private fun getClient(): OkHttpClient = httpClient
+    private fun getClient(): OkHttpClient =
+        OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .apply { ProxyManager.getActiveProxy()?.let { proxy(it) } }
+            .build()
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }
     @Volatile

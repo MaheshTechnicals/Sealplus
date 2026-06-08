@@ -52,6 +52,7 @@ object DatabaseUtil {
     private val db =
         Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
             .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+            .fallbackToDestructiveMigration()
             .build()
     private val dao = db.videoInfoDao()
 

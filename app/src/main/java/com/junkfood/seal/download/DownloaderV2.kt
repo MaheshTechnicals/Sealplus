@@ -81,6 +81,8 @@ interface DownloaderV2 {
     }
 
     fun remove(task: Task): Boolean
+
+    fun cleanup() {}
 }
 
 internal object FakeDownloaderV2 : DownloaderV2 {
@@ -140,40 +142,40 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
     private val snapshotFlow = snapshotFlow { taskStateMap.toMap() }
 
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            clearNetworkDegraded()
+            waitingForNetwork.clear()
+            resumeNetworkPausedTasks()
+            doYourWork()
+        }
+
+        override fun onLost(network: Network) {
+            markNetworkDegraded()
+        }
+
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities,
+        ) {
+            val validated =
+                networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            if (validated) {
+                clearNetworkDegraded()
+                waitingForNetwork.clear()
+                resumeNetworkPausedTasks()
+                doYourWork()
+            } else {
+                markNetworkDegraded()
+            }
+        }
+    }
+
     init {
         // Re-trigger doYourWork() when suitable network becomes available
         // (e.g. WiFi reconnects after the restriction blocked queued tasks).
-        App.connectivityManager.registerDefaultNetworkCallback(
-            object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) {
-                    clearNetworkDegraded()
-                    waitingForNetwork.clear()
-                    resumeNetworkPausedTasks()
-                    doYourWork()
-                }
-
-                override fun onLost(network: Network) {
-                    markNetworkDegraded()
-                }
-
-                override fun onCapabilitiesChanged(
-                    network: Network,
-                    networkCapabilities: NetworkCapabilities,
-                ) {
-                    val validated =
-                        networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                            networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    if (validated) {
-                        clearNetworkDegraded()
-                        waitingForNetwork.clear()
-                        resumeNetworkPausedTasks()
-                        doYourWork()
-                    } else {
-                        markNetworkDegraded()
-                    }
-                }
-            }
-        )
+        App.connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
         scope.launch(Dispatchers.Default) {
             // Only trigger doYourWork() when a state TYPE changes (not on every progress tick).
@@ -290,6 +292,12 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
 
     override fun restart(task: Task) {
         task.restartImpl()
+    }
+
+    override fun cleanup() {
+        runCatching {
+            App.connectivityManager.unregisterNetworkCallback(networkCallback)
+        }
     }
 
     private var Task.state: Task.State

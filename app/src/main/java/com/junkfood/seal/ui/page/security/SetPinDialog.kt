@@ -30,7 +30,6 @@ import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.AuthenticationManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 enum class SetPinState {
     ENTER_NEW_PIN,

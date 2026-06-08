@@ -48,9 +48,11 @@ fun LockScreen(
     val context = LocalContext.current
     
     // Show biometric prompt on first composition if available
+    var biometricShown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        if (useBiometric && AuthenticationManager.isBiometricAvailable(context)) {
+        if (useBiometric && AuthenticationManager.isBiometricAvailable(context) && !biometricShown) {
             if (context is FragmentActivity) {
+                biometricShown = true
                 AuthenticationManager.showBiometricPrompt(
                     activity = context,
                     title = context.getString(R.string.unlock_seal_plus),
@@ -58,14 +60,17 @@ fun LockScreen(
                     description = context.getString(R.string.biometric_prompt_description),
                     allowDeviceCredential = false,
                     onSuccess = {
-                        AuthenticationManager.updateLastAuthTime()
-                        onUnlocked()
+                        if (!context.isFinishing) {
+                            biometricShown = false
+                            AuthenticationManager.updateLastAuthTime()
+                            onUnlocked()
+                        }
                     },
                     onError = { error ->
-                        // Silently fail to PIN entry
+                        biometricShown = false
                     },
                     onFailed = {
-                        // Authentication failed, stay on PIN screen
+                        biometricShown = false
                     }
                 )
             }

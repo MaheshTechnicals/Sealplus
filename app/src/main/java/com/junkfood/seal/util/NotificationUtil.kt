@@ -338,7 +338,6 @@ object NotificationUtil {
             )
             .run {
                 applySmartNotificationSettings(this, isError = true)
-                notificationManager.cancel(notificationId)
                 notificationManager.notify(notificationId, build())
             }
     }

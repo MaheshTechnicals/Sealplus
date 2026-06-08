@@ -52,10 +52,6 @@ class CrashReportActivity : ComponentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (isFinishing) finishAffinity()
-    }
 }
 
 @Composable

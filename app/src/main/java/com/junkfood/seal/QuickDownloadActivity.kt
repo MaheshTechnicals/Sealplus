@@ -69,6 +69,7 @@ class QuickDownloadActivity : ComponentActivity() {
 
         if (sharedUrlCached.isEmpty()) {
             finish()
+            return
         }
 
         App.startService()

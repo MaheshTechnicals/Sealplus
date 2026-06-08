@@ -95,12 +95,15 @@ object UpdateUtil {
                 .maxByOrNull { it.name.toVersion() } ?: throw Exception("No valid release found")
         }
 
-    fun checkForUpdate(context: Context = App.context): Release? {
-        val currentVersion = context.getCurrentVersion()
-        val latestRelease = getLatestRelease()
-        val latestVersion = latestRelease.name.toVersion()
-        return if (currentVersion < latestVersion) latestRelease else null
-    }
+    suspend fun checkForUpdate(context: Context = App.context): Release? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val currentVersion = context.getCurrentVersion()
+                val latestRelease = getLatestRelease()
+                val latestVersion = latestRelease.name.toVersion()
+                if (currentVersion < latestVersion) latestRelease else null
+            }.getOrNull()
+        }
 
     private fun Context.getCurrentVersion(): Version =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

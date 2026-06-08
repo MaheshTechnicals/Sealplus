@@ -59,11 +59,12 @@ class MainActivity : AppCompatActivity() {
                 val windowSizeClass = calculateWindowSizeClass(this)
                 var showSplash by remember { mutableStateOf(true) }
                 var showOnboarding by remember { mutableStateOf(!ONBOARDING_COMPLETED.getBoolean()) }
-                var isLocked by remember { 
-                    mutableStateOf(
-                        AuthenticationManager.isSecurityEnabled() && 
-                        AuthenticationManager.isAuthenticationNeeded()
-                    )
+                var isLocked by remember { mutableStateOf(false) }
+                LaunchedEffect(showOnboarding) {
+                    if (!showOnboarding) {
+                        isLocked = AuthenticationManager.isSecurityEnabled() &&
+                                AuthenticationManager.isAuthenticationNeeded()
+                    }
                 }
                 
                 SettingsProvider(windowWidthSizeClass = windowSizeClass.widthSizeClass) {
