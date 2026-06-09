@@ -34,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -404,14 +405,7 @@ fun LazyListScope.ActionButtons(
 @Preview(name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SheetPreview() {
-    val sheetState =
-        with(LocalDensity.current) {
-            SheetState(
-                skipPartiallyExpanded = true,
-                density = this,
-                initialValue = SheetValue.Expanded,
-            )
-        }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var downloadState: DownloadState by remember { mutableStateOf(Running(Job(), "", 0.58f)) }
 

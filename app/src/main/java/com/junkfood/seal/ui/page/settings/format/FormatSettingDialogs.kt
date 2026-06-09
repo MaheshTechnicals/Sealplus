@@ -118,7 +118,7 @@ fun VideoResolutionSelectField(
             onValueChange = {},
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
             //            label = { Text(stringResource(id = R.string.video_resolution)) }
         )
         ExposedDropdownMenu(
@@ -156,7 +156,7 @@ fun VideoFormatPreferenceSelectField(
             readOnly = true,
             leadingIcon = { Icon(Icons.Outlined.VideoFile, null, tint = MaterialTheme.colorScheme.primary) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
             label = { Text(stringResource(id = R.string.video_format_preference)) },
         )
         ExposedDropdownMenu(
@@ -292,7 +292,7 @@ private fun AudioFormatSelectField(
             onValueChange = {},
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
         )
         ExposedDropdownMenu(
             modifier = Modifier,
@@ -348,7 +348,7 @@ private fun AudioQualitySelectField(
             onValueChange = {},
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
         )
         ExposedDropdownMenu(
             modifier = Modifier,

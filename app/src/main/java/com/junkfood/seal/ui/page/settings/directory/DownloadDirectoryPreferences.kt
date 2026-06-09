@@ -1,16 +1,16 @@
-@file:OptIn(ExperimentalPermissionsApi::class)
-
 package com.junkfood.seal.ui.page.settings.directory
 
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -71,9 +71,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.rememberPermissionState
 import com.junkfood.seal.App
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.booleanState
@@ -132,7 +129,7 @@ enum class Directory {
     CUSTOM_COMMAND,
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadDirectoryPreferences(onNavigateBack: () -> Unit) {
 
@@ -177,8 +174,8 @@ fun DownloadDirectoryPreferences(onNavigateBack: () -> Unit) {
 
     var showOutputTemplateDialog by remember { mutableStateOf(false) }
 
-    val storagePermission =
-        rememberPermissionState(permission = Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    val storagePermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val showDirectoryAlert =
         Build.VERSION.SDK_INT >= 30 &&
             !Environment.isExternalStorageManager() &&
@@ -226,9 +223,14 @@ fun DownloadDirectoryPreferences(onNavigateBack: () -> Unit) {
 
     fun openDirectoryChooser(directory: Directory = Directory.VIDEO) {
         editingDirectory = directory
-        if (Build.VERSION.SDK_INT > 29 || storagePermission.status == PermissionStatus.Granted)
+        if (Build.VERSION.SDK_INT > 29 ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            ) == PackageManager.PERMISSION_GRANTED
+        )
             launcher.launch(null)
-        else storagePermission.launchPermissionRequest()
+        else storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
     Scaffold(

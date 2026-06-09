@@ -953,14 +953,7 @@ private fun SponsorDialogContentPreview() {
 @Preview
 @Composable
 private fun SponsorDialogPreview() {
-    val sheetState =
-        with(LocalDensity.current) {
-            SheetState(
-                skipPartiallyExpanded = true,
-                density = this,
-                initialValue = SheetValue.Expanded,
-            )
-        }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val sponsorShip =
         SponsorShip(

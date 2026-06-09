@@ -1,7 +1,10 @@
 package com.junkfood.seal.ui.page.settings.general
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -64,10 +67,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.rememberPermissionState
 import com.junkfood.seal.App
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.booleanState
@@ -106,7 +107,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: () -> Unit) {
     val context = LocalContext.current
@@ -130,12 +131,18 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
     var isNotificationPermissionGranted by remember {
         mutableStateOf(NotificationUtil.areNotificationsEnabled())
     }
+    var isNotificationDenied by remember { mutableStateOf(false) }
 
-    val notificationPermission =
+    val notificationPermissionLauncher =
         if (Build.VERSION.SDK_INT >= 33)
-            rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS) { status ->
-                if (!status) context.makeToast(R.string.permission_denied)
-                else isNotificationPermissionGranted = true
+            rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                if (!granted) {
+                    context.makeToast(R.string.permission_denied)
+                    isNotificationDenied = true
+                } else {
+                    isNotificationPermissionGranted = true
+                    isNotificationDenied = false
+                }
             }
         else null
 
@@ -144,11 +151,12 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
     var showNotificationDialog by remember { mutableStateOf(false) }
     var archiveFileContent by remember { mutableStateOf("") }
 
-    val storagePermission =
-        rememberPermissionState(permission = Manifest.permission.WRITE_EXTERNAL_STORAGE)
-
     val isPermissionGranted =
-        Build.VERSION.SDK_INT > 29 || storagePermission.status == PermissionStatus.Granted
+        Build.VERSION.SDK_INT > 29 ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            ) == PackageManager.PERMISSION_GRANTED
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -251,7 +259,7 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
                             else Icons.Outlined.NotificationsActive,
                         isChecked = downloadNotification && isNotificationPermissionGranted,
                         onClick = {
-                            if (notificationPermission?.status is PermissionStatus.Denied) {
+                            if (isNotificationDenied) {
                                 showNotificationDialog = true
                             } else if (isNotificationPermissionGranted) {
                                 if (downloadNotification) NotificationUtil.cancelAllNotifications()
@@ -419,7 +427,7 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
         NotificationPermissionDialog(
             onDismissRequest = { showNotificationDialog = false },
             onPermissionGranted = {
-                notificationPermission?.launchPermissionRequest()
+                notificationPermissionLauncher?.launch(Manifest.permission.POST_NOTIFICATIONS)
                 NOTIFICATION.updateBoolean(true)
                 downloadNotification = true
                 showNotificationDialog = false

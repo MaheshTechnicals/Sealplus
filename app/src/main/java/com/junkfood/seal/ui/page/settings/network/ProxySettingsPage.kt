@@ -947,7 +947,7 @@ private fun FreeProxySection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(),
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                colors = ExposedDropdownMenuDefaults.textFieldColors(),
                 enabled = !isBusy
             )
 
@@ -1101,7 +1101,7 @@ private fun CustomProxySection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(),
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                colors = ExposedDropdownMenuDefaults.textFieldColors()
             )
 
             ExposedDropdownMenu(

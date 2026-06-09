@@ -1,7 +1,13 @@
 package com.junkfood.seal.ui.page.download
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Build.VERSION_CODES
+import android.view.View
+import android.view.ViewGroup
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -86,11 +92,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import com.junkfood.seal.App
 import com.junkfood.seal.Downloader
 import com.junkfood.seal.R
@@ -124,7 +127,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadPage(
     navigateToSettings: () -> Unit = {},
@@ -149,12 +152,11 @@ fun DownloadPage(
     val processCount by Downloader.processCount.collectAsStateWithLifecycle()
 
     var showNotificationDialog by remember { mutableStateOf(false) }
-    val notificationPermission =
+    val notificationPermissionLauncher =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS) {
-                isGranted: Boolean ->
+            rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
                 showNotificationDialog = false
-                if (!isGranted) {
+                if (!granted) {
                     context.makeToast(R.string.permission_denied)
                 }
             }
@@ -175,10 +177,9 @@ fun DownloadPage(
         }
     }
 
-    val storagePermission =
-        rememberPermissionState(permission = Manifest.permission.WRITE_EXTERNAL_STORAGE) {
-            b: Boolean ->
-            if (b) {
+    val storagePermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
                 checkNetworkOrDownload()
             } else {
                 context.makeToast(R.string.permission_denied)
@@ -186,17 +187,28 @@ fun DownloadPage(
         }
 
     val checkPermissionOrDownload = {
-        if (Build.VERSION.SDK_INT > 29 || storagePermission.status == PermissionStatus.Granted) {
+        if (Build.VERSION.SDK_INT > 29 ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             checkNetworkOrDownload()
         } else {
-            storagePermission.launchPermissionRequest()
+            storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
 
     val downloadCallback: () -> Unit = {
         view.slightHapticFeedback()
         keyboardController?.hide()
-        if (NOTIFICATION.getBoolean() && notificationPermission?.status?.isGranted == false) {
+        if (NOTIFICATION.getBoolean() && notificationPermissionLauncher?.let {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) != PackageManager.PERMISSION_GRANTED
+            } == true
+        ) {
             showNotificationDialog = true
         }
         if (CONFIGURE.getBoolean()) {
@@ -212,7 +224,7 @@ fun DownloadPage(
                 showNotificationDialog = false
                 NOTIFICATION.updateBoolean(false)
             },
-            onPermissionGranted = { notificationPermission?.launchPermissionRequest() },
+            onPermissionGranted = { notificationPermissionLauncher?.launch(Manifest.permission.POST_NOTIFICATIONS) },
         )
     }
 

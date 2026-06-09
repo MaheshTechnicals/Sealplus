@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.pager.HorizontalPager
+import com.junkfood.seal.R
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -50,9 +52,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.android.material.color.DynamicColors
-import com.junkfood.seal.R
 import com.junkfood.seal.download.Task
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalDynamicColorSwitch
@@ -181,18 +181,27 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     }
                 }
 
-                HorizontalPagerIndicator(
-                    pagerState = pagerState,
-                    pageCount = pageCount,
+                Row(
                     modifier =
                         Modifier.clearAndSetSemantics {}
                             .align(Alignment.CenterHorizontally)
                             .padding(vertical = 12.dp),
-                    activeColor = MaterialTheme.colorScheme.primary,
-                    inactiveColor = MaterialTheme.colorScheme.outlineVariant,
-                    indicatorHeight = 6.dp,
-                    indicatorWidth = 6.dp,
-                )
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    repeat(pageCount) { index ->
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (pagerState.currentPage == index)
+                                            MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.outlineVariant
+                                    ),
+                        )
+                    }
+                }
                 if (DynamicColors.isDynamicColorAvailable()) {
                     PreferenceSwitch(
                         title = stringResource(id = R.string.dynamic_color),

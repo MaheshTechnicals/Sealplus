@@ -63,6 +63,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -444,14 +445,7 @@ private fun DownloadDialogContent(
 private fun ErrorPreview() {
     SealModalBottomSheet(
         onDismissRequest = {},
-        sheetState =
-            with(LocalDensity.current) {
-                SheetState(
-                    skipPartiallyExpanded = true,
-                    density = this,
-                    initialValue = SheetValue.Expanded,
-                )
-            },
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         ErrorPage(
             state =
@@ -503,14 +497,7 @@ fun FormatPage(
 private fun ConfigurePagePreview() {
     SealTheme() {
         SealModalBottomSheet(
-            sheetState =
-                with(LocalDensity.current) {
-                    SheetState(
-                        skipPartiallyExpanded = true,
-                        density = this,
-                        initialValue = SheetValue.Expanded,
-                    )
-                },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             onDismissRequest = {},
             contentPadding = PaddingValues(),
         ) {

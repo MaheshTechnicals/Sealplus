@@ -157,7 +157,6 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.androidxCompose)
-    implementation(libs.bundles.accompanist)
 
     implementation(libs.coil.kt.compose)
 
@@ -175,6 +174,8 @@ dependencies {
     implementation(libs.bundles.youtubedlAndroid)
 
     implementation(libs.mmkv)
+
+    implementation(libs.androidx.documentfile)
 
     testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext)

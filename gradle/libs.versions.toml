@@ -1,31 +1,31 @@
 [versions]
-accompanist = "0.36.0"
-androidGradlePlugin = "9.2.0"
-androidxComposeBom = "2025.01.00"
-androidxCore = "1.17.0"
-androidMaterial = "1.12.0"
+androidGradlePlugin = "9.2.1"
+androidxComposeBom = "2026.05.01"
+androidxCore = "1.19.0"
+androidMaterial = "1.14.0"
 androidxAppCompat = "1.7.1"
-androidxActivity = "1.12.2"
+androidxActivity = "1.13.0"
 androidxBiometric = "1.2.0-alpha05"
-graphics = "1.0.4"
-constraintLayout = "1.1.0"
+graphics = "1.1.0"
+constraintLayout = "1.1.1"
 
 androidxLifecycle = "2.10.0"
-androidxNavigation = "2.9.6"
+androidxNavigation = "2.9.8"
 
-androidxEspresso = "3.6.1"
-androidxTestExt = "1.2.1"
+androidxDocumentFile = "1.1.0"
+androidxEspresso = "3.7.0"
+androidxTestExt = "1.3.0"
 
 
-coil = "2.7.0"
+coil = "3.4.0"
 
 junit4 = "4.13.2"
 
 kotlin = "2.3.21"
 
-coroutines = "1.10.1"
-datetime = "0.6.1"
-serialization = "1.7.3"
+coroutines = "1.11.0"
+datetime = "0.8.0"
+serialization = "1.11.0"
 okhttp = "4.12.0"
 
 room = "2.8.4"
@@ -33,12 +33,12 @@ ksp = "2.3.9"
 
 youtubedlAndroid = "0.18.1"
 
-mmkv = "1.3.12"
+mmkv = "1.3.16"
 # pin to v1.3.x for 32-bit support
 
-koin = "4.0.0"
+koin = "4.2.1"
 
-ktfmt = "0.20.1"
+ktfmt = "0.26.0"
 
 [libraries]
 
@@ -50,10 +50,6 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "androidxBiometric" }
 
 androidx-lifecycle-runtimeCompose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
-
-accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
-accompanist-webview = { group = "com.google.accompanist", name = "accompanist-webview", version.ref = "accompanist" }
-accompanist-pager-indicators = { group = "com.google.accompanist", name = "accompanist-pager-indicators", version.ref = "accompanist" }
 
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
 
@@ -84,8 +80,9 @@ androidx-test-ext = { group = "androidx.test.ext", name = "junit-ktx", version.r
 
 androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidxEspresso" }
 
+androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "androidxDocumentFile" }
 
-coil-kt-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+coil-kt-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 
 junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 
@@ -123,14 +120,9 @@ ktfmt-gradle = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 
 
 [bundles]
-accompanist = [
-    "accompanist-permissions",
-    "accompanist-webview",
-    "accompanist-pager-indicators",
-]
-
 androidxCompose = ["androidx-compose-ui",
     "androidx-compose-ui-tooling-preview",
+    "androidx-compose-material",
     "androidx-compose-material-iconsExtended",
     "androidx-compose-material3",
     "androidx-compose-material3-windowSizeClass",

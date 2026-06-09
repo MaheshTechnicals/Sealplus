@@ -173,7 +173,7 @@ fun YtdlpUpdateChannelDialog(modifier: Modifier = Modifier, onDismissRequest: ()
                             modifier =
                                 Modifier.fillMaxWidth()
                                     .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                            colors = ExposedDropdownMenuDefaults.textFieldColors(),
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                             },

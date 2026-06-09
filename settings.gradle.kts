@@ -6,8 +6,8 @@ pluginManagement {
     }
 }
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version("0.4.0")
-    id("com.gradle.develocity") version("3.19")
+    id("org.gradle.toolchains.foojay-resolver-convention") version("1.0.0")
+    id("com.gradle.develocity") version("4.4.2")
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -20,8 +20,8 @@ dependencyResolutionManagement {
 
 develocity {
     buildScan {
-        termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-        termsOfUseAgree = "yes"
+        termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
+        termsOfUseAgree.set("yes")
         
         // Publish to scans.gradle.com
         publishing.onlyIf { true }
