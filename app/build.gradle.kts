@@ -1,12 +1,10 @@
 @file:Suppress("UnstableApiUsage")
 
-import com.android.build.api.variant.FilterConfiguration
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
@@ -77,7 +75,7 @@ android {
                 val name =
                     if (splitApks) {
                         output.filters
-                            .find { it.filterType == FilterConfiguration.FilterType.ABI }
+                            .find { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }
                             ?.identifier
                     } else {
                         abiFilterList.firstOrNull()
@@ -88,6 +86,8 @@ android {
                 if (baseAbiCode != null) {
                     output.versionCode.set(baseAbiCode + (output.versionCode.get() ?: 0))
                 }
+
+                output.outputFileName.set("SealPlus-${baseVersionName}-${name ?: "universal"}.apk")
             }
         }
     }
@@ -110,7 +110,6 @@ android {
             }
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            resValue("string", "app_name", "Seal Plus Debug")
         }
     }
 
@@ -124,13 +123,6 @@ android {
     }
 
     lint { disable.addAll(listOf("MissingTranslation", "ExtraTranslation", "MissingQuantity")) }
-
-    applicationVariants.all {
-        outputs.all {
-            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                "SealPlus-${defaultConfig.versionName}-${name}.apk"
-        }
-    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
