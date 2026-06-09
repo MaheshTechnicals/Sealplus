@@ -11,8 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -1482,7 +1480,6 @@ fun <T : Collection<String>> T.filterWithRegex(subtitleLanguageRegex: String): S
     return filter { language -> regexGroup.any { Regex(it).matchEntire(language) != null } }.toSet()
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 @Preview
 fun UpdateSubtitleLanguageDialog(
@@ -1506,12 +1503,9 @@ fun UpdateSubtitleLanguageDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     languages.forEach {
-                        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier =
                                     Modifier.padding(end = 8.dp)

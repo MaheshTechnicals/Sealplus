@@ -4,9 +4,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -194,10 +193,9 @@ fun TemplateEditPage(onDismissRequest: () -> Unit, templateId: Int) {
                 Column(
                     modifier = Modifier.fillParentMaxWidth().horizontalScroll(rememberScrollState())
                 ) {
-                    FlowRow(
-                        modifier = Modifier.padding(horizontal = 8.dp).width(500.dp),
-                        //                        mainAxisSize = SizeMode.Expand,
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         shortcuts.forEach { item ->
                             ShortcutChip(

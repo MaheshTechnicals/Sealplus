@@ -5,9 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -47,7 +46,6 @@ private val DialogHorizontalPadding = PaddingValues(horizontal = 24.dp)
 private val TitlePadding = PaddingValues(bottom = 16.dp)
 private val TextPadding = PaddingValues(bottom = 24.dp)
 private val ButtonsMainAxisSpacing = 8.dp
-private val ButtonsCrossAxisSpacing = 12.dp
 
 @Composable
 fun HelpDialog(
@@ -68,7 +66,7 @@ fun HelpDialog(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SealDialog(
     modifier: Modifier = Modifier,
@@ -150,9 +148,8 @@ fun SealDialog(
                 Box(modifier = Modifier.align(Alignment.End).padding(DialogHorizontalPadding)) {
                     val textStyle = MaterialTheme.typography.labelLarge
                     ProvideTextStyle(value = textStyle) {
-                        FlowRow(
+                        Row(
                             horizontalArrangement = Arrangement.spacedBy(ButtonsMainAxisSpacing),
-                            verticalArrangement = Arrangement.spacedBy(ButtonsCrossAxisSpacing),
                         ) {
                             dismissButton?.invoke()
                             confirmButton?.invoke()

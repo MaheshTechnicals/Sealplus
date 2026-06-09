@@ -3,7 +3,7 @@ package com.junkfood.seal.ui.page.settings.command
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
@@ -183,7 +183,7 @@ fun OptionChipsDialog(onDismissRequest: () -> Unit = {}) {
                             .horizontalScroll(rememberScrollState())
                             .verticalScroll(rememberScrollState())
                 ) {
-                    FlowRow(modifier = Modifier.width(400.dp)) {
+                    Row(modifier = Modifier.width(400.dp)) {
                         shortcuts.forEach { item ->
                             ShortcutChip(
                                 text = item.option,
