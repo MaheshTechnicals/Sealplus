@@ -78,8 +78,8 @@ fun SettingsGridItem(
     title: String,
     description: String,
     icon: Any?,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit,
 ) {
     Card(
         onClick = onClick,
@@ -136,9 +136,9 @@ fun SettingsGridSwitchItem(
     icon: Any?,
     isChecked: Boolean,
     switchEnabled: Boolean = true,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onCheckedChange: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     Card(
         onClick = onClick,

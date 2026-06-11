@@ -1,27 +1,37 @@
 package com.junkfood.seal.ui.page.settings.about
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.UpdateDisabled
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -30,10 +40,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
@@ -44,19 +56,18 @@ import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.UrlAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.junkfood.seal.App
 import com.junkfood.seal.App.Companion.packageInfo
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.ConfirmButton
-import com.junkfood.seal.ui.component.SettingsGridItem
-import com.junkfood.seal.ui.component.SettingsGridSwitchItem
 import com.junkfood.seal.util.AUTO_UPDATE
 import com.junkfood.seal.util.PreferenceUtil
-import com.junkfood.seal.util.makeToast
 
 private const val releaseURL = "https://github.com/MaheshTechnicals/Sealplus/releases"
 private const val repoUrl = "https://github.com/MaheshTechnicals/Sealplus/blob/main/README.md"
@@ -83,22 +94,7 @@ fun AboutPage(
             canScroll = { true },
         )
     val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
-    //    val configuration = LocalConfiguration.current
-    //    val screenDensity = configuration.densityDpi / 160f
-    //    val screenHeight = (configuration.screenHeightDp.toFloat() * screenDensity).roundToInt()
-    //    val screenWidth = (configuration.screenWidthDp.toFloat() * screenDensity).roundToInt()
     var isAutoUpdateEnabled by remember { mutableStateOf(PreferenceUtil.isAutoUpdateEnabled()) }
-
-    val info = App.getVersionReport()
-    val versionName = packageInfo.versionName
-
-    //        infoBuilder.append("App version: $versionName ($versionCode)\n")
-    //            .append("Device information: Android $release (API ${Build.VERSION.SDK_INT})\n")
-    //            .append("Supported ABIs: ${Build.SUPPORTED_ABIS.contentToString()}\n")
-    //            .append("\nScreen resolution: $screenHeight x $screenWidth")
-    //            .append("Yt-dlp Version:
-    // ${YoutubeDL.version(context.applicationContext)}").toString()
 
     val uriHandler = LocalUriHandler.current
     fun openUrl(url: String) {
@@ -114,114 +110,233 @@ fun AboutPage(
             )
         },
         content = {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.padding(it),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(it),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
-                    SettingsGridItem(
-                        title = stringResource(R.string.readme),
-                        description = stringResource(R.string.readme_desc),
-                        icon = Icons.Outlined.Description,
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        ),
                     ) {
-                        openUrl(repoUrl)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.auto_update),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = stringResource(R.string.check_for_updates_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color =
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.8f
+                                        ),
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Switch(
+                                checked = isAutoUpdateEnabled,
+                                onCheckedChange = {
+                                    isAutoUpdateEnabled = !isAutoUpdateEnabled
+                                    PreferenceUtil.updateValue(AUTO_UPDATE, isAutoUpdateEnabled)
+                                },
+                                enabled = !App.isFDroidBuild(),
+                            )
+                        }
                     }
                 }
+
                 item {
-                    SettingsGridItem(
-                        title = stringResource(R.string.release),
-                        description = stringResource(R.string.release_desc),
-                        icon = Icons.Outlined.NewReleases,
+                    Card(
+                        onClick = onNavigateToOnboarding,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        ),
                     ) {
-                        openUrl(releaseURL)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "View Onboarding",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "See the introduction screens again",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color =
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.8f
+                                        ),
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
+
                 item {
-                    SettingsGridItem(
-                        title = stringResource(id = R.string.sponsor),
-                        description = stringResource(id = R.string.sponsor_desc),
-                        icon = Icons.Outlined.VolunteerActivism,
-                    ) {
-                        onNavigateToDonatePage()
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CommunityCard(
+                                title = stringResource(R.string.readme),
+                                description = stringResource(R.string.readme_desc),
+                                icon = Icons.Outlined.Description,
+                                onClick = { openUrl(repoUrl) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            CommunityCard(
+                                title = stringResource(R.string.release),
+                                description = stringResource(R.string.release_desc),
+                                icon = Icons.Outlined.NewReleases,
+                                onClick = { openUrl(releaseURL) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CommunityCard(
+                                title = stringResource(R.string.sponsor),
+                                description = stringResource(R.string.sponsor_desc),
+                                icon = Icons.Outlined.VolunteerActivism,
+                                onClick = onNavigateToDonatePage,
+                                modifier = Modifier.weight(1f),
+                            )
+                            CommunityCard(
+                                title = stringResource(R.string.telegram_channel),
+                                description = telegramChannelUrl,
+                                icon = painterResource(id = R.drawable.icons8_telegram_app),
+                                onClick = { openUrl(telegramChannelUrl) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CommunityCard(
+                                title = stringResource(R.string.youtube_channel),
+                                description = youtubeChannelUrl,
+                                icon = painterResource(id = R.drawable.icons8_youtube),
+                                onClick = { openUrl(youtubeChannelUrl) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            CommunityCard(
+                                title = stringResource(R.string.website),
+                                description = "sealplus.in",
+                                icon = Icons.Outlined.Public,
+                                onClick = { openUrl("https://sealplus.in/") },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CommunityCard(
+                                title = stringResource(R.string.credits),
+                                description = stringResource(R.string.credits_desc),
+                                icon = Icons.Outlined.AutoAwesome,
+                                onClick = onNavigateToCreditsPage,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
+
                 item {
-                    SettingsGridItem(
-                        title = stringResource(R.string.telegram_channel),
-                        description = telegramChannelUrl,
-                        icon = painterResource(id = R.drawable.icons8_telegram_app),
-                    ) {
-                        openUrl(telegramChannelUrl)
-                    }
-                }
-                item {
-                    SettingsGridItem(
-                        title = stringResource(R.string.youtube_channel),
-                        description = youtubeChannelUrl,
-                        icon = painterResource(id = R.drawable.icons8_youtube),
-                    ) {
-                        openUrl(youtubeChannelUrl)
-                    }
-                }
-                item {
-                    SettingsGridItem(
-                        title = "View Onboarding",
-                        description = "See the introduction screens again",
-                        icon = Icons.Outlined.Lightbulb,
-                    ) {
-                        onNavigateToOnboarding()
-                    }
-                }
-                item {
-                    SettingsGridItem(
-                        title = stringResource(id = R.string.credits),
-                        description = stringResource(id = R.string.credits_desc),
-                        icon = Icons.Outlined.AutoAwesome,
-                    ) {
-                        onNavigateToCreditsPage()
-                    }
-                }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    SettingsGridSwitchItem(
-                        title = stringResource(R.string.auto_update),
-                        description = stringResource(R.string.check_for_updates_desc),
-                        icon =
-                            if (isAutoUpdateEnabled) Icons.Outlined.Update
-                            else Icons.Outlined.UpdateDisabled,
-                        isChecked = isAutoUpdateEnabled,
-                        switchEnabled = !App.isFDroidBuild(),
-                        onClick = onNavigateToUpdatePage,
-                        onCheckedChange = {
-                            isAutoUpdateEnabled = !isAutoUpdateEnabled
-                            PreferenceUtil.updateValue(AUTO_UPDATE, isAutoUpdateEnabled)
-                        },
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                        text = "Version ${packageInfo.versionName ?: ""}  \u2022  ${context.packageName}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color =
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
                     )
-                }
-                item {
-                    SettingsGridItem(
-                        title = stringResource(R.string.version),
-                        description = versionName,
-                        icon = Icons.Outlined.Info,
-                    ) {
-                        clipboardManager.setText(AnnotatedString(info))
-                        context.makeToast(R.string.info_copied)
-                    }
-                }
-                item {
-                    SettingsGridItem(
-                        title = "Package name",
-                        description = context.packageName,
-                        icon = Icons.Outlined.Info,
-                    ) {
-                        clipboardManager.setText(AnnotatedString(context.packageName))
-                        context.makeToast(R.string.info_copied)
-                    }
                 }
             }
         },
     )
+}
+
+@Composable
+private fun CommunityCard(
+    title: String,
+    description: String,
+    icon: Any?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        ) {
+            when (icon) {
+                is ImageVector -> {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                is Painter -> {
+                    Icon(
+                        painter = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color =
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalTextApi::class)
