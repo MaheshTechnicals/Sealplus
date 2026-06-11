@@ -1,8 +1,11 @@
 package com.junkfood.seal.ui.page.settings.about
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -49,8 +52,8 @@ import com.junkfood.seal.App.Companion.packageInfo
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.ConfirmButton
-import com.junkfood.seal.ui.component.PreferenceItem
-import com.junkfood.seal.ui.component.PreferenceSwitchWithDivider
+import com.junkfood.seal.ui.component.SettingsGridItem
+import com.junkfood.seal.ui.component.SettingsGridSwitchItem
 import com.junkfood.seal.util.AUTO_UPDATE
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.makeToast
@@ -111,9 +114,14 @@ fun AboutPage(
             )
         },
         content = {
-            LazyColumn(modifier = Modifier.padding(it)) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.padding(it),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = stringResource(R.string.readme),
                         description = stringResource(R.string.readme_desc),
                         icon = Icons.Outlined.Description,
@@ -122,7 +130,7 @@ fun AboutPage(
                     }
                 }
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = stringResource(R.string.release),
                         description = stringResource(R.string.release_desc),
                         icon = Icons.Outlined.NewReleases,
@@ -130,25 +138,17 @@ fun AboutPage(
                         openUrl(releaseURL)
                     }
                 }
-                /*            item {
-                    PreferenceItem(
-                        title = stringResource(R.string.github_issue),
-                        description = stringResource(R.string.github_issue_desc),
-                        icon = Icons.Outlined.ContactSupport,
-                    ) { openUrl(githubIssueUrl) }
-                }*/
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = stringResource(id = R.string.sponsor),
                         description = stringResource(id = R.string.sponsor_desc),
                         icon = Icons.Outlined.VolunteerActivism,
                     ) {
-                        //                    openUrl(githubSponsor)
                         onNavigateToDonatePage()
                     }
                 }
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = stringResource(R.string.telegram_channel),
                         description = telegramChannelUrl,
                         icon = painterResource(id = R.drawable.icons8_telegram_app),
@@ -157,7 +157,7 @@ fun AboutPage(
                     }
                 }
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = stringResource(R.string.youtube_channel),
                         description = youtubeChannelUrl,
                         icon = painterResource(id = R.drawable.icons8_youtube),
@@ -166,7 +166,7 @@ fun AboutPage(
                     }
                 }
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = "View Onboarding",
                         description = "See the introduction screens again",
                         icon = Icons.Outlined.Lightbulb,
@@ -175,7 +175,7 @@ fun AboutPage(
                     }
                 }
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = stringResource(id = R.string.credits),
                         description = stringResource(id = R.string.credits_desc),
                         icon = Icons.Outlined.AutoAwesome,
@@ -183,24 +183,24 @@ fun AboutPage(
                         onNavigateToCreditsPage()
                     }
                 }
-                item {
-                    PreferenceSwitchWithDivider(
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    SettingsGridSwitchItem(
                         title = stringResource(R.string.auto_update),
                         description = stringResource(R.string.check_for_updates_desc),
                         icon =
                             if (isAutoUpdateEnabled) Icons.Outlined.Update
                             else Icons.Outlined.UpdateDisabled,
                         isChecked = isAutoUpdateEnabled,
-                        isSwitchEnabled = !App.isFDroidBuild(),
+                        switchEnabled = !App.isFDroidBuild(),
                         onClick = onNavigateToUpdatePage,
-                        onChecked = {
+                        onCheckedChange = {
                             isAutoUpdateEnabled = !isAutoUpdateEnabled
                             PreferenceUtil.updateValue(AUTO_UPDATE, isAutoUpdateEnabled)
                         },
                     )
                 }
                 item {
-                    PreferenceItem(
+                    SettingsGridItem(
                         title = stringResource(R.string.version),
                         description = versionName,
                         icon = Icons.Outlined.Info,
@@ -210,7 +210,11 @@ fun AboutPage(
                     }
                 }
                 item {
-                    PreferenceItem(title = "Package name", description = context.packageName) {
+                    SettingsGridItem(
+                        title = "Package name",
+                        description = context.packageName,
+                        icon = Icons.Outlined.Info,
+                    ) {
                         clipboardManager.setText(AnnotatedString(context.packageName))
                         context.makeToast(R.string.info_copied)
                     }

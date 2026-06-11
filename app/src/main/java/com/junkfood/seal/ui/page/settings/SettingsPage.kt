@@ -13,8 +13,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AudioFile
 import androidx.compose.material.icons.rounded.BugReport
@@ -53,7 +56,7 @@ import com.junkfood.seal.ui.common.Route
 import com.junkfood.seal.ui.common.intState
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.PreferencesHintCard
-import com.junkfood.seal.ui.component.SettingItem
+import com.junkfood.seal.ui.component.SettingsGridItem
 import com.junkfood.seal.util.EXTRACT_AUDIO
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
@@ -126,9 +129,15 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
             }
         },
     ) {
-        LazyColumn(modifier = Modifier, contentPadding = it) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier,
+            contentPadding = it,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                item {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     AnimatedVisibility(
                         visible = showBatteryHint && isActivityAvailable,
                         exit = shrinkVertically() + fadeOut(),
@@ -146,7 +155,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             if (!showBatteryHint && showSponsorMessage > 30)
-                item {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     PreferencesHintCard(
                         title = stringResource(id = R.string.sponsor),
                         icon = Icons.Rounded.VolunteerActivism,
@@ -156,7 +165,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                     }
                 }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.general_settings),
                     description = stringResource(id = R.string.general_settings_desc),
                     icon = Icons.Rounded.SettingsApplications,
@@ -165,7 +174,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.download_directory),
                     description = stringResource(id = R.string.download_directory_desc),
                     icon = Icons.Rounded.Folder,
@@ -174,7 +183,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.format),
                     description = stringResource(id = R.string.format_settings_desc),
                     icon =
@@ -185,7 +194,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.network),
                     description = stringResource(id = R.string.network_settings_desc),
                     icon =
@@ -197,7 +206,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.custom_command),
                     description = stringResource(id = R.string.custom_command_desc),
                     icon = Icons.Rounded.Terminal,
@@ -206,7 +215,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.look_and_feel),
                     description = stringResource(id = R.string.display_settings),
                     icon = Icons.Rounded.Palette,
@@ -215,7 +224,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.interface_and_interaction),
                     description = stringResource(id = R.string.settings_before_download),
                     icon = Icons.Rounded.ViewComfy,
@@ -224,7 +233,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.sealplus_extras),
                     description = stringResource(id = R.string.sealplus_extras_desc),
                     icon = Icons.Rounded.Stars,
@@ -233,7 +242,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(R.string.trouble_shooting),
                     description = stringResource(R.string.trouble_shooting_desc),
                     icon = Icons.Rounded.BugReport,
@@ -242,7 +251,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                 }
             }
             item {
-                SettingItem(
+                SettingsGridItem(
                     title = stringResource(id = R.string.about),
                     description = stringResource(id = R.string.about_page),
                     icon = Icons.Rounded.Info,
