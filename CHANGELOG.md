@@ -5,6 +5,161 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-06-11
+
+### 🎨 Settings & About Page Redesign
+
+* **Full-Width Settings LazyColumn Layout**
+  + Settings page now uses a full-width `LazyColumn` with consistent `PreferenceItem` + trailing chevron icons for every navigation row
+  + Added visual grouping with 16dp `Spacer` dividers between logical sections: Download → Customization → Extras
+  + Sponsor card now uses `primaryContainer` / `onPrimaryContainer` color pairing for a prominent, themed appearance
+
+* **Card-Based About Page Redesign**
+  + About page completely rebuilt with a 2-column grid of `CommunityCard` components — each card shows an icon, title, and description in a clean `surfaceVariant` container with 12dp rounded corners
+  + New **Website** card linking to `sealplus.in`
+  + Auto-Update toggle now rendered as a standalone `Card` with a `Switch` control, separate from the community links grid
+  + "View Onboarding" moved to a dedicated card with chevron icon
+  + Version & package name displayed as a centered footer caption
+  + Removed old `PreferenceItem`, `PreferenceSwitchWithDivider`, and clipboard-based package copy
+
+* **New SettingsGridItem / SettingsGridSwitchItem Composables**
+  + Added `SettingsGridItem` and `SettingsGridSwitchItem` — card-based composables with icon, bold title, description, and optional switch
+  + Designed for use in future settings sections that benefit from a grid/card layout
+
+### 🔌 Accompanist → Platform API Migration
+
+* **Permissions Replaced with ActivityResultContracts**
+  + Removed `accompanist-permissions` dependency; all `rememberPermissionState()` usages migrated to `rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())`
+  + Affected pages: `DownloadPage`, `DownloadDirectoryPreferences`, `GeneralDownloadPreferences`
+  + Permission checks now use `ContextCompat.checkSelfPermission()` for consistency
+
+* **WebView Replaced with Platform AndroidView**
+  + Removed `accompanist-webview` dependency; Cookie profile WebView page migrated to raw `WebView` via `AndroidView` factory
+  + Page title tracked via `WebChromeClient.onReceivedTitle` callback with `mutableStateOf`
+
+* **Pager Indicators Replaced with Custom Row**
+  + Removed `accompanist-pager-indicators` dependency; `HorizontalPagerIndicator` replaced with manual `Row` + `Box` dots with `CircleShape` clip and proper coloring
+
+* **Accompanist Dependency Fully Removed**
+  + Deleted `bundles.accompanist` from version catalog and all three accompanist library entries
+
+### 📦 Bulk Dependency Update
+
+* **Gradle 9.5.1 & AGP 9.2.1**
+  + Upgraded from Gradle 8.13 / AGP 8.13.2 to Gradle 9.5.1 / AGP 9.2.1
+  + Removed `com.android.build.api.variant.FilterConfiguration` direct import (now fully qualified)
+
+* **Kotlin 2.3.21 with K2 Compiler**
+  + Upgraded from Kotlin 2.0.21 → 2.3.21
+  + KSP updated to `2.3.9`; Kotlin Compose compiler plugin aligned
+  + `kotlin-android` plugin removed from all modules (now implicit via AGP)
+
+* **Compose BOM 2026.05.01**
+  + Upgraded from 2025.01.00 → 2026.05.01
+  + Added `androidx.compose.material` to the compose bundle
+  + Fixed breaking API changes: `SheetState` constructor → `rememberModalBottomSheetState()`, `ExposedDropdownMenuDefaults.outlinedTextFieldColors()` → `textFieldColors()`, `LocalOverscrollFactory` removed
+
+* **Coil 3 Migration (io.coil-kt.coil3)**
+  + Upgraded Coil 2.7.0 → 3.4.0 with group ID changed from `io.coil-kt` to `io.coil-kt.coil3`
+  + Imports updated from `coil.compose` → `coil3.compose`
+  + `ImageRequest.Builder` simplified for Coil 3 API
+
+* **Android SDK 37 (Android 17)**
+  + compileSdk / targetSdk upgraded from 36 → 37
+  + All GitHub workflow actions updated (`android-actions/setup-android@v4`)
+  + GitLab CI image updated to `mobiledevops/android-sdk-image:34.0.1`
+
+* **Other Version Bumps**
+  + Room 2.6.1 → 2.8.4 | Koin 4.0.0 → 4.2.1 | MMKV 1.3.12 → 1.3.16
+  + Coroutines 1.10.1 → 1.11.0 | Serialization 1.7.3 → 1.11.0 | ktfmt 0.20.1 → 0.26.0
+  + AndroidX Core 1.17.0 → 1.19.0 | Activity 1.12.2 → 1.13.0 | Navigation 2.9.6 → 2.9.8
+  + Material 1.12.0 → 1.14.0 | Graphics 1.0.4 → 1.1.0 | ConstraintLayout 1.1.0 → 1.1.1
+  + datetime 0.6.1 → 0.8.0 | Espresso 3.6.1 → 3.7.0 | TestExt 1.2.1 → 1.3.0
+  + Added `androidx.documentfile:documentfile:1.1.0`
+  + Removed unused `kotlin-android` plugin alias
+
+### 🐛 Bug Fixes & Stability
+
+* **LockScreen Biometric Prompt Fix**
+  + Added `biometricShown` flag to prevent repeated biometric prompts on recomposition
+  + Added `context.isFinishing` guard before calling biometric prompt callback
+  + `biometricShown` properly reset after authentication completes, errors, or fails — preventing stale state
+
+* **MainActivity LockScreen Deferred Until Onboarding**
+  + Lock screen evaluation moved from `remember` initializer to `LaunchedEffect(showOnboarding)` to prevent lock screen from flashing during onboarding flow
+
+* **QuickDownloadActivity Crash Fix**
+  + Added early `return` after `finish()` when `sharedUrlCached` is empty, preventing continued execution on a finishing activity
+
+* **DownloaderV2 NetworkCallback Memory Leak Fix**
+  + Network callback extracted from `init` block to a named field `networkCallback` for proper unregistration
+  + Added `cleanup()` method that unregisters the callback via `App.connectivityManager.unregisterNetworkCallback()`
+  + `cleanup()` called on crash (`GlobalContext.getOrNull()?.get<DownloaderV2>()?.cleanup()`) and `onLowMemory()`
+
+* **App.onLowMemory Handling**
+  + Added `onLowMemory()` override that calls `DownloaderV2.cleanup()` for early resource release under memory pressure
+
+* **SponsorUtil OkHttpClient Leak Fix**
+  + Removed singleton `httpClient` field (was holding proxy reference forever)
+  + `getClient()` now creates a fresh `OkHttpClient` per call, preventing leaked connections
+
+* **NotificationUtil Redundant Cancel Removed**
+  + Removed redundant `notificationManager.cancel(notificationId)` before `notify()` in error notification builder
+
+* **CrashReportActivity Cleanup**
+  + Removed `onDestroy()` with `finishAffinity()` to prevent potential IllegalStateException during activity teardown
+
+* **DatabaseUtil Destructive Migration Fallback**
+  + Added `fallbackToDestructiveMigration()` as a safety net for unexpected schema states
+
+* **UpdateUtil checkForUpdate Made Safe**
+  + Changed to `suspend fun` running on `Dispatchers.IO` with `withContext` + `runCatching` to prevent ANR from network calls on main thread
+
+### 🌐 APK Output Naming Refinement
+
+* **Consistent Output File Names**
+  + Moved APK naming logic from deprecated `applicationVariants.all` block to the `androidComponents.onVariants` callback
+  + Output file format: `SealPlus-{version}-{abi}.apk` (e.g. `SealPlus-2.8.0-arm64-v8a.apk`)
+  + Removed redundant `FilterConfiguration` import (fully qualified inline)
+
+### 🏗️ Build Configuration Cleanup
+
+* **Debug Build Cleanup**
+  + Removed `resValue("string", "app_name", "Seal Plus Debug")` from debug build type
+  + Removed root `build.gradle.kts` superfluous `kotlin.android` plugin declaration
+  + Added `android.disallowKotlinSourceSets=false` in `gradle.properties`
+
+### 🌍 Website Redesign & SEO Overhaul
+
+* **Complete sealplus.in Redesign**
+  + New hero section with refined positioning and SEO-optimized structured data (SoftwareApplication + AggregateRating schema)
+  + Support CTA section with statistics cards and donation call-to-action
+  + Step-by-step **How to Install** guide with `HowTo` schema markup
+  + **Seal Plus vs Seal app** comparison table with responsive mobile layout
+  + **FAQ accordion** using native `<details>` elements with custom styling
+  + Navigation now links to Support, Contact, and Privacy pages
+  + Updated OG tags, meta descriptions, and keywords for better search visibility
+
+* **New Support Page**
+  + Dedicated `/support.html` with donation options: UPI, PayPal, GitHub Sponsors
+  + Section explaining why support is needed, how contributions help
+  + Live sponsors grid populated from `sponsors.json`
+
+* **New Contact Page**
+  + `/contact.html` with contact form (Formspree integration), support details sidebar, and highlights section
+  + Average response time indicator
+
+* **Complete CSS Rewrite**
+  + New glassmorphism design system with CSS custom properties, dark theme, responsive breakpoints
+  + Loading skeletons, toast notifications, modal overlays, sponsor cards
+  + Accessibility improvements (reduced motion, aria labels, keyboard support)
+
+* **Updated Sitemap & Privacy**
+  + `sitemap.xml` updated with all new pages and correct lastmod dates
+  + `privacy.html` updated with new cross-links
+
+---
+
 ## [2.7.0] - 2026-05-22
 
 ### 🎁 Monetization & Support

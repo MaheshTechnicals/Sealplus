@@ -83,41 +83,55 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## ✨ Seal Plus v2.7.0 - GitHub Sponsors Integration, Enhanced File Management & UI Improvements
+          ## ✨ Seal Plus v2.8.0 - Settings & About Redesign, Bulk Dependency Update, Website & SEO Overhaul
           
           ---
           
-          ### 🎁 Monetization & Support
+          ### 🎨 Settings & About Page Redesign
           
-          * **GitHub Sponsors Integration**
-              + New **GitHub Sponsors** donation option in Support Developer page
-              + Support development directly via https://github.com/sponsors/MaheshTechnicals
-              + Updated gradient colors for GitHub Sponsors button (blue to gray)
-              + Removed outdated "Buy Me a Coffee" option for cleaner interface
+          * **Full-Width Settings LazyColumn Layout**
+              + Settings page redesigned with `PreferenceItem` + trailing chevron icons throughout
+              + Visual grouping with spacers between sections
+              + Prominent sponsor card with `primaryContainer` color
           
-          ### 📦 Database & File Management
+          * **Card-Based About Page Redesign**
+              + 2-column grid of `CommunityCard` components
+              + Website link to sealplus.in, Auto-Update toggle as standalone Card
+              + Version & package name footer caption
           
-          * **Database Schema Upgrade (v7 → v8)**
-              + Added `videoId` field to `DownloadedVideoInfo` entity for better tracking
-              + Enhanced download history with unique video identifiers
-              + Automatic migration from schema v7 to v8 with proper default values
+          ### 🔌 Accompanist → Platform API Migration
           
-          * **Enhanced Temp File Deletion**
-              + Improved `FileUtil.deleteTempFilesForTask()` to use both `baseName` and `videoId`
-              + Temp files associated with downloads more reliably identified and removed
-              + Better handling of edge cases where files were renamed or moved
+          * **Permissions**: Replaced accompanist-permissions with `ActivityResultContracts.RequestPermission`
+          * **WebView**: Replaced accompanist-webview with platform `AndroidView` + `WebView`
+          * **Pager Indicators**: Replaced accompanist-pager-indicators with custom `Row` + `Box` dots
+          * Entire accompanist dependency bundle removed
           
-          ### 🗑️ User Experience Improvements
+          ### 📦 Bulk Dependency Update
           
-          * **Task Deletion Confirmation Dialog**
-              + New confirmation dialog before deleting active download tasks
-              + Displays task title/URL for confirmation
-              + Prevents accidental task deletion with automatic temp file cleanup
+          * **Gradle 9.5.1 & AGP 9.2.1** — Upgraded from 8.13 / 8.13.2
+          * **Kotlin 2.3.21** with K2 Compiler — Upgraded from 2.0.21, KSP 2.3.9
+          * **Compose BOM 2026.05.01** — Upgraded from 2025.01.00
+          * **Coil 3.4.0** — Migrated from Coil 2 to Coil 3 (`io.coil-kt.coil3`)
+          * **Android SDK 37** — compileSdk/targetSdk upgraded to Android 17
+          * **Room 2.8.4, Koin 4.2.1, MMKV 1.3.16, Coroutines 1.11.0** — All bumped
           
-          * **Improved Download State Management**
-              + Better network pause state handling and transitions
-              + Improved logic for tasks waiting for network availability
-              + Correct action determination based on current download state
+          ### 🐛 Bug Fixes & Stability
+          
+          * **LockScreen Biometric Fix** — Repeated prompt prevention, finishing guard
+          * **MainActivity LockScreen** — Deferred until after onboarding completes
+          * **QuickDownloadActivity** — Early return fix for finishing activity crash
+          * **DownloaderV2 Cleanup** — Network callback properly unregistered on crash/low memory
+          * **SponsorUtil Leak** — OkHttpClient per-call instead of singleton
+          * **DatabaseUtil** — Destructive migration fallback for safety
+          * **UpdateUtil** — checkForUpdate now safe with Dispatchers.IO + runCatching
+          
+          ### 🌍 Website Redesign & SEO Overhaul
+          
+          * Complete sealplus.in redesign — hero, support CTA, install guide, comparison table, FAQ
+          * New support.html (UPI/PayPal/GitHub Sponsors donations)
+          * New contact.html (Formspree contact form)
+          * Updated sitemap.xml, privacy.html, OG tags
+          * Complete CSS rewrite with glassmorphism design system
           
           ---
           
@@ -130,12 +144,12 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### ✨ Key Features (v2.7)
-          - 🎁 **GitHub Sponsors Integration** - Direct support option in UI
-          - 📦 **Database v8** - Enhanced videoId tracking for better file management
-          - 🗑️ **Delete Confirmation Dialog** - Prevent accidental task deletion
-          - 🧹 **Smarter Temp Cleanup** - VideoId-based file identification
-          - 🔄 **Better Network State Handling** - Improved pause/resume logic
+          ### ✨ Key Features (v2.8)
+          - 🎨 **Settings & About Redesign** - Card-based grid layout with chevron navigation
+          - 🔌 **Accompanist Removed** - Fully migrated to platform APIs
+          - 📦 **Bulk Dependency Update** - Gradle 9.5.1, Kotlin 2.3.21, Compose BOM 2026.05
+          - 🐛 **Bug Fixes** - Biometric, memory leaks, crash on finishing activity
+          - 🌐 **Website Overhaul** - New pages, SEO, glassmorphism design
           - ⏯️ **Pause/Resume downloads** with queue support
           - 🌐 Download from 1000+ sites via yt-dlp
           
@@ -176,33 +190,44 @@ jobs:
         MESSAGE+="📱 <b>App Name:</b> Seal Plus\n\n"
         MESSAGE+="🏷️ <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📋 <b>Changelog (v2.7):</b>\n\n"
-        MESSAGE+="<b>🎁 Monetization &amp; Support</b>\n"
-        MESSAGE+="  ➤ GitHub Sponsors integration added — support development directly\n"
-        MESSAGE+="  ➤ New donation option in Support Developer page\n"
-        MESSAGE+="  ➤ Removed outdated Buy Me a Coffee option\n"
-        MESSAGE+="  ➤ Updated GitHub Sponsors button gradient (blue to gray)\n\n"
-        MESSAGE+="<b>📦 Database &amp; File Management</b>\n"
-        MESSAGE+="  ➤ Database schema upgraded from v7 to v8\n"
-        MESSAGE+="  ➤ Added videoId field to DownloadedVideoInfo entity\n"
-        MESSAGE+="  ➤ Better video tracking and identification\n"
-        MESSAGE+="  ➤ Automatic migration with proper default values\n\n"
-        MESSAGE+="<b>🧹 Enhanced Temp File Deletion</b>\n"
-        MESSAGE+="  ➤ FileUtil.deleteTempFilesForTask() now uses videoId + baseName\n"
-        MESSAGE+="  ➤ More reliable temp file cleanup and identification\n"
-        MESSAGE+="  ➤ Better handling of renamed or moved files\n\n"
-        MESSAGE+="<b>🗑️ User Experience Improvements</b>\n"
-        MESSAGE+="  ➤ New confirmation dialog before deleting active tasks\n"
-        MESSAGE+="  ➤ Prevents accidental download deletion\n"
-        MESSAGE+="  ➤ Automatic temp file cleanup\n"
-        MESSAGE+="  ➤ Improved network state handling and transitions\n\n"
+        MESSAGE+="📋 <b>Changelog (v2.8):</b>\n\n"
+        MESSAGE+="<b>🎨 Settings &amp; About Page Redesign</b>\n"
+        MESSAGE+="  ➤ Full-width LazyColumn with PreferenceItem + chevron icons\n"
+        MESSAGE+="  ➤ Card-based About page with 2-column CommunityCard grid\n"
+        MESSAGE+="  ➤ New Website link to sealplus.in\n"
+        MESSAGE+="  ➤ Auto-Update standalone Card toggle\n\n"
+        MESSAGE+="<b>🔌 Accompanist → Platform API Migration</b>\n"
+        MESSAGE+="  ➤ Permissions replaced with ActivityResultContracts\n"
+        MESSAGE+="  ➤ WebView replaced with platform AndroidView\n"
+        MESSAGE+="  ➤ Pager indicators replaced with custom Row+Box dots\n"
+        MESSAGE+="  ➤ Entire accompanist dependency removed\n\n"
+        MESSAGE+="<b>📦 Bulk Dependency Update</b>\n"
+        MESSAGE+="  ➤ Gradle 9.5.1 &amp; AGP 9.2.1 (was 8.13 / 8.13.2)\n"
+        MESSAGE+="  ➤ Kotlin 2.3.21 with K2 Compiler (was 2.0.21)\n"
+        MESSAGE+="  ➤ Compose BOM 2026.05.01 (was 2025.01.00)\n"
+        MESSAGE+="  ➤ Coil 3.4.0 — migrated from Coil 2 to Coil 3\n"
+        MESSAGE+="  ➤ Android SDK 37 — compileSdk/targetSdk upgraded\n"
+        MESSAGE+="  ➤ Room 2.8.4, Koin 4.2.1, MMKV 1.3.16, Coroutines 1.11.0\n\n"
+        MESSAGE+="<b>🐛 Bug Fixes &amp; Stability</b>\n"
+        MESSAGE+="  ➤ LockScreen biometric prompt — repeated prompt prevention\n"
+        MESSAGE+="  ➤ LockScreen deferred until after onboarding completes\n"
+        MESSAGE+="  ➤ QuickDownloadActivity — early return crash fix\n"
+        MESSAGE+="  ➤ DownloaderV2 network callback cleanup on crash/memory\n"
+        MESSAGE+="  ➤ SponsorUtil OkHttpClient leak fix (per-call client)\n"
+        MESSAGE+="  ➤ DatabaseUtil destructive migration fallback\n"
+        MESSAGE+="  ➤ UpdateUtil checkForUpdate made safe with IO dispatcher\n\n"
+        MESSAGE+="<b>🌍 Website Redesign &amp; SEO Overhaul</b>\n"
+        MESSAGE+="  ➤ Complete sealplus.in redesign with new sections\n"
+        MESSAGE+="  ➤ New support.html (UPI, PayPal, GitHub Sponsors)\n"
+        MESSAGE+="  ➤ New contact.html (Formspree form)\n"
+        MESSAGE+="  ➤ Updated sitemap, privacy, OG tags, CSS redesign\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="✨ <b>Key Features (v2.7):</b>\n"
-        MESSAGE+="🎁 GitHub Sponsors Integration — direct support option\n"
-        MESSAGE+="📦 Database v8 — enhanced videoId tracking\n"
-        MESSAGE+="🗑️ Delete Confirmation Dialog — prevent accidental deletion\n"
-        MESSAGE+="🧹 Smarter Temp Cleanup — videoId-based identification\n"
-        MESSAGE+="🔄 Better Network State Handling — improved pause/resume\n"
+        MESSAGE+="✨ <b>Key Features (v2.8):</b>\n"
+        MESSAGE+="🎨 Settings &amp; About Redesign — card-based grid with chevron navigation\n"
+        MESSAGE+="🔌 Accompanist Removed — fully migrated to platform APIs\n"
+        MESSAGE+="📦 Bulk Dependency Update — Gradle 9.5.1, Kotlin 2.3.21, Compose 2026.05\n"
+        MESSAGE+="🐛 Bug Fixes — biometric, memory leaks, crash fixes\n"
+        MESSAGE+="🌐 Website Overhaul — new pages, SEO, glassmorphism design\n"
         MESSAGE+="⏯️ Pause/Resume with queue — continue interrupted downloads\n"
         MESSAGE+="🌐 1000+ sites via yt-dlp — YouTube, TikTok, Instagram, and more\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -215,7 +240,7 @@ jobs:
         MESSAGE+="🔗 <b>Download Now:</b>\n"
         MESSAGE+="<a href=\"${RELEASE_URL}\">Click here to download v${{ steps.version.outputs.VERSION }}</a>\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="💡 <b>Note:</b> v2.7 brings GitHub Sponsors integration, database schema v8 with videoId tracking, enhanced temp file cleanup, task deletion confirmation, and improved network state handling.\n\n"
+        MESSAGE+="💡 <b>Note:</b> v2.8 brings a complete Settings &amp; About page redesign, migration from Accompanist to platform APIs, bulk dependency updates (Gradle 9.5.1, Kotlin 2.3.21, Compose BOM 2026.05), critical bug fixes for biometric/crashes/memory leaks, and a full website overhaul with support/contact pages.\n\n"
         MESSAGE+="🕐 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues

@@ -22,7 +22,7 @@
 - **🎨 Exclusive Gradient Dark Theme**: Premium glassmorphism UI with vibrant gradients
 - **⚡ Auto-Update System**: Seamless in-app updates from our release page
 - **🎯 Enhanced Repository**: Active maintenance and improvements by [Mahesh Technicals](https://github.com/MaheshTechnicals)
-- **💎 Modern Architecture**: Latest Android SDK 36, Kotlin 2.0, Jetpack Compose, yt-dlp 2025.12.08
+- **💎 Modern Architecture**: Latest Android SDK 37, Kotlin 2.3, Jetpack Compose, yt-dlp 2025.12.08
 - **🚀 Performance Optimized**: Hardware-accelerated animations, ultra-fast downloads with speed optimization, advanced aria2c support
 
 ---
@@ -155,9 +155,9 @@ English
   - Kotlin Coroutines for async operations
 
 - **Latest Technology Stack**
-  - Android SDK 36 (Android 14)
-  - Kotlin 2.0.21 with K2 compiler
-  - Jetpack Compose BOM 2025.01.00
+  - Android SDK 37 (Android 17)
+  - Kotlin 2.3.21 with K2 compiler
+  - Jetpack Compose BOM 2026.05.01
   - Room Database 2.8.4
   - Material 3 Components
 
@@ -172,60 +172,98 @@ English
 ## ⬇️ Download & Installation
 
 
-### 🚀 What's New in v2.7?
+### 🚀 What's New in v2.8?
 
 <details open>
-<summary><b>📱 Click to see latest updates - GitHub Sponsors, Database Enhancement & Better UX (May 22, 2026)</b></summary>
+<summary><b>📱 Click to see latest updates - Settings/About Redesign, Dependency Overhaul, Website Redesign (June 11, 2026)</b></summary>
 
-## ✨ Seal Plus v2.7.0 - GitHub Sponsors Integration, Enhanced File Management & UI Improvements
-
----
-
-### 🎁 Monetization & Support
-
-* **GitHub Sponsors Integration**
-  + New **GitHub Sponsors** donation option in Support Developer page
-  + Support development directly via https://github.com/sponsors/MaheshTechnicals
-  + Removed outdated "Buy Me a Coffee" option for cleaner interface
-
-### 📦 Database & File Management
-
-* **Database Schema Upgrade (v7 → v8)**
-  + Added `videoId` field to download history for better tracking
-  + Improved video identification and temp file cleanup
-  + Seamless automatic migration with default values
-
-* **Enhanced Temp File Deletion**
-  + Better temp file cleanup using videoId for accuracy
-  + More reliable identification of associated temporary files
-  + Proper cleanup of edge cases
-
-### 🗑️ User Experience Improvements
-
-* **Task Deletion Confirmation Dialog**
-  + New confirmation dialog before deleting active downloads
-  + Prevents accidental task deletion
-  + Smart temp file cleanup
-
-* **Improved Download State Management**
-  + Better network pause handling and state transitions
-  + Enhanced waiting state logic for network availability
+## ✨ Seal Plus v2.8.0 - Settings & About Redesign, Bulk Dependency Update, Website & SEO Overhaul
 
 ---
 
-### ✨ Key Features (v2.7)
+### 🎨 Settings & About Page Redesign
 
-* 🎁 **GitHub Sponsors Integration** - Direct support option in UI
-* 📦 **Database v8** - Enhanced videoId tracking for better file management
-* 🗑️ **Delete Confirmation Dialog** - Prevent accidental task deletion
-* 🧹 **Smarter Temp Cleanup** - VideoId-based file identification
-* 🔄 **Better Network State Handling** - Improved pause/resume logic
+* **Full-Width Settings LazyColumn Layout**
+  + Settings page redesigned with `PreferenceItem` + trailing chevron icons throughout
+  + Visual grouping with spacers between Download → Customization → Extras sections
+  + Prominent sponsor card with `primaryContainer` color pairing
+
+* **Card-Based About Page Redesign**
+  + 2-column grid of `CommunityCard` components — Website, Release, Sponsor, Telegram, YouTube, Credits
+  + Auto-Update toggle as standalone Card with Switch control
+  + Version & package name footer caption
+  + Website link to sealplus.in
+
+### 🔌 Accompanist → Platform API Migration
+
+* Replaced accompanist-permissions with `ActivityResultContracts.RequestPermission`
+* Replaced accompanist-webview with platform `AndroidView` + `WebView`
+* Replaced accompanist-pager-indicators with custom `Row` + `Box` dots
+* Removed entire accompanist dependency bundle
+
+### 📦 Bulk Dependency Update
+
+* **Gradle 9.5.1 & AGP 9.2.1** — Upgraded from 8.13
+* **Kotlin 2.3.21** with K2 Compiler — Upgraded from 2.0.21
+* **Compose BOM 2026.05.01** — Upgraded from 2025.01.00
+* **Coil 3.4.0** — Migrated from Coil 2 to Coil 3 (`io.coil-kt.coil3`)
+* **Android SDK 37** — compileSdk/targetSdk upgraded to 37
+* **Room 2.8.4, Koin 4.2.1, MMKV 1.3.16, Coroutines 1.11.0** — All bumped
+
+### 🐛 Bug Fixes & Stability
+
+* LockScreen biometric prompt fixed — prevents repeated prompts and crashes on recomposition
+* LockScreen now deferred until after onboarding completes
+* QuickDownloadActivity early return fix for finishing activity
+* DownloaderV2 network callback properly cleaned up on crash and low memory
+* SponsorUtil OkHttpClient leak fixed — per-call client instead of singleton
+* DatabaseUtil destructive migration fallback added
+* UpdateUtil checkForUpdate made safe with `Dispatchers.IO` + `runCatching`
+
+### 🌍 Website Redesign & SEO Overhaul
+
+* Complete sealplus.in redesign with new hero, support CTA, install guide, comparison table, FAQ
+* New support.html page (UPI, PayPal, GitHub Sponsors donations)
+* New contact.html page (Formspree contact form)
+* Updated sitemap.xml, privacy.html, and OG tags
+* Complete CSS rewrite with glassmorphism design system
+
+---
+
+### ✨ Key Features (v2.8)
+
+* 🎨 **Settings & About Redesign** - Card-based layout with grid and chevron navigation
+* 🔌 **Accompanist Removed** - Fully migrated to platform APIs
+* 📦 **Bulk Dependency Update** - Gradle 9.5.1, Kotlin 2.3.21, Compose BOM 2026.05
+* 🐛 **Bug Fixes** - Biometric, memory leaks, crash on finishing activity
+* 🌐 **Website Overhaul** - New pages, SEO, glassmorphism design
 * ⏯️ **Pause/Resume downloads** with queue support
 * 🌐 Download from 1000+ sites via yt-dlp
 
 ### 📜 Full Changelog
 
 See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
+
+</details>
+
+<details>
+<summary><b>📱 Previous Release - v2.7 (May 22, 2026)</b></summary>
+
+#### ✨ Seal Plus v2.7.0 - GitHub Sponsors Integration, Enhanced File Management & UI Improvements
+
+#### 🎁 Monetization & Support
+- ✅ **GitHub Sponsors Integration** - New donation option in Support Developer page
+- ✅ **Support development** directly via github.com/sponsors/MaheshTechnicals
+
+#### 📦 Database & File Management
+- ✅ **Database Schema Upgrade (v7 → v8)** - Added videoId field for tracking
+- ✅ **Enhanced Temp File Deletion** - Better cleanup using videoId
+
+#### 🗑️ User Experience Improvements
+- ✅ **Task Deletion Confirmation Dialog** - Prevents accidental deletion
+- ✅ **Improved Download State Management** - Better network handling
+
+[View Full Changelog →](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md)
 
 </details>
 
@@ -386,19 +424,15 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 ### 🚀 Latest Releases
 
 - **Latest Stable**: [Download from GitHub Releases](https://github.com/MaheshTechnicals/Sealplus/releases/latest)
-  - ✅ **Current Version**: v2.5.0 (April 2026)
-  - 🔒 **Hidden Content System** - Biometric-protected private vault with file relocation
-  - 🎨 **List View & Redesigned Format Cards** - File size, bitrate, and codec info at a glance
-  - 🔀 **Merge Audio Stream Option** - Combine separate audio into any video format
-  - 📋 **Active Download Sorting** - Stable order: Running → Queued → Paused → Done
-  - 🔄 **Auto-Retry on Network Error** - Up to 3 automatic retries with 5s backoff
-  - ▶️ **Resume Partial Downloads** - Continue interrupted downloads, never restart from zero
-  - 📶 **WiFi-Only Fully Enforced** - Network restriction respected engine-side, auto-resumes
-  - 📊 **Speed & ETA on Home Cards** - Live download speed and time remaining
-  - 🔀 **Merging Phase Indicator** - Cards correctly show "Merging..." during post-processing
-  - 🖼️ **Missing File Detection** - Grayed-out cards for deleted/moved files
-  - ⚡ **CPU & Storage Optimized** - Near-zero overhead during active downloads
-  - 🌍 **61 Languages Updated** - New merge-hint strings across all locales
+  - ✅ **Current Version**: v2.8.0 (June 2026)
+  - 🎨 **Settings & About Redesign** - Card-based grid layout with chevron navigation
+  - 🔌 **Accompanist Removed** - Fully migrated to platform APIs (Permissions, WebView, Pager)
+  - 📦 **Bulk Dependency Update** - Gradle 9.5.1, Kotlin 2.3.21, AGP 9.2.1, Compose BOM 2026.05
+  - 🔄 **Coil 3 Migration** - Upgraded from Coil 2 to Coil 3 (io.coil-kt.coil3)
+  - 📱 **Android SDK 37** - compileSdk/targetSdk upgraded to Android 17
+  - 🐛 **LockScreen & Crash Fixes** - Biometric prompt stability, finishing activity crash
+  - 🧹 **Memory Leak Fixes** - DownloaderV2 callback cleanup, SponsorUtil OkHttpClient leak
+  - 🌐 **Website Redesign** - New support/contact pages, glassmorphism design, SEO overhaul
   - ⏯️ **Pause/Resume Downloads** - Full download control with queue
   - 🌐 **1000+ Sites** - Download from YouTube, Instagram, TikTok & more
   - 🚀 **Auto-Update System** enabled for seamless updates
@@ -413,9 +447,9 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 | Requirement | Specification |
 |------------|---------------|
 | **Minimum Android** | Android 7.0 (API 24) |
-| **Target Android** | Android 14 (API 36) |
-| **Current Version** | 2.5.0 |
-| **Release Date** | April 6, 2026 |
+| **Target Android** | Android 17 (API 37) |
+| **Current Version** | 2.8.0 |
+| **Release Date** | June 11, 2026 |
 
 ### 🏗️ Architecture Support
 
@@ -690,17 +724,17 @@ Help make Seal Plus accessible to users worldwide:
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| **Language** | Kotlin | 2.0.21 |
-| **UI Framework** | Jetpack Compose | 2025.01.00 |
+| **Language** | Kotlin | 2.3.21 |
+| **UI Framework** | Jetpack Compose | 2026.05.01 |
 | **Architecture** | MVVM + Clean Architecture | - |
-| **Build System** | Gradle (KTS) | 8.13 |
+| **Build System** | Gradle (KTS) | 9.5.1 |
 | **Minimum SDK** | Android 7.0 | API 24 |
-| **Target SDK** | Android 14 | API 36 |
+| **Target SDK** | Android 17 | API 37 |
 | **Database** | Room | 2.8.4 |
-| **Async** | Kotlin Coroutines | 1.10.1 |
-| **Networking** | OkHttp | 5.0.0 |
-| **Image Loading** | Coil | 2.7.0 |
-| **DI** | Manual (Performance) | - |
+| **Async** | Kotlin Coroutines | 1.11.0 |
+| **Networking** | OkHttp | 4.12.0 |
+| **Image Loading** | Coil 3 | 3.4.0 |
+| **DI** | Koin | 4.2.1 |
 
 ## ⭐ Star History
 
