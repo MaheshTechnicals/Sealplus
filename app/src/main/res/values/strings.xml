@@ -233,6 +233,7 @@
     <string name="video_only">Video (no audio)</string>
     <string name="suggested">Suggested</string>
     <string name="format_selection">Format selection</string>
+    <string name="mp4_only">MP4 only</string>
     <string name="format_selection_desc">Select the format to download before starting the download</string>
     <string name="generate_new_cookies">Generate new cookies</string>
     <string name="use_cookies">Use Cookies</string>

@@ -95,11 +95,13 @@ import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.ui.theme.generateLabelColor
 import com.junkfood.seal.util.EXTRACT_AUDIO
 import com.junkfood.seal.util.FORMAT_LIST_VIEW
+import com.junkfood.seal.util.FORMAT_MP4_ONLY
 import com.junkfood.seal.util.Format
 import com.junkfood.seal.util.FormatValidator
 import com.junkfood.seal.util.MERGE_MULTI_AUDIO_STREAM
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getString
+import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateString
 import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.SUBTITLE_LANGUAGE
@@ -407,18 +409,36 @@ private fun FormatPageImpl(
     var validatedVideoAudioFormats by remember { mutableStateOf<List<Format>>(emptyList()) }
 
     if (videoInfo.formats.isNullOrEmpty()) return
-    
+
+    // MP4-only filter: when enabled, only MP4-family formats are listed
+    // (mp4 video / m4a audio). This is the modern yt-dlp container split — H.264 and
+    // AV1 live in mp4, VP9/Opus live in webm. We filter on the display side by `ext`.
+    // SAFETY: if a site exposes no MP4 formats in a category, we keep the unfiltered
+    // list for that category so the user is never left with an empty selection.
+    var mp4Only by remember { mutableStateOf(FORMAT_MP4_ONLY.getBoolean()) }
+    fun List<Format>.keepMp4(wantedExt: String): List<Format> {
+        if (!mp4Only) return this
+        val filtered = filter { it.ext.equals(wantedExt, ignoreCase = true) }
+        return if (filtered.isNotEmpty()) filtered else this
+    }
+
     // Initial format separation (before validation)
     val rawVideoOnlyFormats =
-        videoInfo.formats.filter { it.vcodec != "none" && it.acodec == "none" }.reversed()
+        videoInfo.formats.filter { it.vcodec != "none" && it.acodec == "none" }
+            .reversed()
+            .keepMp4("mp4")
     val rawAudioOnlyFormats =
-        videoInfo.formats.filter { it.acodec != "none" && it.vcodec == "none" }.reversed()
+        videoInfo.formats.filter { it.acodec != "none" && it.vcodec == "none" }
+            .reversed()
+            .keepMp4("m4a")
     // Original video+audio combined formats (usually lower quality like 360p, 480p)
     val rawVideoAudioFormats =
-        videoInfo.formats.filter { it.acodec != "none" && it.vcodec != "none" }.reversed()
+        videoInfo.formats.filter { it.acodec != "none" && it.vcodec != "none" }
+            .reversed()
+            .keepMp4("mp4")
     
     // Validate and filter formats on composition
-    LaunchedEffect(videoInfo) {
+    LaunchedEffect(videoInfo, mp4Only) {
         isValidatingFormats = true
         try {
             // Validate all format categories
@@ -799,6 +819,25 @@ private fun FormatPageImpl(
                         onSplittingToggled = { isSplittingVideo = !isSplittingVideo },
                         onRename = { showRenameDialog = true },
                         onOpenThumbnail = { uriHandler.openUri(thumbnail.toHttpsUrl()) },
+                    )
+                }
+            }
+
+            // MP4-only filter toggle
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    VideoFilterChip(
+                        selected = mp4Only,
+                        onClick = {
+                            mp4Only = !mp4Only
+                            FORMAT_MP4_ONLY.updateBoolean(mp4Only)
+                        },
+                        label = stringResource(R.string.mp4_only),
                     )
                 }
             }
