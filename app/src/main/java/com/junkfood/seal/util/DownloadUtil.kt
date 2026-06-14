@@ -101,8 +101,12 @@ object DownloadUtil {
                 addOption("--flat-playlist")
                 addOption("--dump-single-json")
                 addOption("-o", BASENAME)
-                addOption("-R", "1")
-                addOption("--socket-timeout", "5")
+                // Info-probe resilience: 1 retry + 5s timeout was too aggressive and made
+                // slow/distant servers (common for many non-YouTube sites) fail to even
+                // fetch metadata. 3 retries + 15s timeout is far more tolerant while still
+                // failing reasonably fast on genuinely dead hosts.
+                addOption("-R", "3")
+                addOption("--socket-timeout", "15")
                 downloadPreferences.run {
                     if (extractAudio) {
                         addOption("-x")
@@ -194,8 +198,10 @@ object DownloadUtil {
                         addOption("--dump-single-json")
                         addOption("--no-playlist")
                     }
-                    addOption("-R", "1")
-                    addOption("--socket-timeout", "5")
+                    // See getPlaylistOrVideoInfo: 1 retry + 5s timeout caused spurious
+                    // "fetch info" failures on slow sites. Use more tolerant values.
+                    addOption("-R", "3")
+                    addOption("--socket-timeout", "15")
                 }
             return getVideoInfo(request, taskKey)
         }
@@ -487,17 +493,30 @@ object DownloadUtil {
 
     /**
      * Resilience options applied to actual downloads so a single transient failure
-     * (network blip, slow extractor, busy storage) retries instead of aborting. This
-     * is the highest-value, lowest-risk lever for reliable downloads across the many
-     * sites yt-dlp supports. Intentionally NOT applied to info-probe requests, which
-     * use a fast fail-quick policy (-R 1) for snappy metadata fetches.
+     * (network blip, slow extractor, busy storage, rate-limit) retries instead of
+     * aborting. Reliable downloads across the many sites yt-dlp supports.
+     *
+     * NOTE: the retry COUNTS below match yt-dlp's current defaults (retries=10,
+     * fragment-retries=10, file-access-retries=3, extractor-retries=3). They are set
+     * explicitly so behaviour is stable even if upstream defaults change.
+     *
+     * The real value-add is the BACK-OFF: by default yt-dlp sleeps 0s between retries,
+     * which hammers a struggling/rate-limiting server (HTTP 429) and often escalates
+     * into a temporary ban. Exponential back-off (1s, 2s, 4s … capped) lets the server
+     * recover and dramatically improves success on rate-limited / flaky sites.
+     *
+     * Intentionally NOT applied to info-probe requests, which use their own tolerant
+     * but faster policy (see getPlaylistOrVideoInfo / fetchVideoInfoFromUrl).
      */
     private fun YoutubeDLRequest.enableRetryOptions(): YoutubeDLRequest =
         this.addOption("--retries", "10")
             .addOption("--fragment-retries", "10")
             .addOption("--extractor-retries", "3")
             .addOption("--file-access-retries", "3")
-            .addOption("--retry-sleep", "3")
+            // HTTP request back-off: exponential starting at 1s, capped at 120s.
+            .addOption("--retry-sleep", "exp=1:120")
+            // Fragment back-off: exponential starting at 1s, capped at 60s.
+            .addOption("--retry-sleep", "fragment:exp=1:60")
 
     private fun YoutubeDLRequest.addOptionsForVideoDownloads(
         downloadPreferences: DownloadPreferences
