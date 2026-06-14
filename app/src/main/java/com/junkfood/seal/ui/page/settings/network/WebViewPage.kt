@@ -1,16 +1,20 @@
 package com.junkfood.seal.ui.page.settings.network
 
 import android.annotation.SuppressLint
+import android.os.Message
 import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -87,6 +92,10 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
     val cookieSet = remember { mutableSetOf<Cookie>() }
     val websiteUrl = state.editingCookieProfile.url
     var pageTitle by remember { mutableStateOf("") }
+    // Holds a popup/child WebView opened by the page via window.open() / target="_blank".
+    // Many login flows (Instagram, Google, OAuth) open the login form in a NEW window.
+    // Without multi-window support this produced a black screen.
+    var popupWebView by remember { mutableStateOf<WebView?>(null) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -110,16 +119,22 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
             )
         },
     ) { paddingValues ->
+      Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
         AndroidView(
-            modifier = Modifier.padding(paddingValues).fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             factory = { context ->
                 WebView(context).apply {
                     settings.run {
                         javaScriptCanOpenWindowsAutomatically = true
                         javaScriptEnabled = true
                         domStorageEnabled = true
+                        // Required so the page can open login popups (window.open / target=_blank).
+                        // Combined with WebChromeClient.onCreateWindow below, this fixes the
+                        // black screen seen when tapping "Log in" on Instagram and similar sites.
+                        setSupportMultipleWindows(true)
                         USER_AGENT_STRING.updateString(userAgentString)
                     }
+                    cookieManager.setAcceptCookie(true)
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView, url: String?) {
                             super.onPageFinished(view, url)
@@ -139,6 +154,41 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                         override fun onReceivedTitle(view: WebView, title: String) {
                             pageTitle = title
                         }
+
+                        // Route the page's popup window into a real child WebView shown as an
+                        // overlay, so the user can complete the login. Cookies set during the
+                        // popup flow land in the shared app cookie store and are captured.
+                        override fun onCreateWindow(
+                            view: WebView,
+                            isDialog: Boolean,
+                            isUserGesture: Boolean,
+                            resultMsg: Message,
+                        ): Boolean {
+                            val popup =
+                                WebView(view.context).apply {
+                                    settings.javaScriptEnabled = true
+                                    settings.domStorageEnabled = true
+                                    settings.javaScriptCanOpenWindowsAutomatically = true
+                                    settings.setSupportMultipleWindows(true)
+                                    settings.userAgentString = view.settings.userAgentString
+                                    cookieManager.setAcceptThirdPartyCookies(this, true)
+                                    webViewClient = WebViewClient()
+                                    webChromeClient =
+                                        object : WebChromeClient() {
+                                            override fun onCloseWindow(window: WebView) {
+                                                popupWebView = null
+                                            }
+                                        }
+                                }
+                            popupWebView = popup
+                            (resultMsg.obj as WebView.WebViewTransport).webView = popup
+                            resultMsg.sendToTarget()
+                            return true
+                        }
+
+                        override fun onCloseWindow(window: WebView) {
+                            popupWebView = null
+                        }
                     }
                     cookieManager.setAcceptThirdPartyCookies(this, true)
                     loadUrl(websiteUrl)
@@ -150,5 +200,33 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                 }
             },
         )
+
+        // Login popup overlay (e.g. Instagram/Google "Log in" window).
+        popupWebView?.let { popup ->
+            key(popup) {
+            Box(
+                modifier =
+                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+            ) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { popup },
+                    onRelease = { it.destroy() },
+                )
+                IconButton(
+                    onClick = { popupWebView = null },
+                    modifier = Modifier.align(Alignment.TopEnd),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription =
+                            stringResource(id = androidx.appcompat.R.string.abc_action_mode_done),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            }
+        }
+      }
     }
 }
