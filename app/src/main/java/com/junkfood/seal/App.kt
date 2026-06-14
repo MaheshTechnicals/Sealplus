@@ -14,6 +14,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import androidx.core.content.getSystemService
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.crossfade
 import com.google.android.material.color.DynamicColors
 import com.junkfood.seal.download.DownloaderV2
 import com.junkfood.seal.download.DownloaderV2Impl
@@ -50,6 +55,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
 import org.koin.android.ext.koin.androidLogger
@@ -57,7 +64,42 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
-class App : Application() {
+class App : Application(), SingletonImageLoader.Factory {
+
+    /**
+     * Coil 3 does NOT bundle a network fetcher by default — without an explicit network
+     * component every remote image (e.g. video thumbnails) silently fails to load, leaving
+     * blank poster areas in the format/configure screens. We register the OkHttp fetcher and
+     * attach a desktop browser User-Agent so thumbnail CDNs that reject the default client
+     * (returning 403) still serve the image.
+     */
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        val callFactory = {
+            OkHttpClient.Builder()
+                .addNetworkInterceptor(
+                    Interceptor { chain ->
+                        val request =
+                            chain
+                                .request()
+                                .newBuilder()
+                                .header(
+                                    "User-Agent",
+                                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                                        "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                                        "Chrome/124.0.0.0 Safari/537.36",
+                                )
+                                .build()
+                        chain.proceed(request)
+                    }
+                )
+                .build()
+        }
+        return ImageLoader.Builder(context)
+            .components { add(OkHttpNetworkFetcherFactory(callFactory = callFactory)) }
+            .crossfade(true)
+            .build()
+    }
+
     override fun onCreate() {
         super.onCreate()
         MMKV.initialize(this)

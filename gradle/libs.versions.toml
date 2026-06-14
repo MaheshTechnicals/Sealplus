@@ -83,6 +83,7 @@ androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espres
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "androidxDocumentFile" }
 
 coil-kt-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-kt-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 

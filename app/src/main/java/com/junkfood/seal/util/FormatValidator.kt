@@ -196,6 +196,74 @@ object FormatValidator {
     }
 
     /**
+     * Minimum plausible overall bitrate (kbps) for a given video height. A format that claims a
+     * high resolution but reports a bitrate/size far below this floor (e.g. a "1080p" track at
+     * 30 kbps) is almost always a broken or placeholder entry and should not be offered.
+     */
+    private fun minPlausibleBitrateKbps(height: Int): Double = when {
+        height >= 2160 -> 1500.0 // 4K
+        height >= 1440 -> 1000.0 // 2K
+        height >= 1080 -> 500.0
+        height >= 720 -> 250.0
+        height >= 480 -> 120.0
+        height >= 360 -> 60.0
+        else -> 20.0
+    }
+
+    /**
+     * Resolves a format's height (px) from explicit metadata, the resolution string, or the raw
+     * format string. Returns null when no resolution can be determined.
+     */
+    private fun formatHeight(format: Format): Int? {
+        format.height?.toInt()?.takeIf { it > 0 }?.let { return it }
+        val source = format.resolution ?: format.format ?: ""
+        """(\d{3,4})x(\d{3,4})""".toRegex().find(source)?.let {
+            return it.groupValues[2].toIntOrNull()?.takeIf { h -> h > 0 }
+        }
+        """(\d{3,4})p""".toRegex().find(source)?.let {
+            return it.groupValues[1].toIntOrNull()?.takeIf { h -> h > 0 }
+        }
+        return null
+    }
+
+    /**
+     * Effective overall bitrate (kbps): prefers reported tbr/vbr, otherwise derives it from the
+     * file size and duration. Returns null when neither bitrate nor size information exists.
+     */
+    private fun effectiveBitrateKbps(format: Format, durationSec: Double): Double? {
+        (format.tbr ?: format.vbr)?.takeIf { it > 0 }?.let { return it }
+        val sizeBytes = format.fileSize ?: format.fileSizeApprox
+        if (sizeBytes != null && sizeBytes > 0 && durationSec > 0) {
+            return sizeBytes * 8.0 / 1000.0 / durationSec // bytes -> kbps
+        }
+        return null
+    }
+
+    /**
+     * Removes video formats whose advertised resolution is not justified by their bitrate/size
+     * (high resolution + implausibly small size). Formats with unknown resolution OR unknown
+     * bitrate/size are kept, since they cannot be judged reliably. If filtering would remove
+     * every format, the original list is returned so the user is never left with an empty section.
+     */
+    fun filterImplausibleVideoSizes(formats: List<Format>, durationSec: Double): List<Format> {
+        if (formats.isEmpty()) return formats
+        val filtered = formats.filter { format ->
+            val height = formatHeight(format) ?: return@filter true
+            val bitrate = effectiveBitrateKbps(format, durationSec) ?: return@filter true
+            val plausible = bitrate >= minPlausibleBitrateKbps(height)
+            if (!plausible) {
+                Log.d(
+                    TAG,
+                    "Filtered implausible format ${format.formatId}: ${height}p @ " +
+                        "${"%.0f".format(bitrate)} kbps (min ${minPlausibleBitrateKbps(height)})",
+                )
+            }
+            plausible
+        }
+        return filtered.ifEmpty { formats }
+    }
+
+    /**
      * Deduplicates formats by resolution, keeping the best quality for each resolution
      */
     fun deduplicateByResolution(formats: List<Format>): List<Format> {

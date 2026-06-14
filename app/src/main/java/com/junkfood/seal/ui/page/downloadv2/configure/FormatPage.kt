@@ -450,7 +450,16 @@ private fun FormatPageImpl(
                             .thenByDescending { it.fileSizeApprox ?: it.fileSize ?: 0.0 }
                     )
             validatedVideoAudioFormats = FormatValidator.filterValidFormats(rawVideoAudioFormats, checkUrlAccessibility = false)
-            
+
+            // Drop "high resolution but implausibly tiny size" video formats so only
+            // genuine high-resolution + proper-size streams are shown (bitrate must justify
+            // the advertised resolution). Audio formats are left untouched.
+            val durationSec = videoInfo.duration ?: 0.0
+            validatedVideoOnlyFormats =
+                FormatValidator.filterImplausibleVideoSizes(validatedVideoOnlyFormats, durationSec)
+            validatedVideoAudioFormats =
+                FormatValidator.filterImplausibleVideoSizes(validatedVideoAudioFormats, durationSec)
+
             // Deduplicate by resolution to avoid showing multiple formats for same resolution
             validatedVideoOnlyFormats = FormatValidator.deduplicateByResolution(validatedVideoOnlyFormats)
             validatedVideoAudioFormats = FormatValidator.deduplicateByResolution(validatedVideoAudioFormats)

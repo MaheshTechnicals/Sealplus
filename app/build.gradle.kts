@@ -159,6 +159,7 @@ dependencies {
     implementation(libs.bundles.androidxCompose)
 
     implementation(libs.coil.kt.compose)
+    implementation(libs.coil.kt.network.okhttp)
 
     implementation(libs.kotlinx.serialization.json)
 
