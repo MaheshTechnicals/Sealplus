@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.component.ConfirmButton
+import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.util.CONCURRENT
 import com.junkfood.seal.util.MAX_RATE
 import com.junkfood.seal.util.PROXY_URL
