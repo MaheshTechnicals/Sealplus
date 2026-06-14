@@ -56,6 +56,19 @@ object DownloadUtil {
         const val EXPIRY = "expires_utc"
         const val HOST = "host_key"
         const val PATH = "path"
+        const val HTTPONLY = "is_httponly"
+        const val HAS_EXPIRES = "has_expires"
+    }
+
+    /**
+     * Chromium/WebView stores expiry as microseconds since 1601-01-01 (Windows FILETIME epoch).
+     * Netscape cookie format expects Unix timestamp (seconds since 1970-01-01).
+     */
+    private const val CHROMIUM_TIME_TO_UNIX_OFFSET = 11644473600L
+
+    private fun chromiumTimeToUnixTimestamp(chromiumTime: Long): Long {
+        if (chromiumTime <= 0L) return 0L
+        return (chromiumTime / 1_000_000L) - CHROMIUM_TIME_TO_UNIX_OFFSET
     }
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }
@@ -392,12 +405,25 @@ object DownloadUtil {
         }
     }
 
-    private fun YoutubeDLRequest.enableCookies(userAgentString: String): YoutubeDLRequest =
-        this.addOption("--cookies", context.getCookiesFile().absolutePath).apply {
+    private fun YoutubeDLRequest.enableCookies(userAgentString: String): YoutubeDLRequest {
+        refreshCookiesFile()
+        return this.addOption("--cookies", context.getCookiesFile().absolutePath).apply {
             if (userAgentString.isNotEmpty()) {
                 addOption("--add-header", "User-Agent:$userAgentString")
             }
         }
+    }
+
+    fun refreshCookiesFile() {
+        context.getCookiesFile().let { cookiesFile ->
+            getCookieListFromDatabase()
+                .mapCatching { it.toCookiesFileContent() }
+                .onSuccess { FileUtil.writeContentToFile(it, cookiesFile) }
+                .onFailure {
+                    if (cookiesFile.exists()) cookiesFile.delete()
+                }
+        }
+    }
 
     private fun YoutubeDLRequest.enableProxy(proxyUrl: String): YoutubeDLRequest =
         this.addOption("--proxy", proxyUrl)
@@ -411,6 +437,7 @@ object DownloadUtil {
             if (!hasCookies()) throw Exception("There is no cookies in the database!")
             flush()
         }
+        val now = System.currentTimeMillis() / 1000L
         SQLiteDatabase.openDatabase(
                 context.dataDir.resolve("app_webview/Default/Cookies").absolutePath,
                 null,
@@ -424,26 +451,35 @@ object DownloadUtil {
                         CookieScheme.NAME,
                         CookieScheme.VALUE,
                         CookieScheme.SECURE,
+                        CookieScheme.HTTPONLY,
+                        CookieScheme.HAS_EXPIRES,
                     )
                 val cookieList = mutableListOf<Cookie>()
                 db.query("cookies", projection, null, null, null, null, null).use { cursor ->
                     while (cursor.moveToNext()) {
-                        val expiry = cursor.getLong(cursor.getColumnIndexOrThrow(CookieScheme.EXPIRY))
+                        val rawExpiry = cursor.getLong(cursor.getColumnIndexOrThrow(CookieScheme.EXPIRY))
+                        val hasExpires = cursor.getInt(cursor.getColumnIndexOrThrow(CookieScheme.HAS_EXPIRES)) == 1
                         val name = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.NAME))
                         val value = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.VALUE))
                         val path = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.PATH))
                         val secure = cursor.getLong(cursor.getColumnIndexOrThrow(CookieScheme.SECURE)) == 1L
                         val hostKey = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.HOST))
+                        val isHttpOnly = cursor.getInt(cursor.getColumnIndexOrThrow(CookieScheme.HTTPONLY)) == 1
 
+                        val expiry = if (hasExpires) chromiumTimeToUnixTimestamp(rawExpiry) else 0L
+                        if (expiry > 0L && expiry < now) continue
+                        val includeSubdomains = hostKey[0] == '.'
                         val host = if (hostKey[0] != '.') ".$hostKey" else hostKey
                         cookieList.add(
                             Cookie(
                                 domain = host,
                                 name = name,
                                 value = value,
+                                includeSubdomains = includeSubdomains,
                                 path = path,
                                 secure = secure,
                                 expiry = expiry,
+                                isHttpOnly = isHttpOnly,
                             )
                         )
                     }

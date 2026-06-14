@@ -45,10 +45,11 @@ data class Cookie(
     val domain: String = "",
     val name: String = "",
     val value: String = "",
-    val includeSubdomains: Boolean = true,
+    val includeSubdomains: Boolean = false,
     val path: String = "/",
     val secure: Boolean = true,
     val expiry: Long = 0L,
+    val isHttpOnly: Boolean = false,
 ) {
     constructor(
         url: String,
@@ -59,21 +60,25 @@ data class Cookie(
     fun toNetscapeCookieString(): String {
         return connectWithDelimiter(
             domain,
-            includeSubdomains.toString().uppercase(),
+            includeSubdomains.toNetscapeFlag(),
             path,
-            secure.toString().uppercase(),
-            expiry.toString(),
+            secure.toNetscapeFlag(),
+            if (expiry > 0L) expiry.toString() else "0",
             name,
             value,
             delimiter = "\u0009",
         )
     }
+
+    fun isExpired(): Boolean = expiry > 0L && expiry < System.currentTimeMillis() / 1000L
 }
 
-private val domainRegex = Regex("""http(s)?://(\w*(www|m|account|sso))?|/.*""")
+private fun Boolean.toNetscapeFlag(): String = if (this) "TRUE" else "FALSE"
+
+private val domainRegex = Regex("""https?://([\w-]+\.)?|/.*""")
 
 private fun String.toDomain(): String {
-    return this.replace(domainRegex, "")
+    return this.replace(domainRegex, "").trimEnd('/')
 }
 
 private fun makeCookie(url: String, cookieString: String): Cookie {
