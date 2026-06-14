@@ -1,6 +1,7 @@
 package com.junkfood.seal.ui.page.settings.network
 
 import android.annotation.SuppressLint
+import android.graphics.Color as AndroidColor
 import android.os.Message
 import android.util.Log
 import android.webkit.CookieManager
@@ -8,6 +9,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -88,14 +90,30 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
     val state by cookiesViewModel.stateFlow.collectAsStateWithLifecycle()
     Log.d(TAG, state.editingCookieProfile.url)
 
-    val cookieManager = CookieManager.getInstance()
-    val cookieSet = remember { mutableSetOf<Cookie>() }
+    val cookieManager = remember { CookieManager.getInstance() }
     val websiteUrl = state.editingCookieProfile.url
     var pageTitle by remember { mutableStateOf("") }
+    // Reference to the main WebView so the system back button can navigate the login flow
+    // (multi-step logins) instead of immediately leaving the screen.
+    var mainWebView by remember { mutableStateOf<WebView?>(null) }
     // Holds a popup/child WebView opened by the page via window.open() / target="_blank".
-    // Many login flows (Instagram, Google, OAuth) open the login form in a NEW window.
-    // Without multi-window support this produced a black screen.
+    // Many login flows (Google, OAuth) open the login form in a NEW window. Without
+    // multi-window support that produced a black screen.
     var popupWebView by remember { mutableStateOf<WebView?>(null) }
+
+    // Accept cookies globally before any page loads, otherwise the login session is never
+    // persisted and the SQLite extraction finds nothing.
+    cookieManager.setAcceptCookie(true)
+
+    // Back navigation: close the popup first, then walk back through the login history,
+    // and finally leave the screen.
+    BackHandler {
+        when {
+            popupWebView != null -> popupWebView = null
+            mainWebView?.canGoBack() == true -> mainWebView?.goBack()
+            else -> onDismissRequest()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -124,39 +142,45 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
                 WebView(context).apply {
+                    mainWebView = this
+                    // White background avoids a black flash before the first paint.
+                    setBackgroundColor(AndroidColor.WHITE)
                     settings.run {
                         javaScriptCanOpenWindowsAutomatically = true
                         javaScriptEnabled = true
                         domStorageEnabled = true
                         // Required so the page can open login popups (window.open / target=_blank).
-                        // Combined with WebChromeClient.onCreateWindow below, this fixes the
-                        // black screen seen when tapping "Log in" on Instagram and similar sites.
                         setSupportMultipleWindows(true)
+                        loadWithOverviewMode = true
+                        useWideViewPort = true
                         USER_AGENT_STRING.updateString(userAgentString)
                     }
                     cookieManager.setAcceptCookie(true)
+                    cookieManager.setAcceptThirdPartyCookies(this, true)
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView, url: String?) {
                             super.onPageFinished(view, url)
-                            if (url.isNullOrEmpty()) return
+                            // Persist cookies as they arrive so the SQLite extraction
+                            // (DownloadUtil.getCookieListFromDatabase) sees the latest session.
+                            cookieManager.flush()
                         }
 
                         override fun shouldOverrideUrlLoading(
                             view: WebView,
                             request: WebResourceRequest,
                         ): Boolean {
-                            return if (request.url?.scheme?.contains("http") == true)
-                                super.shouldOverrideUrlLoading(view, request)
-                            else true
+                            // Let the WebView load all http(s) navigations itself; only block
+                            // non-http schemes (intent://, market://, mailto:, etc.).
+                            return request.url?.scheme?.startsWith("http") != true
                         }
                     }
                     webChromeClient = object : WebChromeClient() {
-                        override fun onReceivedTitle(view: WebView, title: String) {
-                            pageTitle = title
+                        override fun onReceivedTitle(view: WebView, title: String?) {
+                            pageTitle = title ?: ""
                         }
 
-                        // Route the page's popup window into a real child WebView shown as an
-                        // overlay, so the user can complete the login. Cookies set during the
+                        // Route a user-initiated popup window into a real child WebView shown as
+                        // an overlay, so the user can complete the login. Cookies set during the
                         // popup flow land in the shared app cookie store and are captured.
                         override fun onCreateWindow(
                             view: WebView,
@@ -164,17 +188,31 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                             isUserGesture: Boolean,
                             resultMsg: Message,
                         ): Boolean {
+                            // Ignore automatic popups (ads/trackers). Honouring them would cover
+                            // the real login page with a blank overlay — the "black screen".
+                            if (!isUserGesture) return false
                             val popup =
                                 WebView(view.context).apply {
+                                    setBackgroundColor(AndroidColor.WHITE)
                                     settings.javaScriptEnabled = true
                                     settings.domStorageEnabled = true
                                     settings.javaScriptCanOpenWindowsAutomatically = true
                                     settings.setSupportMultipleWindows(true)
                                     settings.userAgentString = view.settings.userAgentString
                                     cookieManager.setAcceptThirdPartyCookies(this, true)
-                                    webViewClient = WebViewClient()
+                                    webViewClient =
+                                        object : WebViewClient() {
+                                            override fun onPageFinished(v: WebView, url: String?) {
+                                                super.onPageFinished(v, url)
+                                                cookieManager.flush()
+                                            }
+                                        }
                                     webChromeClient =
                                         object : WebChromeClient() {
+                                            override fun onReceivedTitle(v: WebView, title: String?) {
+                                                if (!title.isNullOrEmpty()) pageTitle = title
+                                            }
+
                                             override fun onCloseWindow(window: WebView) {
                                                 popupWebView = null
                                             }
@@ -190,18 +228,19 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                             popupWebView = null
                         }
                     }
-                    cookieManager.setAcceptThirdPartyCookies(this, true)
                     loadUrl(websiteUrl)
                 }
             },
-            update = { view ->
-                if (view.url != websiteUrl) {
-                    view.loadUrl(websiteUrl)
-                }
+            // NOTE: deliberately NO reload here. Reloading on recomposition (which happens on
+            // every title change / popup toggle) restarted the page on each redirect and caused
+            // the blank/black login screen. The factory loads the URL exactly once.
+            onRelease = {
+                mainWebView = null
+                it.destroy()
             },
         )
 
-        // Login popup overlay (e.g. Instagram/Google "Log in" window).
+        // Login popup overlay (e.g. Google "Log in" window).
         popupWebView?.let { popup ->
             key(popup) {
             Box(
