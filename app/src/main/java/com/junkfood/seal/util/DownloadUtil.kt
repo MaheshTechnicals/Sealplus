@@ -462,13 +462,42 @@ object DownloadUtil {
         // argument, so aria2c received a single malformed string, ignored all flags,
         // and fell back to single-connection mode → no speed boost + progress = -1.
         // Correct form: no quotes, values separated by spaces, each flag is its own token.
+        //
+        // PROTOCOL SCOPING: aria2c excels at contiguous HTTP(S)/FTP downloads but adds
+        // little for fragmented DASH/HLS (e.g. YouTube high-res, live streams), where
+        // yt-dlp's native --concurrent-fragments is more reliable. We therefore restrict
+        // aria2c to direct protocols only and let native handle fragmented streams, so
+        // both paths can run their respective parallelism (see the call site).
+        //
+        // aria2c args:
         // -x N  = max N connections per server (user-controlled via ARIA2C_CONNECTIONS)
         // -s N  = split download into N parallel streams
-        // -k 1M  = minimum chunk size 1 MB (prevents excessive requests)
+        // -k 1M = minimum chunk size 1 MB (allows aggressive splitting; aria2 default 20M)
+        // --file-allocation=none   = no preallocation (faster on Android / SAF temp dirs)
+        // --max-tries / --retry-wait = resilience against transient network errors
+        // --console-log-level=warn = keep logs clean without breaking progress parsing
         val connections = ARIA2C_CONNECTIONS.getInt()
-        return this.addOption("--downloader", "libaria2c.so")
-            .addOption("--external-downloader-args", "aria2c:-x $connections -s $connections -k 1M")
+        return this.addOption("--downloader", "http,https,ftp,ftps:libaria2c.so")
+            .addOption(
+                "--external-downloader-args",
+                "aria2c:-x $connections -s $connections -k 1M " +
+                    "--file-allocation=none --max-tries=5 --retry-wait=2 --console-log-level=warn",
+            )
     }
+
+    /**
+     * Resilience options applied to actual downloads so a single transient failure
+     * (network blip, slow extractor, busy storage) retries instead of aborting. This
+     * is the highest-value, lowest-risk lever for reliable downloads across the many
+     * sites yt-dlp supports. Intentionally NOT applied to info-probe requests, which
+     * use a fast fail-quick policy (-R 1) for snappy metadata fetches.
+     */
+    private fun YoutubeDLRequest.enableRetryOptions(): YoutubeDLRequest =
+        this.addOption("--retries", "10")
+            .addOption("--fragment-retries", "10")
+            .addOption("--extractor-retries", "3")
+            .addOption("--file-access-retries", "3")
+            .addOption("--retry-sleep", "3")
 
     private fun YoutubeDLRequest.addOptionsForVideoDownloads(
         downloadPreferences: DownloadPreferences
@@ -772,6 +801,7 @@ object DownloadUtil {
                 .apply {
                     addOption("--no-mtime")
                     addOption("--continue")
+                    enableRetryOptions()
                     //                addOption("-v")
                     if (cookies) {
                         enableCookies(userAgentString)
@@ -824,8 +854,13 @@ object DownloadUtil {
                         addOption("--no-playlist")
                     }
 
+                    // aria2c is scoped to contiguous protocols (see enableAria2c), so
+                    // concurrent fragments can run alongside it for DASH/HLS streams.
                     if (aria2c) {
                         enableAria2c()
+                        if (concurrentFragments > 1) {
+                            addOption("--concurrent-fragments", concurrentFragments)
+                        }
                     } else if (concurrentFragments > 1) {
                         addOption("--concurrent-fragments", concurrentFragments)
                     }
