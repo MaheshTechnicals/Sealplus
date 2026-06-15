@@ -880,6 +880,7 @@ private fun FormatPageImpl(
                         onClick = {
                             downloadDocs = !downloadDocs
                             DOWNLOAD_DOCS.updateBoolean(downloadDocs)
+                            if (downloadDocs) isSuggestedFormatSelected = false
                         },
                         label = stringResource(R.string.download_docs),
                     )
