@@ -143,7 +143,6 @@ private fun InputUrlPageImpl(
         Header(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
             title = stringResource(R.string.new_task),
-            icon = Icons.Outlined.Add,
         )
         OutlinedTextField(
             value = url,
