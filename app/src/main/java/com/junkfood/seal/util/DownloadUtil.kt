@@ -403,7 +403,6 @@ object DownloadUtil {
                     mergeAudioStream = false,
                     mergeToMkv =
                         (downloadSubtitle && embedSubtitle) || MERGE_OUTPUT_MKV.getBoolean(),
-                    downloadDocs = DOWNLOAD_DOCS.getBoolean(),
                 )
             }
         }

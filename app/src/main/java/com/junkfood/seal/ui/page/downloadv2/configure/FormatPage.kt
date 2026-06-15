@@ -96,7 +96,6 @@ import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.ui.theme.generateLabelColor
 import com.junkfood.seal.util.EXTRACT_AUDIO
 import com.junkfood.seal.util.FORMAT_LIST_VIEW
-import com.junkfood.seal.util.DOWNLOAD_DOCS
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FORMAT_MP4_ONLY
 import com.junkfood.seal.util.Format
@@ -439,7 +438,7 @@ private fun FormatPageImpl(
     // SAFETY: if a site exposes no MP4 formats in a category, we keep the unfiltered
     // list for that category so the user is never left with an empty selection.
     var mp4Only by remember { mutableStateOf(FORMAT_MP4_ONLY.getBoolean()) }
-    var downloadDocs by remember { mutableStateOf(DOWNLOAD_DOCS.getBoolean()) }
+    var downloadDocs by remember { mutableStateOf(false) }
     fun List<Format>.keepMp4(wantedExt: String): List<Format> {
         if (!mp4Only) return this
         val filtered = filter { it.ext.equals(wantedExt, ignoreCase = true) }
@@ -879,7 +878,6 @@ private fun FormatPageImpl(
                         selected = downloadDocs,
                         onClick = {
                             downloadDocs = !downloadDocs
-                            DOWNLOAD_DOCS.updateBoolean(downloadDocs)
                             if (downloadDocs) isSuggestedFormatSelected = false
                         },
                         label = stringResource(R.string.download_docs),
