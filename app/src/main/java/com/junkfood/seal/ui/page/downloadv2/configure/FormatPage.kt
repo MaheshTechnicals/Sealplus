@@ -73,6 +73,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.junkfood.seal.App
 import com.junkfood.seal.R
 import com.junkfood.seal.download.DownloaderV2
 import com.junkfood.seal.download.TaskFactory
@@ -95,6 +96,8 @@ import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.ui.theme.generateLabelColor
 import com.junkfood.seal.util.EXTRACT_AUDIO
 import com.junkfood.seal.util.FORMAT_LIST_VIEW
+import com.junkfood.seal.util.DOWNLOAD_DOCS
+import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FORMAT_MP4_ONLY
 import com.junkfood.seal.util.Format
 import com.junkfood.seal.util.FormatValidator
@@ -112,7 +115,10 @@ import com.junkfood.seal.util.VideoInfo
 import com.junkfood.seal.util.toHttpsUrl
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.material3.CircularProgressIndicator
 import org.koin.compose.koinInject
 
@@ -215,6 +221,7 @@ private data class FormatConfig(
     val newTitle: String,
     val selectedSubtitles: List<String>,
     val selectedAutoCaptions: List<String>,
+    val downloadDocs: Boolean = false,
 )
 
 @Composable
@@ -263,8 +270,22 @@ fun FormatPage(
                     .run { this - this.filterWithRegex(subtitleLanguageRegex) }
                     .toSet()
 
-            downloader.enqueue(
-                TaskFactory.createWithConfigurations(
+            if (downloadDocs && formatList.isEmpty()) {
+                App.applicationScope.launch(Dispatchers.IO) {
+                    DownloadUtil.writeDocsTextFile(videoInfo)
+                        .onFailure { e ->
+                            Log.e(TAG, "Failed to write docs file", e)
+                        }
+                    withContext(Dispatchers.Main) { onNavigateBack() }
+                }
+            } else {
+                val prefs = if (downloadDocs) {
+                    DownloadUtil.DownloadPreferences.createFromPreferences().copy(
+                        downloadDocs = true
+                    )
+                } else null
+
+                val taskWithState = TaskFactory.createWithConfigurations(
                     videoInfo = videoInfo,
                     formatList = formatList,
                     videoClips = videoClips,
@@ -272,13 +293,15 @@ fun FormatPage(
                     newTitle = newTitle,
                     selectedSubtitles = selectedSubtitles,
                     selectedAutoCaptions = selectedAutoCaptions,
+                    overridePreferences = prefs,
                 )
-            )
+                downloader.enqueue(taskWithState)
 
-            if (diffSubtitleLanguages.isNotEmpty()) {
-                showUpdateSubtitleDialog = true
-            } else {
-                onNavigateBack()
+                if (diffSubtitleLanguages.isNotEmpty()) {
+                    showUpdateSubtitleDialog = true
+                } else {
+                    onNavigateBack()
+                }
             }
         }
     }
@@ -416,6 +439,7 @@ private fun FormatPageImpl(
     // SAFETY: if a site exposes no MP4 formats in a category, we keep the unfiltered
     // list for that category so the user is never left with an empty selection.
     var mp4Only by remember { mutableStateOf(FORMAT_MP4_ONLY.getBoolean()) }
+    var downloadDocs by remember { mutableStateOf(DOWNLOAD_DOCS.getBoolean()) }
     fun List<Format>.keepMp4(wantedExt: String): List<Format> {
         if (!mp4Only) return this
         val filtered = filter { it.ext.equals(wantedExt, ignoreCase = true) }
@@ -750,10 +774,10 @@ private fun FormatPageImpl(
                 selectedVideoAudioFormat != NOT_SELECTED || 
                 selectedVideoOnlyFormat != NOT_SELECTED || 
                 selectedAudioOnlyFormats.isNotEmpty()
-            val isNetworkAvailable = FormatValidator.isNetworkAvailable()
-            val canDownload = isFormatSelected && isNetworkAvailable && !isValidatingFormats
+            val isDocsOnly = downloadDocs && !isFormatSelected
+            val canDownload = (isFormatSelected || isDocsOnly) && isNetworkAvailable && !isValidatingFormats
             
-            if (isFormatSelected) {
+            if (isFormatSelected || isDocsOnly) {
                 ExtendedFloatingActionButton(
                     onClick = {
                         if (canDownload) {
@@ -767,6 +791,7 @@ private fun FormatPageImpl(
                                     newTitle = videoTitle,
                                     selectedSubtitles = selectedSubtitles,
                                     selectedAutoCaptions = selectedAutoCaptions,
+                                    downloadDocs = downloadDocs,
                                 )
                             )
                         }
@@ -790,6 +815,7 @@ private fun FormatPageImpl(
                         Text(
                             if (!isNetworkAvailable) "No Network"
                             else if (isValidatingFormats) "Validating..."
+                            else if (isDocsOnly) stringResource(R.string.download_docs_only)
                             else if (selectedVideoOnlyFormat != NOT_SELECTED && selectedAudioOnlyFormats.isNotEmpty())
                                 stringResource(R.string.download_and_merge)
                             else stringResource(R.string.start_download)
@@ -832,7 +858,7 @@ private fun FormatPageImpl(
                 }
             }
 
-            // MP4-only filter toggle
+            // MP4-only & Docs filter toggle
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Row(
                     modifier =
@@ -847,6 +873,14 @@ private fun FormatPageImpl(
                             FORMAT_MP4_ONLY.updateBoolean(mp4Only)
                         },
                         label = stringResource(R.string.mp4_only),
+                    )
+                    VideoFilterChip(
+                        selected = downloadDocs,
+                        onClick = {
+                            downloadDocs = !downloadDocs
+                            DOWNLOAD_DOCS.updateBoolean(downloadDocs)
+                        },
+                        label = stringResource(R.string.download_docs),
                     )
                 }
             }

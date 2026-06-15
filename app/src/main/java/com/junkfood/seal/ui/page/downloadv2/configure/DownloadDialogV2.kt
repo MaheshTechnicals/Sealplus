@@ -130,6 +130,7 @@ import com.junkfood.seal.util.AUDIO_QUALITY
 import com.junkfood.seal.util.COOKIES
 import com.junkfood.seal.util.CUSTOM_COMMAND
 import com.junkfood.seal.util.DatabaseUtil
+import com.junkfood.seal.util.DOWNLOAD_DOCS
 import com.junkfood.seal.util.DownloadType
 import com.junkfood.seal.util.DownloadType.Audio
 import com.junkfood.seal.util.DownloadType.Command
@@ -803,6 +804,15 @@ private fun AdditionalSettings(
                     onPreferenceUpdate()
                 },
                 label = stringResource(R.string.create_thumbnail),
+            )
+            VideoFilterChip(
+                selected = preference.downloadDocs,
+                enabled = selectedType != Command,
+                onClick = {
+                    DOWNLOAD_DOCS.updateBoolean(!preference.downloadDocs)
+                    onPreferenceUpdate()
+                },
+                label = stringResource(R.string.download_docs),
             )
         }
 

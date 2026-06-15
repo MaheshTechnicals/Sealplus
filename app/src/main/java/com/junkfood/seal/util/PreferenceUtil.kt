@@ -140,6 +140,9 @@ const val FORMAT_LIST_VIEW = "format_list_view"
 // (mp4 video / m4a audio). Falls back to showing all formats if a site has none.
 const val FORMAT_MP4_ONLY = "format_mp4_only"
 
+// When true, a text file with video metadata (title, description, tags) is saved
+const val DOWNLOAD_DOCS = "download_docs"
+
 // Smart Notifications
 const val NOTIFICATION_SOUND = "notification_sound"
 const val NOTIFICATION_VIBRATE = "notification_vibrate"
@@ -281,6 +284,7 @@ private val BooleanPreferenceDefaults =
         PROXY_IS_WORKING to false,
         FORMAT_LIST_VIEW to false,
         FORMAT_MP4_ONLY to true,
+        DOWNLOAD_DOCS to false,
     )
 
 private val IntPreferenceDefaults =

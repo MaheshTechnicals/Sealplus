@@ -234,6 +234,10 @@
     <string name="suggested">Suggested</string>
     <string name="format_selection">Format selection</string>
     <string name="mp4_only">MP4 only</string>
+    <string name="download_docs">Docs</string>
+    <string name="download_docs_desc">Save video title, description and tags as a text file</string>
+    <string name="download_docs_only">Download Docs</string>
+    <string name="docs_saved">Video info saved as text file</string>
     <string name="format_selection_desc">Select the format to download before starting the download</string>
     <string name="generate_new_cookies">Generate new cookies</string>
     <string name="use_cookies">Use Cookies</string>

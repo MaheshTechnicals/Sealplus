@@ -24,6 +24,7 @@ object TaskFactory {
         newTitle: String,
         selectedSubtitles: List<String>,
         selectedAutoCaptions: List<String>,
+        overridePreferences: DownloadPreferences? = null,
     ): TaskWithState {
         val fileSize =
             formatList.fold(.0) { acc, format ->
@@ -48,7 +49,7 @@ object TaskFactory {
             (selectedSubtitles + selectedAutoCaptions).joinToString(separator = ",")
 
         val preferences =
-            DownloadPreferences.createFromPreferences()
+            (overridePreferences ?: DownloadPreferences.createFromPreferences())
                 .run {
                     // When merging video+audio, force MP4 output (not MKV)
                     // This ensures high-quality merged videos are in MP4 container

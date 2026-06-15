@@ -567,6 +567,10 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                                     else null,
                             )
                         }
+                        // Write docs text file if enabled
+                        if (preferences.downloadDocs && info != null) {
+                            DownloadUtil.writeDocsTextFile(info!!)
+                        }
                     }
                     .onFailure { throwable ->
                         if (throwable is YoutubeDL.CanceledException) {

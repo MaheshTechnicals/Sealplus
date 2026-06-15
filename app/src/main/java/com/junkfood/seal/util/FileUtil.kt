@@ -267,6 +267,9 @@ object FileUtil {
         File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "SealPlus")
             .also { it.mkdir() }
 
+    fun getDocsDirectory(): File =
+        File(getExternalDownloadDirectory(), "docs").also { it.mkdirs() }
+
     internal fun getExternalPrivateDownloadDirectory() =
         File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
