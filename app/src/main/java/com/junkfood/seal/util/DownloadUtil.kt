@@ -8,6 +8,7 @@ import android.util.Log
 import android.webkit.CookieManager
 import androidx.annotation.CheckResult
 import com.junkfood.seal.App
+import java.io.File
 import com.junkfood.seal.BuildConfig
 import com.junkfood.seal.App.Companion.audioDownloadDir
 import com.junkfood.seal.App.Companion.context

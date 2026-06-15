@@ -774,6 +774,7 @@ private fun FormatPageImpl(
                 selectedVideoAudioFormat != NOT_SELECTED || 
                 selectedVideoOnlyFormat != NOT_SELECTED || 
                 selectedAudioOnlyFormats.isNotEmpty()
+            val isNetworkAvailable = FormatValidator.isNetworkAvailable()
             val isDocsOnly = downloadDocs && !isFormatSelected
             val canDownload = (isFormatSelected || isDocsOnly) && isNetworkAvailable && !isValidatingFormats
             
