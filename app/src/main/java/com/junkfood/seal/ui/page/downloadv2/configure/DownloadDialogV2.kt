@@ -93,6 +93,23 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.junkfood.seal.App
 import com.junkfood.seal.R
@@ -547,93 +564,98 @@ private fun ConfigurePage(
         }
     }
 
-    Column {
-        Column(modifier = modifier.padding(horizontal = 20.dp)) {
-            Header(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                title = stringResource(R.string.settings_before_download),
-                icon = Icons.Outlined.DoneAll,
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+    ) {
+        Header(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            title = stringResource(R.string.settings_before_download),
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = stringResource(id = R.string.download_type),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
+        )
+        DownloadTypeSelectionGroup(
+            typeEntries = config.typeEntries,
+            selectedType = selectedType,
+            onSelect = {
+                selectedType = it
+                EXTRACT_AUDIO.updateBoolean(it == Audio)
+            },
+        )
+        Spacer(Modifier.height(4.dp))
+        if (selectedType != Command) {
+            Text(
+                text = stringResource(id = R.string.format_selection),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
             )
-            DrawerSheetSubtitle(text = stringResource(id = R.string.download_type))
-            DownloadTypeSelectionGroup(
-                typeEntries = config.typeEntries,
-                selectedType = selectedType,
-                onSelect = {
-                    selectedType = it
-                    EXTRACT_AUDIO.updateBoolean(it == Audio)
-                },
+            Preset(
+                modifier = Modifier,
+                preference = preferences,
+                selected = !useFormatSelection,
+                downloadType = selectedType,
+                onClick = { useFormatSelection = false },
+                showEditIcon = !useFormatSelection && selectedType != Playlist,
+                onEdit = { onPresetEdit(selectedType) },
             )
-            Column(modifier = Modifier.animateContentSize()) {
-                if (selectedType != Command) {
-                    DrawerSheetSubtitle(
-                        text = stringResource(id = R.string.format_selection),
-                        modifier = Modifier,
-                    )
-                    Preset(
-                        modifier = Modifier,
-                        preference = preferences,
-                        selected = !useFormatSelection,
-                        downloadType = selectedType,
-                        onClick = { useFormatSelection = false },
-                        showEditIcon = !useFormatSelection && selectedType != Playlist,
-                        onEdit = { onPresetEdit(selectedType) },
-                    )
-                    Custom(
-                        selected = useFormatSelection,
-                        enabled = selectedType != Playlist,
-                        onClick = { useFormatSelection = true },
-                    )
-                } else {
-                    if (showTemplateSelectionDialog) {
-                        TemplatePickerDialog { showTemplateSelectionDialog = false }
-                    }
-                    if (showTemplateCreatorDialog) {
-                        CommandTemplateDialog(
-                            onDismissRequest = { showTemplateCreatorDialog = false },
-                            confirmationCallback = { scope.launch { TEMPLATE_ID.updateInt(it) } },
-                        )
-                    }
-                    if (showTemplateEditorDialog) {
-                        CommandTemplateDialog(
-                            commandTemplate = template,
-                            onDismissRequest = { showTemplateEditorDialog = false },
-                        )
-                    }
-                    DrawerSheetSubtitle(
-                        text = stringResource(id = R.string.template_selection),
-                        modifier = Modifier,
-                    )
-                    LazyRow(modifier = Modifier) {
-                        item {
-                            ButtonChip(
-                                icon = Icons.Outlined.Code,
-                                label = template.name,
-                                onClick = { showTemplateSelectionDialog = true },
-                            )
-                        }
-                        item {
-                            ButtonChip(
-                                icon = Icons.Outlined.NewLabel,
-                                label = stringResource(id = R.string.new_template),
-                                onClick = { showTemplateCreatorDialog = true },
-                            )
-                        }
-                        item {
-                            ButtonChip(
-                                icon = Icons.Outlined.Edit,
-                                label = stringResource(id = R.string.edit_template, template.name),
-                                onClick = { showTemplateEditorDialog = true },
-                            )
-                        }
-                    }
-                }
+            Custom(
+                selected = useFormatSelection,
+                enabled = selectedType != Playlist,
+                onClick = { useFormatSelection = true },
+            )
+        } else {
+            if (showTemplateSelectionDialog) {
+                TemplatePickerDialog { showTemplateSelectionDialog = false }
+            }
+            if (showTemplateCreatorDialog) {
+                CommandTemplateDialog(
+                    onDismissRequest = { showTemplateCreatorDialog = false },
+                    confirmationCallback = { scope.launch { TEMPLATE_ID.updateInt(it) } },
+                )
+            }
+            if (showTemplateEditorDialog) {
+                CommandTemplateDialog(
+                    commandTemplate = template,
+                    onDismissRequest = { showTemplateEditorDialog = false },
+                )
+            }
+            Text(
+                text = stringResource(id = R.string.template_selection),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
+            )
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                ButtonChip(
+                    icon = Icons.Outlined.Code,
+                    label = template.name,
+                    onClick = { showTemplateSelectionDialog = true },
+                )
+                ButtonChip(
+                    icon = Icons.Outlined.NewLabel,
+                    label = stringResource(id = R.string.new_template),
+                    onClick = { showTemplateCreatorDialog = true },
+                )
+                ButtonChip(
+                    icon = Icons.Outlined.Edit,
+                    label = stringResource(id = R.string.edit_template, template.name),
+                    onClick = { showTemplateEditorDialog = true },
+                )
             }
         }
+        Spacer(Modifier.height(8.dp))
         var expanded by remember { mutableStateOf(false) }
         ExpandableTitle(expanded = expanded, onClick = { expanded = !expanded }) { settingChips() }
-
+        Spacer(Modifier.height(4.dp))
         ActionButtons(
-            modifier = Modifier.padding(horizontal = 20.dp),
             canProceed = canProceed,
             selectedType = selectedType,
             useFormatSelection = useFormatSelection,
@@ -704,7 +726,6 @@ fun ConfigurePagePlaylistVariant(
             Header(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 title = stringResource(R.string.settings_before_download),
-                icon = Icons.Outlined.DoneAll,
             )
             DrawerSheetSubtitle(text = stringResource(id = R.string.download_type))
             DownloadTypeSelectionGroup(
@@ -758,6 +779,7 @@ fun ConfigurePagePlaylistVariant(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AdditionalSettings(
     modifier: Modifier = Modifier,
@@ -771,9 +793,14 @@ private fun AdditionalSettings(
     var showCookiesDialog by rememberSaveable { mutableStateOf(false) }
 
     with(preference) {
-        Row(modifier = modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+        FlowRow(
+            modifier = modifier.fillMaxWidth(),
+            maxItemsInEachRow = 3,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             if (cookiesProfiles.isNotEmpty()) {
-                VideoFilterChip(
+                FilterChip(
                     selected = preference.cookies,
                     onClick = {
                         if (isQuickDownload) {
@@ -783,36 +810,56 @@ private fun AdditionalSettings(
                             showCookiesDialog = true
                         }
                     },
-                    label = stringResource(id = R.string.cookies),
+                    label = { Text(stringResource(id = R.string.cookies)) },
+                    modifier = Modifier.height(36.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    leadingIcon = if (preference.cookies) {
+                        { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
+                    } else null,
                 )
             }
 
-            VideoFilterChip(
+            FilterChip(
                 selected = downloadSubtitle,
                 enabled = selectedType != Command,
                 onClick = {
                     SUBTITLE.updateBoolean(!downloadSubtitle)
                     onPreferenceUpdate()
                 },
-                label = stringResource(id = R.string.download_subtitles),
+                label = { Text(stringResource(id = R.string.download_subtitles)) },
+                modifier = Modifier.height(36.dp),
+                shape = RoundedCornerShape(50.dp),
+                leadingIcon = if (downloadSubtitle) {
+                    { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
+                } else null,
             )
-            VideoFilterChip(
+            FilterChip(
                 selected = createThumbnail,
                 enabled = selectedType != Command,
                 onClick = {
                     THUMBNAIL.updateBoolean(!createThumbnail)
                     onPreferenceUpdate()
                 },
-                label = stringResource(R.string.create_thumbnail),
+                label = { Text(stringResource(R.string.create_thumbnail)) },
+                modifier = Modifier.height(36.dp),
+                shape = RoundedCornerShape(50.dp),
+                leadingIcon = if (createThumbnail) {
+                    { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
+                } else null,
             )
-            VideoFilterChip(
+            FilterChip(
                 selected = preference.downloadDocs,
                 enabled = selectedType != Command,
                 onClick = {
                     DOWNLOAD_DOCS.updateBoolean(!preference.downloadDocs)
                     onPreferenceUpdate()
                 },
-                label = stringResource(R.string.download_docs),
+                label = { Text(stringResource(R.string.download_docs)) },
+                modifier = Modifier.height(36.dp),
+                shape = RoundedCornerShape(50.dp),
+                leadingIcon = if (preference.downloadDocs) {
+                    { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
+                } else null,
             )
         }
 
@@ -839,41 +886,49 @@ fun ExpandableTitle(
     onClick: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
+    val rotation by animateFloatAsState(
+        if (expanded) 180f else 0f,
+        label = "",
+    )
     Column {
-        Spacer(Modifier.height(8.dp))
-        HorizontalDivider(thickness = Dp.Hairline, modifier = Modifier.padding(horizontal = 20.dp))
-        Column(
-            modifier =
-                modifier
-                    .clickable(
-                        onClick = onClick,
-                        onClickLabel = stringResource(R.string.show_more_actions),
-                    )
-                    .padding(top = 12.dp, bottom = 8.dp)
+        Surface(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .height(52.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Spacer(modifier = Modifier.width(24.dp))
                 Text(
                     text = stringResource(R.string.additional_settings),
                     style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
                 )
-                Spacer(modifier = Modifier.weight(1f))
                 Icon(
-                    imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    imageVector = Icons.Outlined.ExpandMore,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .graphicsLayer(rotationZ = rotation),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.width(32.dp))
             }
-            AnimatedVisibility(expanded) {
-                Column {
-                    Spacer(Modifier.height(8.dp))
-                    content()
-                }
+        }
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn() + expandVertically(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            Column {
+                Spacer(Modifier.height(8.dp))
+                content()
             }
         }
     }
@@ -892,7 +947,7 @@ private fun SingleChoiceItem(
 ) {
     val corner by
         animateDpAsState(
-            if (selected) 28.dp else 16.dp,
+            if (selected) 24.dp else 16.dp,
             animationSpec =
                 spring(
                     stiffness = Spring.StiffnessMedium,
@@ -902,8 +957,8 @@ private fun SingleChoiceItem(
         )
     val color by
         animateColorAsState(
-            if (selected) MaterialTheme.colorScheme.secondaryContainer
-            else MaterialTheme.colorScheme.surfaceContainerLow,
+            if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+            else MaterialTheme.colorScheme.surfaceContainerHigh,
             label = "",
         )
 
@@ -912,49 +967,75 @@ private fun SingleChoiceItem(
         onClick = onClick,
         color = color,
         shape = RoundedCornerShape(corner),
-        modifier = modifier.padding(vertical = 4.dp).run { if (!enabled) alpha(0.32f) else this },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .alpha(if (enabled) 1f else 0.38f),
         enabled = enabled,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    icon?.invoke()
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(text = title, style = MaterialTheme.typography.titleMedium)
-                }
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                icon?.invoke()
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = desc,
                     style = MaterialTheme.typography.bodySmall,
-                    minLines = 2,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(start = 32.dp),
                 )
             }
-            action?.invoke()
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                action?.invoke()
+            }
         }
     }
 }
 
 @Composable
-internal fun Header(modifier: Modifier = Modifier, icon: ImageVector, title: String) {
+internal fun Header(modifier: Modifier = Modifier, title: String) {
     Column(modifier = modifier) {
-        Icon(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = 8.dp, bottom = 16.dp)
+                .width(40.dp)
+                .height(4.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(2.dp)
+                )
         )
         Text(
             text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier =
-                Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp, bottom = 8.dp),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 4.dp),
             textAlign = TextAlign.Center,
         )
     }
@@ -967,8 +1048,33 @@ private fun DownloadTypeSelectionGroup(
     selectedType: DownloadType?,
     onSelect: (DownloadType) -> Unit,
 ) {
-    val typeCount = typeEntries.size
-    if (typeCount == DownloadType.entries.size) {
+    if (typeEntries.size == 3) {
+        SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth().height(48.dp)) {
+            typeEntries.forEachIndexed { index, type ->
+                SingleChoiceSegmentedButton(
+                    selected = selectedType == type,
+                    onClick = { onSelect(type) },
+                    shape = SegmentedButtonDefaults.itemShape(index, typeEntries.size),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        activeContentColor = MaterialTheme.colorScheme.primary,
+                        inactiveContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                    icon = {
+                        if (selectedType == type) {
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    },
+                    label = { Text(text = type.label()) },
+                )
+            }
+        }
+    } else {
         LazyRow(modifier = modifier) {
             items(typeEntries) { type ->
                 SingleChoiceChip(
@@ -976,18 +1082,6 @@ private fun DownloadTypeSelectionGroup(
                     label = type.label(),
                     onClick = { onSelect(type) },
                 )
-            }
-        }
-    } else {
-        SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
-            typeEntries.forEachIndexed { index, type ->
-                SingleChoiceSegmentedButton(
-                    selected = selectedType == type,
-                    onClick = { onSelect(type) },
-                    shape = SegmentedButtonDefaults.itemShape(index, typeCount),
-                ) {
-                    Text(text = type.label())
-                }
             }
         }
     }
@@ -1022,39 +1116,36 @@ private fun Preset(
         title = stringResource(R.string.preset),
         desc = description,
         icon = {
-            Crossfade(selected, animationSpec = spring(stiffness = Spring.StiffnessMedium)) {
-                if (it) {
-                    Icon(
-                        imageVector = Icons.Filled.SettingsSuggest,
-                        null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Outlined.SettingsSuggest,
-                        null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
+            Icon(
+                imageVector = Icons.Outlined.SettingsSuggest,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (selected) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         },
         selected = selected,
         action = {
-            Crossfade(showEditIcon, animationSpec = spring(stiffness = Spring.StiffnessMedium)) {
-                if (it) {
+            if (showEditIcon && selected) {
+                TextButton(
+                    onClick = onEdit,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                ) {
                     Icon(
-                        imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = stringResource(R.string.edit),
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.secondary,
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.edit),
+                        style = MaterialTheme.typography.labelLarge,
                     )
                 }
             }
         },
         onClick = {
-            if (showEditIcon) {
+            if (showEditIcon && selected) {
                 onEdit()
             } else {
                 onClick()
@@ -1075,23 +1166,13 @@ private fun Custom(
         title = stringResource(R.string.custom),
         desc = stringResource(R.string.custom_format_selection_desc),
         icon = {
-            Crossfade(selected, animationSpec = spring(stiffness = Spring.StiffnessMedium)) {
-                if (it) {
-                    Icon(
-                        imageVector = Icons.Filled.VideoFile,
-                        null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Outlined.VideoFile,
-                        null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
+            Icon(
+                imageVector = Icons.Outlined.Tune,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (selected) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         },
         selected = selected,
         enabled = enabled,
@@ -1154,47 +1235,56 @@ private fun ActionButtons(
             Download
         }
 
-    val state = rememberLazyListState()
-    LazyRow(
-        modifier = modifier.fillMaxWidth().padding(top = 12.dp),
-        horizontalArrangement = Arrangement.End,
-        state = state,
+    Row(
+        modifier = modifier.fillMaxWidth().padding(top = 12.dp, bottom = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        item {
-            OutlinedButtonWithIcon(
-                modifier = Modifier.padding(horizontal = 12.dp),
-                onClick = onCancel,
-                icon = Icons.Outlined.Cancel,
+        OutlinedButton(
+            modifier = Modifier.weight(1f).height(52.dp),
+            onClick = onCancel,
+            shape = RoundedCornerShape(50.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Cancel,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
                 text = stringResource(R.string.cancel),
+                style = MaterialTheme.typography.labelLarge,
             )
         }
-        item {
-            Button(
-                modifier = Modifier,
-                onClick = {
-                    when (action) {
-                        FetchInfo -> onFetchInfo()
-                        Download -> onDownload()
-                        StartTask -> onTaskStart()
-                    }
+        Spacer(modifier = Modifier.width(12.dp))
+        Button(
+            modifier = Modifier.weight(2f).height(52.dp),
+            onClick = {
+                when (action) {
+                    FetchInfo -> onFetchInfo()
+                    Download -> onDownload()
+                    StartTask -> onTaskStart()
+                }
+            },
+            shape = RoundedCornerShape(50.dp),
+            enabled = canProceed,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            ),
+        ) {
+            AnimatedContent(
+                targetState = action,
+                label = "",
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(220, delayMillis = 90))).togetherWith(
+                        fadeOut(animationSpec = tween(90))
+                    )
                 },
-                contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
-                enabled = canProceed,
-            ) {
-                AnimatedContent(
-                    targetState = action,
-                    label = "",
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(220, delayMillis = 90))).togetherWith(
-                            fadeOut(animationSpec = tween(90))
-                        )
-                    },
-                ) { action ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        action.Icon()
-                        action.Label()
-                    }
+            ) { a ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    a.Icon()
+                    Spacer(modifier = Modifier.width(4.dp))
+                    a.Label()
                 }
             }
         }
