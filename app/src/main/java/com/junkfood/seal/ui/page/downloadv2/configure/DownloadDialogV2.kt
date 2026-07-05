@@ -41,7 +41,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.VideoFile
-import androidx.compose.material.icons.outlined.Cancel
+
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Edit
@@ -1247,15 +1247,10 @@ private fun ActionButtons(
             shape = RoundedCornerShape(50.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)),
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Cancel,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = stringResource(R.string.cancel),
                 style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
