@@ -22,16 +22,17 @@ object BatteryUtil {
     private fun isIgnoringViaAppOps(context: Context): Boolean {
         try {
             val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+            val opStr = "android:run_any_in_background"
             val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 appOps.unsafeCheckOpNoThrow(
-                    AppOpsManager.OPSTR_RUN_ANY_IN_BACKGROUND,
+                    opStr,
                     android.os.Process.myUid(),
                     context.packageName
                 )
             } else {
                 @Suppress("DEPRECATION")
                 appOps.checkOpNoThrow(
-                    AppOpsManager.OPSTR_RUN_ANY_IN_BACKGROUND,
+                    opStr,
                     android.os.Process.myUid(),
                     context.packageName
                 )
