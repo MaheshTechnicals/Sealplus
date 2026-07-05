@@ -151,8 +151,8 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                         setSupportZoom(true)
                         builtInZoomControls = true
                         displayZoomControls = false
+                        USER_AGENT_STRING.updateString(userAgentString)
                     }
-                    USER_AGENT_STRING.updateString(userAgentString)
                     cookieManager.setAcceptCookie(true)
                     cookieManager.setAcceptThirdPartyCookies(this, true)
                     webViewClient = object : WebViewClient() {
