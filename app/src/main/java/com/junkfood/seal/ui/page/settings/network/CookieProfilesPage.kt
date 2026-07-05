@@ -48,10 +48,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -66,6 +66,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
@@ -127,19 +130,40 @@ fun CookieProfilePage(
 
     var cookieList by remember { mutableStateOf(listOf<Cookie>()) }
 
-    var shouldUpdateCookies by remember { mutableStateOf(false) }
+    var cookieRefreshKey by remember { mutableIntStateOf(0) }
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    DisposableEffect(shouldUpdateCookies) {
+    fun refreshCookies() {
         scope.launch(Dispatchers.IO) {
             DownloadUtil.getCookieListFromDatabase().getOrNull()?.let {
                 cookieList = it
                 FileUtil.writeContentToFile(it.toCookiesFileContent(), context.getCookiesFile())
             }
         }
-        onDispose { shouldUpdateCookies = false }
+    }
+
+    LaunchedEffect(cookieRefreshKey) {
+        withContext(Dispatchers.IO) {
+            DownloadUtil.getCookieListFromDatabase().getOrNull()?.let {
+                cookieList = it
+                FileUtil.writeContentToFile(it.toCookiesFileContent(), context.getCookiesFile())
+            }
+        }
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshCookies()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     val exportLauncher =
@@ -291,12 +315,13 @@ fun CookieProfilePage(
         CookieGeneratorDialog(
             cookiesViewModel = cookiesViewModel,
             navigateToCookieGeneratorPage = {
+                showEditDialog = false
                 cookiesViewModel.updateCookieProfile()
                 navigateToCookieGeneratorPage()
             },
         ) {
             showEditDialog = false
-            shouldUpdateCookies = true
+            cookieRefreshKey++
         }
     }
 
@@ -315,7 +340,7 @@ fun CookieProfilePage(
             view.slightHapticFeedback()
             scope
                 .launch(Dispatchers.IO) { CookieManager.getInstance().removeAllCookies(null) }
-                .invokeOnCompletion { shouldUpdateCookies = true }
+                .invokeOnCompletion { cookieRefreshKey++ }
         }
     }
 }

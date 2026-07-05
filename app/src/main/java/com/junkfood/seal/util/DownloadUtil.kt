@@ -434,6 +434,20 @@ object DownloadUtil {
     private fun YoutubeDLRequest.useDownloadArchive(): YoutubeDLRequest =
         this.addOption("--download-archive", context.getArchiveFile().absolutePath)
 
+    private fun findCookieDatabasePath(): File {
+        val dataDir = context.dataDir
+        val candidates = listOf(
+            dataDir.resolve("app_webview/Default/Cookies"),
+            dataDir.resolve("app_webview/Cookies"),
+            File(context.applicationInfo.dataDir, "app_webview/Default/Cookies"),
+            File(context.applicationInfo.dataDir, "app_webview/Cookies"),
+        )
+        for (candidate in candidates) {
+            if (candidate.exists() && candidate.length() > 0) return candidate
+        }
+        return candidates.first()
+    }
+
     @CheckResult
     fun getCookieListFromDatabase(): Result<List<Cookie>> = runCatching {
         CookieManager.getInstance().run {
@@ -441,8 +455,12 @@ object DownloadUtil {
             flush()
         }
         val now = System.currentTimeMillis() / 1000L
+        val dbFile = findCookieDatabasePath()
+        if (!dbFile.exists()) {
+            throw Exception("Cookie database not found at ${dbFile.absolutePath}")
+        }
         SQLiteDatabase.openDatabase(
-                context.dataDir.resolve("app_webview/Default/Cookies").absolutePath,
+                dbFile.absolutePath,
                 null,
                 OPEN_READONLY,
             ).use { db ->
