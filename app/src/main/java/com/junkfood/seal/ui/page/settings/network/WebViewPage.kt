@@ -2,20 +2,28 @@ package com.junkfood.seal.ui.page.settings.network
 
 import android.annotation.SuppressLint
 import android.graphics.Color as AndroidColor
+import android.net.Uri
 import android.util.Log
 import android.webkit.CookieManager
+import android.webkit.PermissionRequest
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,8 +34,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.junkfood.seal.util.PreferenceUtil.updateString
@@ -69,11 +79,13 @@ data class Cookie(
 
 private fun Boolean.toNetscapeFlag(): String = if (this) "TRUE" else "FALSE"
 
-private val domainRegex = Regex("""https?://([\w-]+\.)?|/.*""")
-
 private fun String.toDomain(): String {
-    return this.replace(domainRegex, "").trimEnd('/')
+    val candidate = if (this.contains("://")) this else "https://$this"
+    return runCatching { Uri.parse(candidate).host }.getOrNull()
+        ?: this.substringAfter("://").substringBefore("/")
 }
+
+private val NAVIGABLE_SCHEMES = setOf("http", "https")
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,7 +93,6 @@ private fun String.toDomain(): String {
 fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit) {
 
     val state by cookiesViewModel.stateFlow.collectAsStateWithLifecycle()
-    Log.d(TAG, state.editingCookieProfile.url)
 
     val cookieManager = remember { CookieManager.getInstance() }
     val rawUrl = state.editingCookieProfile.url
@@ -92,8 +103,12 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
             else -> "https://$rawUrl"
         }
     }
+
     var pageTitle by remember { mutableStateOf("") }
     var mainWebView by remember { mutableStateOf<WebView?>(null) }
+    var loadProgress by remember { mutableStateOf(0) }
+    var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
 
     cookieManager.setAcceptCookie(true)
 
@@ -103,8 +118,9 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
     }
 
     BackHandler {
-        if (mainWebView?.canGoBack() == true) {
-            mainWebView?.goBack()
+        val webView = mainWebView
+        if (webView?.canGoBack() == true) {
+            webView.goBack()
         } else {
             onDismissRequest()
         }
@@ -114,82 +130,159 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(pageTitle, maxLines = 1) },
+                title = { Text(pageTitle.ifEmpty { websiteUrl }, maxLines = 1) },
                 navigationIcon = {
                     IconButton(onClick = { onDismissRequest() }) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
-                            stringResource(id = androidx.appcompat.R.string.abc_action_mode_done),
+                            contentDescription = stringResource(id = androidx.appcompat.R.string.abc_action_mode_done),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 },
                 actions = {
-                    TextButton(onClick = onDismissRequest) {
+                    TextButton(
+                        onClick = {
+                            cookieManager.flush()
+                            onDismissRequest()
+                        }
+                    ) {
                         Text(text = stringResource(id = androidx.appcompat.R.string.abc_action_mode_done))
                     }
                 },
             )
         },
     ) { paddingValues ->
-        AndroidView(
-            modifier = Modifier.padding(paddingValues).fillMaxSize(),
-            factory = { context ->
-                WebView(context).apply {
-                    mainWebView = this
-                    setBackgroundColor(AndroidColor.WHITE)
-                    settings.run {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        databaseEnabled = true
-                        setSupportMultipleWindows(false)
-                        loadWithOverviewMode = true
-                        useWideViewPort = true
-                        cacheMode = WebSettings.LOAD_DEFAULT
-                        mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                        allowFileAccess = false
-                        allowContentAccess = true
-                        setSupportZoom(true)
-                        builtInZoomControls = true
-                        displayZoomControls = false
-                        blockNetworkImage = false
-                        loadsImagesAutomatically = true
-                        javaScriptCanOpenWindowsAutomatically = true
-                        mediaPlaybackRequiresUserGesture = false
-                        val chromeLikeUA = userAgentString.replace(Regex("\\swv$"), "")
-                        setUserAgentString(chromeLikeUA)
-                        USER_AGENT_STRING.updateString(chromeLikeUA)
-                    }
-                    cookieManager.setAcceptCookie(true)
-                    cookieManager.setAcceptThirdPartyCookies(this, true)
-                    webViewClient = object : WebViewClient() {
-                        override fun onPageFinished(view: WebView, url: String?) {
-                            super.onPageFinished(view, url)
-                            cookieManager.flush()
+        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { context ->
+                    WebView(context).apply {
+                        mainWebView = this
+                        setBackgroundColor(AndroidColor.WHITE)
+                        settings.run {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            databaseEnabled = true
+                            setSupportMultipleWindows(false)
+                            loadWithOverviewMode = true
+                            useWideViewPort = true
+                            cacheMode = WebSettings.LOAD_DEFAULT
+                            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                            allowFileAccess = false
+                            allowContentAccess = true
+                            setSupportZoom(true)
+                            builtInZoomControls = true
+                            displayZoomControls = false
+                            blockNetworkImage = false
+                            loadsImagesAutomatically = true
+                            javaScriptCanOpenWindowsAutomatically = false
+                            mediaPlaybackRequiresUserGesture = false
+                            val chromeLikeUA = userAgentString.replace(Regex("\\swv$"), "")
+                            setUserAgentString(chromeLikeUA)
+                            USER_AGENT_STRING.updateString(chromeLikeUA)
+                        }
+                        cookieManager.setAcceptCookie(true)
+                        cookieManager.setAcceptThirdPartyCookies(this, true)
+
+                        webViewClient = object : WebViewClient() {
+                            override fun onPageStarted(
+                                view: WebView,
+                                url: String?,
+                                favicon: android.graphics.Bitmap?,
+                            ) {
+                                super.onPageStarted(view, url, favicon)
+                                isLoading = true
+                                loadError = null
+                            }
+
+                            override fun onPageFinished(view: WebView, url: String?) {
+                                super.onPageFinished(view, url)
+                                isLoading = false
+                                cookieManager.flush()
+                            }
+
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView,
+                                request: WebResourceRequest,
+                            ): Boolean {
+                                val scheme = request.url?.scheme?.lowercase()
+                                if (scheme in NAVIGABLE_SCHEMES) return false
+                                return try {
+                                    val intent =
+                                        android.content.Intent(
+                                            android.content.Intent.ACTION_VIEW,
+                                            request.url,
+                                        )
+                                    view.context.startActivity(intent)
+                                    true
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "No handler for scheme=$scheme", e)
+                                    true
+                                }
+                            }
+
+                            override fun onReceivedError(
+                                view: WebView,
+                                request: WebResourceRequest,
+                                error: WebResourceError,
+                            ) {
+                                super.onReceivedError(view, request, error)
+                                if (request.isForMainFrame) {
+                                    isLoading = false
+                                    loadError = error.description?.toString()
+                                    Log.w(TAG, "Load error on main frame: ${error.errorCode} ${error.description}")
+                                }
+                            }
+
+                            override fun onReceivedSslError(
+                                view: WebView,
+                                handler: SslErrorHandler,
+                                error: android.net.http.SslError,
+                            ) {
+                                Log.w(TAG, "SSL error: ${error.primaryError}")
+                                loadError = "Connection is not secure"
+                                handler.cancel()
+                            }
                         }
 
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView,
-                            request: android.webkit.WebResourceRequest,
-                        ): Boolean {
-                            return request.url?.scheme?.startsWith("http") != true
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onReceivedTitle(view: WebView, title: String?) {
+                                pageTitle = title ?: ""
+                            }
+
+                            override fun onProgressChanged(view: WebView, newProgress: Int) {
+                                loadProgress = newProgress
+                            }
+
+                            override fun onPermissionRequest(request: PermissionRequest) {
+                                request.deny()
+                            }
                         }
+                        loadUrl(websiteUrl)
                     }
-                    webChromeClient = object : WebChromeClient() {
-                        override fun onReceivedTitle(view: WebView, title: String?) {
-                            pageTitle = title ?: ""
-                        }
-                        override fun onPermissionRequest(request: android.webkit.PermissionRequest) {
-                            request.grant(request.resources)
-                        }
-                    }
-                    loadUrl(websiteUrl)
+                },
+                onRelease = {
+                    mainWebView = null
+                    it.destroy()
+                },
+            )
+
+            if (isLoading) {
+                LinearProgressIndicator(
+                    progress = { loadProgress / 100f },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            loadError?.let { message ->
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = message,
+                        modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                    )
                 }
-            },
-            onRelease = {
-                mainWebView = null
-                it.destroy()
-            },
-        )
+            }
+        }
     }
 }
