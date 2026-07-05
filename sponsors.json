@@ -69,6 +69,16 @@
       "id": 14,
       "name": "Ayman F",
       "METHOD": "PAYPAL"
+    },
+    {
+      "id": 15,
+      "name": "Denis Cavic",
+      "METHOD": "PAYPAL"
+    },
+    {
+      "id": 16,
+      "name": "Gonzalez German",
+      "METHOD": "PAYPAL"
     }
   ]
 }
