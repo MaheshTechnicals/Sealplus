@@ -3,9 +3,7 @@ package com.junkfood.seal.ui.page.home
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -148,8 +146,12 @@ import com.junkfood.seal.util.SPONSOR_DIALOG_FREQUENCY
 import com.junkfood.seal.util.SPONSOR_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.SPONSOR_FREQ_OFF
 import com.junkfood.seal.util.SPONSOR_FREQ_WEEKLY
+import com.junkfood.seal.util.BATTERY_DIALOG_DISMISSED
+import com.junkfood.seal.util.BatteryUtil
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.PreferenceUtil.getLong
+import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateLong
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -234,13 +236,9 @@ fun NewHomePage(
     }
     
     // Check battery optimization
+    val batteryDialogDismissed = remember { BATTERY_DIALOG_DISMISSED.getBoolean() }
     val isBatteryOptimizationDisabled = remember(lifecycleRefreshTrigger) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val pm = context.getSystemService(PowerManager::class.java)
-            pm.isIgnoringBatteryOptimizations(context.packageName)
-        } else {
-            true // Not needed below Android 6
-        }
+        BatteryUtil.isIgnoringBatteryOptimizations(context)
     }
     
     // Notification permission launcher - tries system permission first
@@ -261,7 +259,7 @@ fun NewHomePage(
             permissionsChecked = true
             if (!hasNotificationPermission) {
                 showNotificationPermissionDialog = true
-            } else if (!isBatteryOptimizationDisabled) {
+            } else if (!isBatteryOptimizationDisabled && !batteryDialogDismissed) {
                 showBatteryOptimizationDialog = true
             }
         }
@@ -285,7 +283,7 @@ fun NewHomePage(
     LaunchedEffect(hasNotificationPermission, isBatteryOptimizationDisabled) {
         if (permissionsChecked) {
             // If notification dialog was shown and is now dismissed
-            if (!showNotificationPermissionDialog && hasNotificationPermission && !isBatteryOptimizationDisabled) {
+            if (!showNotificationPermissionDialog && hasNotificationPermission && !isBatteryOptimizationDisabled && !batteryDialogDismissed) {
                 // Show battery optimization dialog after notification permission is granted
                 showBatteryOptimizationDialog = true
             }
@@ -407,7 +405,7 @@ fun NewHomePage(
         AlertDialog(
             onDismissRequest = { 
                 showNotificationPermissionDialog = false
-                if (!isBatteryOptimizationDisabled) {
+                if (!isBatteryOptimizationDisabled && !batteryDialogDismissed) {
                     showBatteryOptimizationDialog = true
                 }
             },
@@ -456,7 +454,7 @@ fun NewHomePage(
                 TextButton(
                     onClick = { 
                         showNotificationPermissionDialog = false
-                        if (!isBatteryOptimizationDisabled) {
+                        if (!isBatteryOptimizationDisabled && !batteryDialogDismissed) {
                             showBatteryOptimizationDialog = true
                         }
                     }
@@ -475,7 +473,10 @@ fun NewHomePage(
     // Battery Optimization Dialog
     if (showBatteryOptimizationDialog) {
         AlertDialog(
-            onDismissRequest = { showBatteryOptimizationDialog = false },
+            onDismissRequest = {
+                showBatteryOptimizationDialog = false
+                BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+            },
             icon = { 
                 Icon(
                     imageVector = Icons.Outlined.BatteryChargingFull,
@@ -499,8 +500,11 @@ fun NewHomePage(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    val batteryDescResId = remember {
+                        BatteryUtil.getBatterySettingsDescResId(BatteryUtil.getManufacturer())
+                    }
                     Text(
-                        text = stringResource(R.string.battery_settings_desc),
+                        text = stringResource(batteryDescResId),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                     )
@@ -510,10 +514,9 @@ fun NewHomePage(
                 TextButton(
                     onClick = {
                         showBatteryOptimizationDialog = false
+                        BATTERY_DIALOG_DISMISSED.updateBoolean(true)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                                data = Uri.parse("package:${context.packageName}")
-                            }
+                            val intent = BatteryUtil.buildBatterySettingsIntent(context)
                             batteryOptimizationLauncher.launch(intent)
                         }
                     }
@@ -526,7 +529,10 @@ fun NewHomePage(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showBatteryOptimizationDialog = false }
+                    onClick = {
+                        showBatteryOptimizationDialog = false
+                        BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+                    }
                 ) {
                     Text(
                         text = stringResource(R.string.skip),

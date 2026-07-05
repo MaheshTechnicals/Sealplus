@@ -1,13 +1,7 @@
 package com.junkfood.seal.ui.page.settings
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
-import android.os.PowerManager
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -59,51 +53,38 @@ import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferencesHintCard
 import com.junkfood.seal.util.EXTRACT_AUDIO
+import com.junkfood.seal.util.BATTERY_DIALOG_DISMISSED
+import com.junkfood.seal.util.BatteryUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
+import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.SHOW_SPONSOR_MSG
 
-@SuppressLint("BatteryLife")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
     val context = LocalContext.current
-    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    val batteryDialogDismissed = remember { BATTERY_DIALOG_DISMISSED.getBoolean() }
     var showBatteryHint by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                !pm.isIgnoringBatteryOptimizations(context.packageName)
+                !batteryDialogDismissed && !BatteryUtil.isIgnoringBatteryOptimizations(context)
             } else {
                 false
             }
         )
     }
-    val intent =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = Uri.parse("package:${context.packageName}")
-            }
-        } else {
-            Intent()
-        }
-    val isActivityAvailable: Boolean =
+    val batteryIntent = remember { BatteryUtil.buildBatterySettingsIntent(context) }
+    val isActivityAvailable: Boolean = remember {
         if (Build.VERSION.SDK_INT < 23) false
-        else if (Build.VERSION.SDK_INT < 33)
-            context.packageManager
-                .queryIntentActivities(intent, PackageManager.MATCH_ALL)
-                .isNotEmpty()
-        else
-            context.packageManager
-                .queryIntentActivities(
-                    intent,
-                    PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_SYSTEM_ONLY.toLong()),
-                )
-                .isNotEmpty()
+        else context.packageManager
+            .resolveActivity(batteryIntent, 0) != null
+    }
 
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                showBatteryHint = !pm.isIgnoringBatteryOptimizations(context.packageName)
+                showBatteryHint = !batteryDialogDismissed && !BatteryUtil.isIgnoringBatteryOptimizations(context)
             }
         }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -154,9 +135,8 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                             icon = Icons.Rounded.EnergySavingsLeaf,
                             description = stringResource(R.string.battery_configuration_desc),
                         ) {
-                            launcher.launch(intent)
-                            showBatteryHint =
-                                !pm.isIgnoringBatteryOptimizations(context.packageName)
+                            BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+                            launcher.launch(batteryIntent)
                         }
                     }
                 }

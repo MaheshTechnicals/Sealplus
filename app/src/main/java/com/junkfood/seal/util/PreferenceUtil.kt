@@ -157,6 +157,9 @@ const val SPONSOR_FREQ_OFF = 0
 const val SPONSOR_FREQ_WEEKLY = 1
 const val SPONSOR_FREQ_MONTHLY = 2
 
+// Battery Optimization Dialog
+const val BATTERY_DIALOG_DISMISSED = "battery_dialog_dismissed"
+
 const val YT_DLP_UPDATE_CHANNEL = "yt-dlp_update_channel"
 const val YT_DLP_UPDATE_TIME = "yt-dlp_last_update"
 const val YT_DLP_UPDATE_INTERVAL = "yt-dlp_update_interval"
@@ -285,6 +288,7 @@ private val BooleanPreferenceDefaults =
         FORMAT_LIST_VIEW to false,
         FORMAT_MP4_ONLY to true,
         DOWNLOAD_DOCS to false,
+        BATTERY_DIALOG_DISMISSED to false,
     )
 
 private val IntPreferenceDefaults =
