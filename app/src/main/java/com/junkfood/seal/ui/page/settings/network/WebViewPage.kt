@@ -148,10 +148,17 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                         cacheMode = WebSettings.LOAD_DEFAULT
                         mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                         allowFileAccess = false
+                        allowContentAccess = true
                         setSupportZoom(true)
                         builtInZoomControls = true
                         displayZoomControls = false
-                        USER_AGENT_STRING.updateString(userAgentString)
+                        blockNetworkImage = false
+                        loadsImagesAutomatically = true
+                        javaScriptCanOpenWindowsAutomatically = true
+                        mediaPlaybackRequiresUserGesture = false
+                        val chromeLikeUA = userAgentString.replace(Regex("\\swv$"), "")
+                        setUserAgentString(chromeLikeUA)
+                        USER_AGENT_STRING.updateString(chromeLikeUA)
                     }
                     cookieManager.setAcceptCookie(true)
                     cookieManager.setAcceptThirdPartyCookies(this, true)
@@ -171,6 +178,9 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                     webChromeClient = object : WebChromeClient() {
                         override fun onReceivedTitle(view: WebView, title: String?) {
                             pageTitle = title ?: ""
+                        }
+                        override fun onPermissionRequest(request: android.webkit.PermissionRequest) {
+                            request.grant(request.resources)
                         }
                     }
                     loadUrl(websiteUrl)
