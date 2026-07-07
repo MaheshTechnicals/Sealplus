@@ -24,6 +24,33 @@
 
             <data android:scheme="https" />
         </intent>
+
+        <!--
+            Android 11+ (API 30) package visibility: PackageManager.resolveActivity() returns
+            null for any package not declared here, so BatteryUtil.isIntentResolvable() would
+            always return false for manufacturer-specific battery-management apps and fall back
+            to the generic Settings page instead of opening the OEM-specific battery screen.
+        -->
+
+        <!-- Xiaomi / MIUI / Redmi / POCO -->
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.miui.powerkeeper" />
+
+        <!-- OPPO / Realme / ColorOS -->
+        <package android:name="com.coloros.oppoguardelf" />
+        <package android:name="com.heytap.manager" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.coloros.oppomanager" />
+
+        <!-- Vivo / iQOO / FuntouchOS -->
+        <package android:name="com.vivo.permissionmanager" />
+        <package android:name="com.iqoo.secure" />
+
+        <!-- Huawei / Honor / EMUI -->
+        <package android:name="com.huawei.systemmanager" />
+
+        <!-- Samsung / One UI -->
+        <package android:name="com.samsung.android.lool" />
     </queries>
 
     <application

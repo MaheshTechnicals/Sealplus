@@ -1,8 +1,7 @@
 package com.junkfood.seal.util
 
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.media.MediaCodecList
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.webkit.CookieManager
@@ -43,34 +42,13 @@ import com.yausername.youtubedl_android.YoutubeDLRequest
 import com.yausername.youtubedl_android.YoutubeDLResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.Locale
 
 object DownloadUtil {
-
-    object CookieScheme {
-        const val NAME = "name"
-        const val VALUE = "value"
-        const val SECURE = "is_secure"
-        const val EXPIRY = "expires_utc"
-        const val HOST = "host_key"
-        const val PATH = "path"
-        const val HTTPONLY = "is_httponly"
-        const val HAS_EXPIRES = "has_expires"
-    }
-
-    /**
-     * Chromium/WebView stores expiry as microseconds since 1601-01-01 (Windows FILETIME epoch).
-     * Netscape cookie format expects Unix timestamp (seconds since 1970-01-01).
-     */
-    private const val CHROMIUM_TIME_TO_UNIX_OFFSET = 11644473600L
-
-    private fun chromiumTimeToUnixTimestamp(chromiumTime: Long): Long {
-        if (chromiumTime <= 0L) return 0L
-        return (chromiumTime / 1_000_000L) - CHROMIUM_TIME_TO_UNIX_OFFSET
-    }
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }
 
@@ -417,12 +395,21 @@ object DownloadUtil {
         }
     }
 
+    /**
+     * Rebuilds the on-disk Netscape cookie file from the current in-memory WebView cookie store.
+     * Called automatically before every download when cookies are enabled.
+     */
     fun refreshCookiesFile() {
         context.getCookiesFile().let { cookiesFile ->
             getCookieListFromDatabase()
                 .mapCatching { it.toCookiesFileContent() }
-                .onSuccess { FileUtil.writeContentToFile(it, cookiesFile) }
-                .onFailure {
+                // Use mapCatching (not onSuccess) so an IOException from writeText
+                // (e.g. disk full) is captured inside the Result and handled by the
+                // onFailure below, rather than propagating as an uncaught exception
+                // and leaving a partial/corrupt cookies.txt on disk.
+                .mapCatching { content -> FileUtil.writeContentToFile(content, cookiesFile) }
+                .onFailure { err ->
+                    Log.w(TAG, "Failed to refresh cookies file: ${err.message}")
                     if (cookiesFile.exists()) cookiesFile.delete()
                 }
         }
@@ -434,79 +421,131 @@ object DownloadUtil {
     private fun YoutubeDLRequest.useDownloadArchive(): YoutubeDLRequest =
         this.addOption("--download-archive", context.getArchiveFile().absolutePath)
 
-    private fun findCookieDatabasePath(): File {
-        val dataDir = context.dataDir
-        val candidates = listOf(
-            dataDir.resolve("app_webview/Default/Cookies"),
-            dataDir.resolve("app_webview/Cookies"),
-            File(context.applicationInfo.dataDir, "app_webview/Default/Cookies"),
-            File(context.applicationInfo.dataDir, "app_webview/Cookies"),
-        )
-        for (candidate in candidates) {
-            if (candidate.exists() && candidate.length() > 0) return candidate
-        }
-        return candidates.first()
-    }
-
+    /**
+     * Reads cookies for every saved [CookieProfile] URL using the documented
+     * [android.webkit.CookieManager] public API.
+     *
+     * ## Why this replaced the old SQLite approach
+     * The old implementation opened the Chromium WebView cookie database file directly with
+     * [android.database.sqlite.SQLiteDatabase]. That was fragile in three ways:
+     *  1. The WebView process may hold a write lock on the file → SQLITE_BUSY / SQLITE_LOCKED
+     *     errors returned no cookies at all.
+     *  2. The internal DB path (`app_webview/Default/Cookies` vs `app_webview/Cookies`) varies
+     *     across Android / WebView versions and required brittle path detection.
+     *  3. The Chromium cookie table schema is an implementation detail that can change without
+     *     notice.
+     *
+     * [CookieManager.getCookie] goes through the same process that owns the cookie store, so
+     * there is no locking conflict, no internal paths, and no schema dependency.
+     *
+     * ## Limitations
+     * [CookieManager.getCookie] returns only `name=value` pairs — expiry, Secure, HttpOnly, and
+     * Path attributes are not accessible via this API. yt-dlp needs only name and value to
+     * authenticate requests, so this is not a practical limitation.
+     */
     @CheckResult
     fun getCookieListFromDatabase(): Result<List<Cookie>> = runCatching {
-        CookieManager.getInstance().run {
-            if (!hasCookies()) throw Exception("There is no cookies in the database!")
-            flush()
-        }
-        val now = System.currentTimeMillis() / 1000L
-        val dbFile = findCookieDatabasePath()
-        if (!dbFile.exists()) {
-            throw Exception("Cookie database not found at ${dbFile.absolutePath}")
-        }
-        SQLiteDatabase.openDatabase(
-                dbFile.absolutePath,
-                null,
-                OPEN_READONLY,
-            ).use { db ->
-                val projection =
-                    arrayOf(
-                        CookieScheme.HOST,
-                        CookieScheme.EXPIRY,
-                        CookieScheme.PATH,
-                        CookieScheme.NAME,
-                        CookieScheme.VALUE,
-                        CookieScheme.SECURE,
-                        CookieScheme.HTTPONLY,
-                        CookieScheme.HAS_EXPIRES,
-                    )
-                val cookieList = mutableListOf<Cookie>()
-                db.query("cookies", projection, null, null, null, null, null).use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val rawExpiry = cursor.getLong(cursor.getColumnIndexOrThrow(CookieScheme.EXPIRY))
-                        val hasExpires = cursor.getInt(cursor.getColumnIndexOrThrow(CookieScheme.HAS_EXPIRES)) == 1
-                        val name = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.NAME))
-                        val value = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.VALUE))
-                        val path = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.PATH))
-                        val secure = cursor.getLong(cursor.getColumnIndexOrThrow(CookieScheme.SECURE)) == 1L
-                        val hostKey = cursor.getString(cursor.getColumnIndexOrThrow(CookieScheme.HOST))
-                        val isHttpOnly = cursor.getInt(cursor.getColumnIndexOrThrow(CookieScheme.HTTPONLY)) == 1
+        val manager = CookieManager.getInstance()
+        // Flush in-memory cookies to the WebView's persistent store before reading.
+        manager.flush()
 
-                        val expiry = if (hasExpires) chromiumTimeToUnixTimestamp(rawExpiry) else 0L
-                        if (expiry > 0L && expiry < now) continue
-                        val includeSubdomains = hostKey[0] == '.'
-                        val host = if (hostKey[0] != '.') ".$hostKey" else hostKey
-                        cookieList.add(
+        if (!manager.hasCookies()) {
+            throw Exception(
+                "No cookies found in the browser. " +
+                "Please open Settings → Network → Cookies, tap a profile, " +
+                "then tap 'Generate cookies' and log in to the website."
+            )
+        }
+
+        // Fetch all saved profile URLs from Room (suspend, so we block here since this
+        // function is always called from a background/IO coroutine or runCatching context).
+        val profiles = runBlocking(Dispatchers.IO) {
+            DatabaseUtil.getCookieProfileList()
+        }
+
+        if (profiles.isEmpty()) {
+            throw Exception(
+                "No cookie profiles configured. " +
+                "Please go to Settings → Network → Cookies and add the site you want to download from."
+            )
+        }
+
+        val seen = HashSet<String>() // deduplication key: "domain|name"
+        val cookies = mutableListOf<Cookie>()
+
+        for (profile in profiles) {
+            // Normalise to HTTPS. CookieManager.getCookie() with an http:// URL silently
+            // omits all Secure-flagged cookies. Facebook session cookies (c_user, xs),
+            // Instagram session cookies (sessionid, csrftoken), and virtually every other
+            // social-media auth cookie carry the Secure flag, so an http:// query returns
+            // an empty or incomplete cookie string — causing silent auth failures.
+            val rawUrl = when {
+                profile.url.startsWith("https://") -> profile.url
+                profile.url.startsWith("http://")  -> profile.url.replaceFirst("http://", "https://")
+                else                               -> "https://${profile.url}"
+            }
+            val host = Uri.parse(rawUrl).host ?: continue
+
+            // Query both the plain and www-prefixed variants because some sites set their
+            // session cookies on "facebook.com" while others use "www.facebook.com".
+            val urlVariants = buildList {
+                add(rawUrl)
+                if (host.startsWith("www.")) {
+                    add(rawUrl.replaceFirst("://www.", "://"))
+                } else {
+                    add(rawUrl.replaceFirst("://", "://www."))
+                }
+            }
+
+            // Use the registered (base) domain rather than the exact queried hostname.
+            // Example: querying "https://www.facebook.com" gives host "www.facebook.com".
+            // Facebook sets cookies on ".facebook.com", so writing ".www.facebook.com" in
+            // the Netscape file means yt-dlp would NOT send those cookies to subdomains like
+            // graph.facebook.com, video.facebook.com, etc., breaking authenticated downloads.
+            // Stripping the leading "www." gives ".facebook.com" which covers all subdomains.
+            val baseDomain = "." + if (host.startsWith("www.")) host.removePrefix("www.") else host
+
+            for (url in urlVariants) {
+                // getCookie returns "name1=val1; name2=val2; ..." or null if nothing is set.
+                val raw = manager.getCookie(url) ?: continue
+                raw.split(";").forEach rawCookie@{ pair ->
+                    val eqIdx = pair.indexOf('=')
+                    if (eqIdx < 0) return@rawCookie
+                    val name  = pair.substring(0, eqIdx).trim()
+                    // Do NOT trim value — some cookies intentionally have leading/trailing
+                    // spaces in their value, and we must preserve those exactly.
+                    val value = pair.substring(eqIdx + 1)
+                    if (name.isEmpty()) return@rawCookie
+                    val dedupKey = "$baseDomain|$name"
+                    if (seen.add(dedupKey)) {
+                        cookies.add(
                             Cookie(
-                                domain = host,
-                                name = name,
-                                value = value,
-                                includeSubdomains = includeSubdomains,
-                                path = path,
-                                secure = secure,
-                                expiry = expiry,
-                                isHttpOnly = isHttpOnly,
+                                domain = baseDomain,
+                                name   = name,
+                                value  = value,
+                                includeSubdomains = true,
+                                path   = "/",
+                                // CookieManager does not expose Secure, HttpOnly, or expiry —
+                                // yt-dlp does not require these for authentication.
+                                secure    = false,
+                                expiry    = 0L,
+                                isHttpOnly = false,
                             )
                         )
                     }
                 }
-                cookieList
             }
+        }
+
+        if (cookies.isEmpty()) {
+            throw Exception(
+                "No cookies could be retrieved for the saved profiles. " +
+                "Please open the cookie browser and log in to each site again."
+            )
+        }
+
+        Log.d(TAG, "getCookieListFromDatabase: extracted ${cookies.size} cookies for ${cookies.distinctBy { it.domain }.size} domain(s)")
+        cookies
     }
 
     fun List<Cookie>.toCookiesFileContent(): String =
@@ -515,6 +554,7 @@ object DownloadUtil {
             }
             .toString()
 
+    /** Convenience wrapper: reads cookies and serialises them to Netscape file format. */
     fun getCookiesContentFromDatabase(): Result<String> =
         getCookieListFromDatabase().mapCatching { it.toCookiesFileContent() }
 

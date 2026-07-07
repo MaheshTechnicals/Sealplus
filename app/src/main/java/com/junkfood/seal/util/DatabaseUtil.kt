@@ -149,6 +149,8 @@ object DatabaseUtil {
 
     suspend fun insertShortcut(shortcut: OptionShortcut) = dao.insertShortcut(shortcut)
 
+    suspend fun getCookieProfileList() = dao.getCookieProfileList()
+
     suspend fun getCookieById(id: Int) = dao.getCookieById(id)
 
     suspend fun deleteCookieProfile(profile: CookieProfile) = dao.deleteCookieProfile(profile)

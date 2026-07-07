@@ -136,21 +136,36 @@ fun CookieProfilePage(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     fun refreshCookies() {
-        scope.launch(Dispatchers.IO) {
-            DownloadUtil.getCookieListFromDatabase().getOrNull()?.let {
-                cookieList = it
-                FileUtil.writeContentToFile(it.toCookiesFileContent(), context.getCookiesFile())
+        scope.launch {
+            // Do the heavy IO work (CookieManager read + file write) on IO dispatcher,
+            // then assign the result back on the main thread where Compose state lives.
+            val list = withContext(Dispatchers.IO) {
+                DownloadUtil.getCookieListFromDatabase().getOrNull()?.also { result ->
+                    // writeContentToFile uses File.writeText() which can throw IOException
+                    // (e.g. disk full). Wrapping in runCatching prevents the exception
+                    // from propagating out of this supervised coroutine — an unhandled
+                    // exception in rememberCoroutineScope reaches the thread's uncaught
+                    // exception handler and can trigger a crash dialog.
+                    runCatching {
+                        FileUtil.writeContentToFile(result.toCookiesFileContent(), context.getCookiesFile())
+                    }
+                }
             }
+            // State mutation on main thread — satisfies Compose snapshot threading contract.
+            list?.let { cookieList = it }
         }
     }
 
     LaunchedEffect(cookieRefreshKey) {
-        withContext(Dispatchers.IO) {
-            DownloadUtil.getCookieListFromDatabase().getOrNull()?.let {
-                cookieList = it
-                FileUtil.writeContentToFile(it.toCookiesFileContent(), context.getCookiesFile())
+        val list = withContext(Dispatchers.IO) {
+            DownloadUtil.getCookieListFromDatabase().getOrNull()?.also { result ->
+                runCatching {
+                    FileUtil.writeContentToFile(result.toCookiesFileContent(), context.getCookiesFile())
+                }
             }
         }
+        // Back on main (LaunchedEffect dispatcher) — safe to mutate Compose state.
+        list?.let { cookieList = it }
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current

@@ -137,8 +137,14 @@ class App : Application(), SingletonImageLoader.Factory {
                 YoutubeDL.init(this@App)
                 FFmpeg.init(this@App)
                 Aria2c.init(this@App)
-                DownloadUtil.getCookiesContentFromDatabase().getOrNull()?.let {
-                    FileUtil.writeContentToFile(it, getCookiesFile())
+                // Pre-build the Netscape cookie file so it exists before the first
+                // download. Wrapped in runCatching so a disk-full IOException here
+                // does NOT propagate into the catch(Throwable) block above and
+                // accidentally show the crash-report screen on the first app launch.
+                runCatching {
+                    DownloadUtil.getCookiesContentFromDatabase().getOrNull()?.let {
+                        FileUtil.writeContentToFile(it, getCookiesFile())
+                    }
                 }
                 UpdateUtil.deleteOutdatedApk()
             } catch (th: Throwable) {
