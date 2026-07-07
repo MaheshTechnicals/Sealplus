@@ -289,6 +289,7 @@ private val BooleanPreferenceDefaults =
         FORMAT_MP4_ONLY to true,
         DOWNLOAD_DOCS to false,
         BATTERY_DIALOG_DISMISSED to false,
+        USER_AGENT to true,
     )
 
 private val IntPreferenceDefaults =

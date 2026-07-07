@@ -517,24 +517,26 @@ fun ManualCookieInputDialog(
         },
         title = { Text(stringResource(R.string.manual_cookie_dialog_title)) },
         text = {
-            Column {
-                // Format guidance
+            // verticalScroll makes the Column wrap to its content height instead of
+            // expanding to fill the AlertDialog's Box — without it, Material3's
+            // AlertDialog gives the text-content area the full available height and
+            // the children are laid out with a blank gap between them.
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                // Compact single-line format hint
                 Text(
                     text = stringResource(R.string.manual_cookie_dialog_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp),
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
 
-                // Cookie content input — monospace font, fixed height box.
-                // maxLines = MAX_VALUE lets every pasted line appear; the box
-                // itself is 220 dp tall which is enough to review a pasted snippet.
+                // Cookie content input — monospace, fixed 180 dp height.
                 OutlinedTextField(
                     value = cookieText,
                     onValueChange = { cookieText = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
+                        .height(180.dp),
                     placeholder = {
                         Text(
                             text = stringResource(R.string.manual_cookie_input_hint),
@@ -548,14 +550,13 @@ fun ManualCookieInputDialog(
                     maxLines = Int.MAX_VALUE,
                 )
 
-                // Action row — three possible actions shown compactly
+                // Action row — Paste · Import · Clear (clear only when field has content)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Paste from system clipboard
                     TextButtonWithIcon(
                         onClick = {
                             val clip = clipboardManager.getText()?.text ?: ""
@@ -564,7 +565,6 @@ fun ManualCookieInputDialog(
                         icon = Icons.Outlined.ContentPaste,
                         text = stringResource(R.string.paste),
                     )
-                    // Import from a cookies.txt / JSON file on device storage
                     TextButtonWithIcon(
                         onClick = {
                             importFileLauncher.launch(
@@ -574,7 +574,6 @@ fun ManualCookieInputDialog(
                         icon = Icons.Outlined.FolderOpen,
                         text = stringResource(R.string.import_cookies_from_file),
                     )
-                    // Clear the text box (only shown when there is content)
                     if (cookieText.isNotEmpty()) {
                         TextButtonWithIcon(
                             onClick = { cookieText = "" },

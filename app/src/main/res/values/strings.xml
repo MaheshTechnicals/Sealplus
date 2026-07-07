@@ -251,7 +251,7 @@
     <string name="paste_cookies_manually">Paste Cookies Manually</string>
     <string name="manual_cookies_active">Manual cookies set</string>
     <string name="manual_cookie_dialog_title">Paste Cookies</string>
-    <string name="manual_cookie_dialog_desc">Paste cookies exported from your browser.\nSupported formats:\n• Netscape / cookies.txt\n• JSON (Cookie-Editor, EditThisCookie)\n• name=value; name=value</string>
+    <string name="manual_cookie_dialog_desc">Supports Netscape (.txt), JSON (Cookie-Editor) and name=value formats.</string>
     <string name="manual_cookie_input_hint">Paste cookies here…</string>
     <string name="clear_manual_cookies">Clear manual cookies</string>
     <string name="import_cookies_from_file">Import from file</string>

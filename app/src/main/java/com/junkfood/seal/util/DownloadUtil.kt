@@ -612,16 +612,8 @@ object DownloadUtil {
         // Flush in-memory cookies to the WebView's persistent store before reading.
         manager.flush()
 
-        if (!manager.hasCookies()) {
-            throw Exception(
-                "No cookies found in the browser. " +
-                "Please open Settings → Network → Cookies, tap a profile, " +
-                "then tap 'Generate cookies' and log in to the website."
-            )
-        }
-
-        // Fetch all saved profile URLs from Room (suspend, so we block here since this
-        // function is always called from a background/IO coroutine or runCatching context).
+        // Fetch all saved profile URLs from Room first — we need to know whether any
+        // profile uses manual cookies before deciding if hasCookies() matters.
         val profiles = runBlocking(Dispatchers.IO) {
             DatabaseUtil.getCookieProfileList()
         }
@@ -630,6 +622,17 @@ object DownloadUtil {
             throw Exception(
                 "No cookie profiles configured. " +
                 "Please go to Settings → Network → Cookies and add the site you want to download from."
+            )
+        }
+
+        // Only require WebView cookies when NO profile has manually-pasted content.
+        // If at least one profile has manual content, skip this check — those cookies
+        // are read from the profile's content field, not from CookieManager.
+        if (profiles.none { it.content.isNotEmpty() } && !manager.hasCookies()) {
+            throw Exception(
+                "No cookies found in the browser. " +
+                "Please open Settings → Network → Cookies, tap a profile, " +
+                "then tap 'Generate cookies' and log in to the website."
             )
         }
 
