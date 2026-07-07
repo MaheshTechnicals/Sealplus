@@ -517,10 +517,6 @@ fun ManualCookieInputDialog(
         },
         title = { Text(stringResource(R.string.manual_cookie_dialog_title)) },
         text = {
-            // No verticalScroll on the Column — the TextField handles its own
-            // internal scrolling via scrollState. Putting verticalScroll on the
-            // outer Column conflicts with the fixed-height TextField and prevents
-            // the text content from scrolling inside the box.
             Column {
                 // Format guidance
                 Text(
@@ -530,9 +526,9 @@ fun ManualCookieInputDialog(
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
 
-                // Cookie content input — fixed height, internal scroll, monospace font.
-                // scrollState enables scrolling within the 220dp box when content overflows.
-                val textFieldScrollState = rememberScrollState()
+                // Cookie content input — monospace font, fixed height box.
+                // maxLines = MAX_VALUE lets every pasted line appear; the box
+                // itself is 220 dp tall which is enough to review a pasted snippet.
                 OutlinedTextField(
                     value = cookieText,
                     onValueChange = { cookieText = it },
@@ -549,7 +545,6 @@ fun ManualCookieInputDialog(
                         fontFamily = FontFamily.Monospace,
                         fontSize = MaterialTheme.typography.bodySmall.fontSize,
                     ),
-                    scrollState = textFieldScrollState,
                     maxLines = Int.MAX_VALUE,
                 )
 
