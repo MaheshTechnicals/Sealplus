@@ -40,6 +40,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.webkit.UserAgentMetadata
+import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.junkfood.seal.util.PreferenceUtil.updateString
@@ -47,50 +49,61 @@ import com.junkfood.seal.util.USER_AGENT_STRING
 
 private const val TAG = "WebViewPage"
 
+// =============================================================================
+// WHY FACEBOOK / INSTAGRAM LOGIN PAGES SHOWED A BLANK PAGE
+// =============================================================================
+//
+// Problem had TWO independent layers — both must be fixed:
+//
+// LAYER 1 — HTTP request header (server-side check, happens BEFORE any HTML is sent):
+//   Android WebView sends:  Sec-CH-UA: "Android WebView";v="136"
+//   Real Chrome sends:      Sec-CH-UA: "Google Chrome";v="136"
+//   Meta's servers see "Android WebView" and return an empty page — no HTML, no JS,
+//   nothing — before our browser even receives anything to render.
+//   Fix: WebSettingsCompat.setUserAgentMetadata() (official AndroidX WebKit API) —
+//        replaces "Android WebView" with "Google Chrome" in ALL outgoing headers.
+//
+// LAYER 2 — JavaScript client-side fingerprint (checked by Meta's React login app):
+//   Android WebView does not expose window.chrome (real Chrome does).
+//   Meta's React login code checks window.chrome.runtime.connect before
+//   mounting the login form. If absent → React renders an empty root → blank page.
+//   Also: navigator.userAgentData.brands reports "Android WebView" on the JS side.
+//   Fix: addDocumentStartJavaScript() injects our shim BEFORE any page JS runs.
+//        Fallback: evaluateJavascript() in onPageStarted for older WebViews.
+//
+// LAYER 1 is the primary cause (server returns nothing).
+// LAYER 2 must also be fixed or the login form still won't render even after
+// the server serves content.
+// =============================================================================
+
 // ---------------------------------------------------------------------------
-// Anti-bot-detection script
-//
-// Facebook and Instagram (Meta) run JavaScript bot-detection checks on their
-// LOGIN pages — specifically:
-//   1. Does window.chrome exist?  (Chrome has it; plain Android WebView does not)
-//   2. Is navigator.webdriver true?  (automation flag)
-//
-// When these checks fail, Meta's React code deliberately mounts an empty root
-// and renders nothing — giving a blank white/dark page even though the HTML
-// arrived and the document title was set.
-//
-// We inject this script using WebViewCompat.addDocumentStartJavaScript() which
-// runs BEFORE any page JavaScript, so the shim is in place before Meta's
-// detection code executes. A fallback evaluateJavascript() call is made from
-// onPageStarted for devices where addDocumentStartJavaScript is not supported.
+// Anti-detection JavaScript shim — injected before every page's own scripts.
+// Fixes LAYER 2 (client-side fingerprinting).
 // ---------------------------------------------------------------------------
 private val ANTI_DETECTION_SCRIPT = """
 (function() {
   'use strict';
   try {
 
-    // 1. window.chrome — Meta checks for this object.
-    //    Android WebView omits it; real Chrome always has it.
+    // ------------------------------------------------------------------
+    // 1. window.chrome — Meta checks for this object before showing the
+    //    login form. Android WebView omits it; real Chrome always has it.
+    // ------------------------------------------------------------------
     if (typeof window.chrome === 'undefined' || window.chrome === null) {
       var chromeDef = {
         app: {
           isInstalled: false,
-          InstallState: {
-            DISABLED: 'disabled',
-            INSTALLED: 'installed',
-            NOT_INSTALLED: 'not_installed'
-          },
-          RunningState: {
-            CANNOT_RUN: 'cannot_run',
-            READY_TO_RUN: 'ready_to_run',
-            RUNNING: 'running'
-          }
+          InstallState: { DISABLED:'disabled', INSTALLED:'installed', NOT_INSTALLED:'not_installed' },
+          RunningState: { CANNOT_RUN:'cannot_run', READY_TO_RUN:'ready_to_run', RUNNING:'running' }
         },
         runtime: {
           connect: function() {
-            return { postMessage: function() {}, disconnect: function() {},
-                     onMessage: { addListener: function() {}, removeListener: function() {} },
-                     onDisconnect: { addListener: function() {}, removeListener: function() {} } };
+            return {
+              postMessage: function() {},
+              disconnect: function() {},
+              onMessage: { addListener: function() {}, removeListener: function() {} },
+              onDisconnect: { addListener: function() {}, removeListener: function() {} }
+            };
           },
           sendMessage: function() {},
           onMessage: {
@@ -104,12 +117,12 @@ private val ANTI_DETECTION_SCRIPT = """
         },
         loadTimes: function() {
           return {
-            requestTime: 0, startLoadTime: 0, commitLoadTime: 0,
-            finishDocumentLoadTime: 0, finishLoadTime: 0,
-            firstPaintTime: 0, firstPaintAfterLoadTime: 0,
-            navigationType: 'Other', wasFetchedViaSpdy: false,
-            wasNpnNegotiated: false, npnNegotiatedProtocol: '',
-            wasAlternateProtocolAvailable: false, connectionInfo: 'unknown'
+            requestTime:0, startLoadTime:0, commitLoadTime:0,
+            finishDocumentLoadTime:0, finishLoadTime:0,
+            firstPaintTime:0, firstPaintAfterLoadTime:0,
+            navigationType:'Other', wasFetchedViaSpdy:false,
+            wasNpnNegotiated:false, npnNegotiatedProtocol:'',
+            wasAlternateProtocolAvailable:false, connectionInfo:'unknown'
           };
         },
         csi: function() {
@@ -118,37 +131,89 @@ private val ANTI_DETECTION_SCRIPT = """
       };
       try {
         Object.defineProperty(window, 'chrome', {
-          value: chromeDef,
-          writable: true,
-          enumerable: true,
-          configurable: true
+          value: chromeDef, writable: true, enumerable: true, configurable: true
         });
-      } catch (e) {
-        window.chrome = chromeDef;
-      }
+      } catch(e) { window.chrome = chromeDef; }
     }
 
+    // ------------------------------------------------------------------
     // 2. navigator.webdriver — must be false/undefined, not true.
+    //    Automation / headless browsers set this to true.
+    // ------------------------------------------------------------------
     try {
       Object.defineProperty(navigator, 'webdriver', {
-        get: function() { return false; },
-        configurable: true
+        get: function() { return false; }, configurable: true
       });
-    } catch (e) {}
+    } catch(e) {}
 
-    // 3. navigator.languages — empty array is a WebView signal.
+    // ------------------------------------------------------------------
+    // 3. navigator.userAgentData.brands — JS mirror of the Sec-CH-UA header.
+    //    WebView reports "Android WebView"; we patch it to "Google Chrome".
+    //    This is a JS-side fallback; the primary fix is setUserAgentMetadata()
+    //    which changes the actual HTTP header natively.
+    // ------------------------------------------------------------------
+    try {
+      if (navigator.userAgentData && navigator.userAgentData.brands) {
+        var brands = navigator.userAgentData.brands;
+        var hasChrome = false;
+        var webViewFound = false;
+        var chromiumVer = '136';
+        for (var i = 0; i < brands.length; i++) {
+          if (brands[i].brand === 'Google Chrome')  { hasChrome = true; }
+          if (brands[i].brand === 'Chromium')        { chromiumVer = brands[i].version; }
+          if (brands[i].brand === 'Android WebView') { webViewFound = true; chromiumVer = brands[i].version; }
+        }
+        if (!hasChrome || webViewFound) {
+          var newBrands = [
+            { brand: 'Not/A)Brand',    version: '8'           },
+            { brand: 'Chromium',       version: chromiumVer   },
+            { brand: 'Google Chrome',  version: chromiumVer   }
+          ];
+          var patchedUAData = {
+            brands: newBrands,
+            mobile: true,
+            platform: 'Android',
+            getHighEntropyValues: function(hints) {
+              return Promise.resolve({
+                brands: newBrands,
+                mobile: true,
+                platform: 'Android',
+                architecture: 'arm',
+                bitness: '64',
+                model: '',
+                platformVersion: '14.0.0',
+                uaFullVersion: chromiumVer + '.0.0.0',
+                fullVersionList: newBrands.map(function(b) {
+                  return { brand: b.brand, version: chromiumVer + '.0.0.0' };
+                }),
+                wow64: false
+              });
+            },
+            toJSON: function() {
+              return { brands: newBrands, mobile: true, platform: 'Android' };
+            }
+          };
+          try {
+            Object.defineProperty(navigator, 'userAgentData', {
+              value: patchedUAData, writable: true, configurable: true
+            });
+          } catch(e2) { /* native setUserAgentMetadata already handled it */ }
+        }
+      }
+    } catch(e) {}
+
+    // ------------------------------------------------------------------
+    // 4. navigator.languages — empty array signals a non-browser environment.
+    // ------------------------------------------------------------------
     try {
       if (!navigator.languages || navigator.languages.length === 0) {
         Object.defineProperty(navigator, 'languages', {
-          get: function() { return ['en-US', 'en']; },
-          configurable: true
+          get: function() { return ['en-US', 'en']; }, configurable: true
         });
       }
-    } catch (e) {}
+    } catch(e) {}
 
-  } catch (globalErr) {
-    // Never crash the host page.
-  }
+  } catch(globalErr) { /* never crash the host page */ }
 })();
 """.trimIndent()
 
@@ -173,24 +238,15 @@ data class Cookie(
     ) : this(domain = url.toDomain(), name = name, value = value)
 
     fun toNetscapeCookieString(): String {
-        // Netscape HTTP Cookie File format: exactly 7 tab-delimited fields, no filtering.
-        // Using connectWithDelimiter() is WRONG here because it silently strips blank/empty
-        // fields — legitimate cookies with empty values (e.g. opt-out flags, logout tokens)
-        // would produce a 6-field line that yt-dlp rejects as malformed.
+        // Netscape HTTP Cookie File format: exactly 7 tab-delimited fields.
         return buildString {
-            append(domain)
-            append('\t')
-            append(includeSubdomains.toNetscapeFlag())
-            append('\t')
-            append(path)
-            append('\t')
-            append(secure.toNetscapeFlag())
-            append('\t')
-            append(if (expiry > 0L) expiry.toString() else "0")
-            append('\t')
-            append(name)
-            append('\t')
-            append(value) // intentionally kept even when empty — empty value is valid
+            append(domain); append('\t')
+            append(includeSubdomains.toNetscapeFlag()); append('\t')
+            append(path); append('\t')
+            append(secure.toNetscapeFlag()); append('\t')
+            append(if (expiry > 0L) expiry.toString() else "0"); append('\t')
+            append(name); append('\t')
+            append(value) // preserved even when empty — empty value is valid
         }
     }
 
@@ -228,8 +284,8 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
         }
     }
 
-    // Tracks whether addDocumentStartJavaScript was registered for this WebView.
-    // If the feature is not supported we fall back to evaluateJavascript in onPageStarted.
+    // True once addDocumentStartJavaScript is successfully registered.
+    // When false, the onPageStarted fallback injects via evaluateJavascript instead.
     var documentStartScriptRegistered by remember { mutableStateOf(false) }
 
     var pageTitle by remember { mutableStateOf("") }
@@ -250,9 +306,6 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
         if (webView?.canGoBack() == true) {
             webView.goBack()
         } else {
-            // Mirror what the "Done" button does: flush first so any cookies written
-            // by JavaScript after the last onPageFinished (common on Facebook/Instagram
-            // SPAs) are persisted before we leave the browser.
             cookieManager.flush()
             onDismissRequest()
         }
@@ -265,8 +318,6 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                 title = { Text(pageTitle.ifEmpty { websiteUrl }, maxLines = 1) },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Flush before dismissing so any cookies written by JS after
-                        // the last onPageFinished are persisted — same as the Done button.
                         cookieManager.flush()
                         onDismissRequest()
                     }) {
@@ -278,12 +329,10 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                     }
                 },
                 actions = {
-                    TextButton(
-                        onClick = {
-                            cookieManager.flush()
-                            onDismissRequest()
-                        }
-                    ) {
+                    TextButton(onClick = {
+                        cookieManager.flush()
+                        onDismissRequest()
+                    }) {
                         Text(text = stringResource(id = androidx.appcompat.R.string.abc_action_mode_done))
                     }
                 },
@@ -296,18 +345,12 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                 factory = { context ->
                     WebView(context).apply {
                         mainWebView = this
-
-                        // Transparent background so dark-themed sites (Instagram) do not
-                        // show a white flash while the page is loading.
                         setBackgroundColor(AndroidColor.TRANSPARENT)
 
                         settings.run {
                             javaScriptEnabled = true
                             domStorageEnabled = true
                             databaseEnabled = true
-                            // Must be true so Facebook/Instagram popup windows (window.open,
-                            // target="_blank") are delivered to onCreateWindow instead of
-                            // being silently dropped, which caused blank pages.
                             setSupportMultipleWindows(true)
                             loadWithOverviewMode = true
                             useWideViewPort = true
@@ -320,19 +363,75 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                             displayZoomControls = false
                             blockNetworkImage = false
                             loadsImagesAutomatically = true
-                            // Allow JS to open windows without user gesture (e.g. post-login
-                            // programmatic redirects in Facebook/Instagram auth flows).
-                            // This is safe because every new-window request is intercepted by
-                            // onCreateWindow and redirected into the same visible WebView —
-                            // no uncontrolled windows can actually appear.
                             javaScriptCanOpenWindowsAutomatically = true
                             mediaPlaybackRequiresUserGesture = false
-                            // Strip the " wv" suffix that older Android WebViews appended to
-                            // the UA string so sites see a standard Chrome UA.
+
+                            // Strip " wv" suffix so User-Agent string looks like real Chrome.
                             val chromeLikeUA = userAgentString.replace(Regex("\\swv\\b"), "")
                             setUserAgentString(chromeLikeUA)
                             USER_AGENT_STRING.updateString(chromeLikeUA)
+
+                            // -----------------------------------------------------------------
+                            // CRITICAL FIX — Layer 1: Sec-CH-UA header override
+                            //
+                            // Android WebView sends `Sec-CH-UA: "Android WebView";v="136"`.
+                            // Meta's (Facebook/Instagram) servers check this HTTP header
+                            // BEFORE sending HTML. Seeing "Android WebView" they return a
+                            // blank page response — before any JavaScript can run.
+                            //
+                            // WebSettingsCompat.setUserAgentMetadata() is the ONLY way to
+                            // change the Sec-CH-UA header. JavaScript injection cannot change
+                            // outgoing HTTP request headers.
+                            //
+                            // Feature requires WebView 112+ / androidx.webkit 1.9.0+.
+                            // On older WebViews the JS fallback in ANTI_DETECTION_SCRIPT
+                            // overrides navigator.userAgentData as a partial mitigation.
+                            // -----------------------------------------------------------------
+                            if (WebViewFeature.isFeatureSupported(WebViewFeature.USER_AGENT_METADATA)) {
+                                runCatching {
+                                    val current = WebSettingsCompat.getUserAgentMetadata(this)
+                                    // Only patch if "Google Chrome" brand is missing —
+                                    // indicating this is a WebView environment.
+                                    if (current.brandVersionList.isNotEmpty() &&
+                                        current.brandVersionList.none { it.brand == "Google Chrome" }
+                                    ) {
+                                        val newBrands = current.brandVersionList.map { bv ->
+                                            if (bv.brand == "Android WebView") {
+                                                // Replace "Android WebView" with "Google Chrome"
+                                                // keeping the same version numbers.
+                                                UserAgentMetadata.BrandVersion.Builder()
+                                                    .setBrand("Google Chrome")
+                                                    .setMajorVersion(bv.majorVersion)
+                                                    .setFullVersion(
+                                                        bv.fullVersion.ifEmpty { bv.majorVersion }
+                                                    )
+                                                    .build()
+                                            } else bv
+                                        }
+                                        // Rebuild metadata, preserving all existing fields
+                                        // except the brands list.
+                                        val metaBuilder = UserAgentMetadata.Builder()
+                                            .setBrandVersionList(newBrands)
+                                            .setMobile(true)
+                                        current.platform?.let       { metaBuilder.setPlatform(it) }
+                                        current.platformVersion?.let { metaBuilder.setPlatformVersion(it) }
+                                        current.architecture?.let   { metaBuilder.setArchitecture(it) }
+                                        current.model?.let          { metaBuilder.setModel(it) }
+                                        metaBuilder.setBitness(current.bitness)
+                                        metaBuilder.setWow64(current.isWow64)
+                                        WebSettingsCompat.setUserAgentMetadata(
+                                            this, metaBuilder.build()
+                                        )
+                                        Log.d(TAG, "Sec-CH-UA brands patched: Android WebView → Google Chrome")
+                                    }
+                                }.onFailure { e ->
+                                    Log.w(TAG, "UA brand metadata override failed: ${e.message}")
+                                }
+                            } else {
+                                Log.d(TAG, "USER_AGENT_METADATA not supported; JS fallback will handle userAgentData")
+                            }
                         }
+
                         cookieManager.setAcceptCookie(true)
                         cookieManager.setAcceptThirdPartyCookies(this, true)
 
@@ -345,11 +444,10 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                 super.onPageStarted(view, url, favicon)
                                 isLoading = true
                                 loadError = null
-
-                                // Fallback injection for devices where WebView does not
-                                // support addDocumentStartJavaScript (WebView < 102).
-                                // evaluateJavascript from onPageStarted runs before the
-                                // page's own script bundle is executed on most devices.
+                                // Fallback injection when addDocumentStartJavaScript is
+                                // unavailable (WebView < 102). evaluateJavascript from
+                                // onPageStarted executes before most page scripts on
+                                // Android's single-threaded JS engine.
                                 if (!documentStartScriptRegistered) {
                                     view.evaluateJavascript(ANTI_DETECTION_SCRIPT, null)
                                 }
@@ -368,11 +466,9 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                 val scheme = request.url?.scheme?.lowercase()
                                 if (scheme in NAVIGABLE_SCHEMES) return false
                                 return try {
-                                    val intent =
-                                        android.content.Intent(
-                                            android.content.Intent.ACTION_VIEW,
-                                            request.url,
-                                        )
+                                    val intent = android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW, request.url
+                                    )
                                     view.context.startActivity(intent)
                                     true
                                 } catch (e: Exception) {
@@ -390,7 +486,7 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                 if (request.isForMainFrame) {
                                     isLoading = false
                                     loadError = error.description?.toString()
-                                    Log.w(TAG, "Load error on main frame: ${error.errorCode} ${error.description}")
+                                    Log.w(TAG, "Load error: ${error.errorCode} ${error.description}")
                                 }
                             }
 
@@ -418,32 +514,20 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                 request.deny()
                             }
 
-                            // Handle window.open() / target="_blank" links.
-                            // Facebook, Instagram and other social sites open their login/OAuth
-                            // flows in popup windows. Without this override those requests are
-                            // silently dropped and the user sees a blank page. We redirect the
-                            // new-window URL into the existing WebView so the login proceeds
-                            // normally inside the same in-app browser.
+                            // Handle window.open() / target="_blank" popups.
+                            // Facebook/Instagram open their login flows in popup windows.
+                            // Without this, those windows are silently dropped → blank page.
                             override fun onCreateWindow(
                                 view: WebView,
                                 isDialog: Boolean,
                                 isUserGesture: Boolean,
                                 resultMsg: android.os.Message?,
                             ): Boolean {
-                                // A temporary, off-screen WebView is required to receive the
-                                // WebViewTransport object that carries the new window's first URL.
-                                //
-                                // IMPORTANT: shouldOverrideUrlLoading does NOT fire for the
-                                // *first* navigation of a transport window — the WebView loads
-                                // that initial URL itself directly. Only subsequent navigations
-                                // trigger the override. We must also intercept onPageStarted so
-                                // the very first URL (e.g. the Facebook/Instagram consent page)
-                                // is redirected into the main visible WebView.
                                 val helper = WebView(view.context)
                                 helper.webViewClient = object : WebViewClient() {
-
-                                    // Catches the FIRST URL loaded into the helper window
-                                    // (the one carried by the transport message).
+                                    // Catches the FIRST URL (transport window).
+                                    // shouldOverrideUrlLoading does NOT fire for the initial
+                                    // transport URL — only subsequent navigations trigger it.
                                     override fun onPageStarted(
                                         view: WebView,
                                         url: String?,
@@ -452,10 +536,9 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                         if (!url.isNullOrEmpty() && url != "about:blank") {
                                             mainWebView?.loadUrl(url)
                                         }
-                                        // The helper has served its purpose — stop loading and
-                                        // destroy it to avoid a memory leak. We post the destroy
-                                        // so it runs after this callback returns (calling
-                                        // destroy() synchronously inside a WebViewClient
+                                        // Destroy helper after capturing URL — avoid leak.
+                                        // post() defers until after this callback returns
+                                        // (calling destroy() synchronously inside a WebViewClient
                                         // callback is undefined behaviour).
                                         view.post {
                                             view.stopLoading()
@@ -463,16 +546,13 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                         }
                                     }
 
-                                    // Catches any subsequent navigations inside the helper
-                                    // before the post-destroy executes.
+                                    // Catches subsequent navigations in the helper.
                                     override fun shouldOverrideUrlLoading(
                                         view: WebView,
                                         request: WebResourceRequest,
                                     ): Boolean {
-                                        val url = request.url?.toString()
-                                        if (!url.isNullOrEmpty()) {
-                                            mainWebView?.loadUrl(url)
-                                        }
+                                        request.url?.toString()
+                                            ?.let { mainWebView?.loadUrl(it) }
                                         view.post {
                                             view.stopLoading()
                                             view.destroy()
@@ -488,27 +568,20 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                             }
                         }
 
-                        // -------------------------------------------------------
-                        // Register the anti-detection script to run at document
-                        // start — BEFORE any page JavaScript executes.
-                        //
-                        // This MUST be called after webViewClient/webChromeClient
-                        // are set and BEFORE loadUrl() so the first page load gets
-                        // the script too.
-                        //
-                        // WebViewFeature.DOCUMENT_START_SCRIPT requires WebView 102+
-                        // (available on all devices running Android 5+ with a modern
-                        // WebView APK, which covers >99% of active devices in 2026).
-                        // -------------------------------------------------------
+                        // ------------------------------------------------------------
+                        // Layer 2 fix: inject ANTI_DETECTION_SCRIPT before page JS.
+                        // Must be called AFTER webViewClient/webChromeClient are set
+                        // and BEFORE loadUrl() so the very first page load gets it.
+                        // Requires WebView 102+ (androidx.webkit:DOCUMENT_START_SCRIPT).
+                        // ------------------------------------------------------------
                         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
                             WebViewCompat.addDocumentStartJavaScript(
                                 this, ANTI_DETECTION_SCRIPT, setOf("*")
                             )
                             documentStartScriptRegistered = true
-                            Log.d(TAG, "Anti-detection script registered via addDocumentStartJavaScript")
+                            Log.d(TAG, "Anti-detection script registered (document-start)")
                         } else {
-                            // Older WebView: fall back to evaluateJavascript in onPageStarted
-                            Log.d(TAG, "addDocumentStartJavaScript not supported; using evaluateJavascript fallback")
+                            Log.d(TAG, "DOCUMENT_START_SCRIPT unavailable; using evaluateJavascript fallback")
                         }
 
                         loadUrl(websiteUrl)
