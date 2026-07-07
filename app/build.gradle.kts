@@ -178,6 +178,11 @@ dependencies {
 
     implementation(libs.androidx.documentfile)
 
+    // AndroidX WebKit — provides WebViewCompat.addDocumentStartJavaScript() which
+    // injects JavaScript BEFORE any page script runs. Required to inject the
+    // window.chrome shim that bypasses Meta's (Facebook/Instagram) bot detection.
+    implementation("androidx.webkit:webkit:1.16.0")
+
     testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso.core)

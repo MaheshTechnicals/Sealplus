@@ -40,10 +40,121 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.junkfood.seal.util.PreferenceUtil.updateString
 import com.junkfood.seal.util.USER_AGENT_STRING
 
 private const val TAG = "WebViewPage"
+
+// ---------------------------------------------------------------------------
+// Anti-bot-detection script
+//
+// Facebook and Instagram (Meta) run JavaScript bot-detection checks on their
+// LOGIN pages — specifically:
+//   1. Does window.chrome exist?  (Chrome has it; plain Android WebView does not)
+//   2. Is navigator.webdriver true?  (automation flag)
+//
+// When these checks fail, Meta's React code deliberately mounts an empty root
+// and renders nothing — giving a blank white/dark page even though the HTML
+// arrived and the document title was set.
+//
+// We inject this script using WebViewCompat.addDocumentStartJavaScript() which
+// runs BEFORE any page JavaScript, so the shim is in place before Meta's
+// detection code executes. A fallback evaluateJavascript() call is made from
+// onPageStarted for devices where addDocumentStartJavaScript is not supported.
+// ---------------------------------------------------------------------------
+private val ANTI_DETECTION_SCRIPT = """
+(function() {
+  'use strict';
+  try {
+
+    // 1. window.chrome — Meta checks for this object.
+    //    Android WebView omits it; real Chrome always has it.
+    if (typeof window.chrome === 'undefined' || window.chrome === null) {
+      var chromeDef = {
+        app: {
+          isInstalled: false,
+          InstallState: {
+            DISABLED: 'disabled',
+            INSTALLED: 'installed',
+            NOT_INSTALLED: 'not_installed'
+          },
+          RunningState: {
+            CANNOT_RUN: 'cannot_run',
+            READY_TO_RUN: 'ready_to_run',
+            RUNNING: 'running'
+          }
+        },
+        runtime: {
+          connect: function() {
+            return { postMessage: function() {}, disconnect: function() {},
+                     onMessage: { addListener: function() {}, removeListener: function() {} },
+                     onDisconnect: { addListener: function() {}, removeListener: function() {} } };
+          },
+          sendMessage: function() {},
+          onMessage: {
+            addListener: function() {},
+            removeListener: function() {},
+            hasListener: function() { return false; }
+          },
+          onConnect: { addListener: function() {}, removeListener: function() {} },
+          onConnectExternal: { addListener: function() {}, removeListener: function() {} },
+          id: undefined
+        },
+        loadTimes: function() {
+          return {
+            requestTime: 0, startLoadTime: 0, commitLoadTime: 0,
+            finishDocumentLoadTime: 0, finishLoadTime: 0,
+            firstPaintTime: 0, firstPaintAfterLoadTime: 0,
+            navigationType: 'Other', wasFetchedViaSpdy: false,
+            wasNpnNegotiated: false, npnNegotiatedProtocol: '',
+            wasAlternateProtocolAvailable: false, connectionInfo: 'unknown'
+          };
+        },
+        csi: function() {
+          return { startE: Date.now(), onloadT: Date.now(), pageT: 0, tran: 15 };
+        }
+      };
+      try {
+        Object.defineProperty(window, 'chrome', {
+          value: chromeDef,
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
+      } catch (e) {
+        window.chrome = chromeDef;
+      }
+    }
+
+    // 2. navigator.webdriver — must be false/undefined, not true.
+    try {
+      Object.defineProperty(navigator, 'webdriver', {
+        get: function() { return false; },
+        configurable: true
+      });
+    } catch (e) {}
+
+    // 3. navigator.languages — empty array is a WebView signal.
+    try {
+      if (!navigator.languages || navigator.languages.length === 0) {
+        Object.defineProperty(navigator, 'languages', {
+          get: function() { return ['en-US', 'en']; },
+          configurable: true
+        });
+      }
+    } catch (e) {}
+
+  } catch (globalErr) {
+    // Never crash the host page.
+  }
+})();
+""".trimIndent()
+
+// ---------------------------------------------------------------------------
+// Cookie data model
+// ---------------------------------------------------------------------------
 
 data class Cookie(
     val domain: String = "",
@@ -79,7 +190,7 @@ data class Cookie(
             append('\t')
             append(name)
             append('\t')
-            append(value)  // intentionally kept even when empty — empty value is valid
+            append(value) // intentionally kept even when empty — empty value is valid
         }
     }
 
@@ -95,6 +206,10 @@ private fun String.toDomain(): String {
 }
 
 private val NAVIGABLE_SCHEMES = setOf("http", "https")
+
+// ---------------------------------------------------------------------------
+// WebView page composable
+// ---------------------------------------------------------------------------
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,6 +227,10 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
             else -> "https://$rawUrl"
         }
     }
+
+    // Tracks whether addDocumentStartJavaScript was registered for this WebView.
+    // If the feature is not supported we fall back to evaluateJavascript in onPageStarted.
+    var documentStartScriptRegistered by remember { mutableStateOf(false) }
 
     var pageTitle by remember { mutableStateOf("") }
     var mainWebView by remember { mutableStateOf<WebView?>(null) }
@@ -177,7 +296,11 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                 factory = { context ->
                     WebView(context).apply {
                         mainWebView = this
-                        setBackgroundColor(AndroidColor.WHITE)
+
+                        // Transparent background so dark-themed sites (Instagram) do not
+                        // show a white flash while the page is loading.
+                        setBackgroundColor(AndroidColor.TRANSPARENT)
+
                         settings.run {
                             javaScriptEnabled = true
                             domStorageEnabled = true
@@ -204,7 +327,9 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                             // no uncontrolled windows can actually appear.
                             javaScriptCanOpenWindowsAutomatically = true
                             mediaPlaybackRequiresUserGesture = false
-                            val chromeLikeUA = userAgentString.replace(Regex("\\swv$"), "")
+                            // Strip the " wv" suffix that older Android WebViews appended to
+                            // the UA string so sites see a standard Chrome UA.
+                            val chromeLikeUA = userAgentString.replace(Regex("\\swv\\b"), "")
                             setUserAgentString(chromeLikeUA)
                             USER_AGENT_STRING.updateString(chromeLikeUA)
                         }
@@ -220,6 +345,14 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                 super.onPageStarted(view, url, favicon)
                                 isLoading = true
                                 loadError = null
+
+                                // Fallback injection for devices where WebView does not
+                                // support addDocumentStartJavaScript (WebView < 102).
+                                // evaluateJavascript from onPageStarted runs before the
+                                // page's own script bundle is executed on most devices.
+                                if (!documentStartScriptRegistered) {
+                                    view.evaluateJavascript(ANTI_DETECTION_SCRIPT, null)
+                                }
                             }
 
                             override fun onPageFinished(view: WebView, url: String?) {
@@ -354,6 +487,30 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                 return true
                             }
                         }
+
+                        // -------------------------------------------------------
+                        // Register the anti-detection script to run at document
+                        // start — BEFORE any page JavaScript executes.
+                        //
+                        // This MUST be called after webViewClient/webChromeClient
+                        // are set and BEFORE loadUrl() so the first page load gets
+                        // the script too.
+                        //
+                        // WebViewFeature.DOCUMENT_START_SCRIPT requires WebView 102+
+                        // (available on all devices running Android 5+ with a modern
+                        // WebView APK, which covers >99% of active devices in 2026).
+                        // -------------------------------------------------------
+                        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                            WebViewCompat.addDocumentStartJavaScript(
+                                this, ANTI_DETECTION_SCRIPT, setOf("*")
+                            )
+                            documentStartScriptRegistered = true
+                            Log.d(TAG, "Anti-detection script registered via addDocumentStartJavaScript")
+                        } else {
+                            // Older WebView: fall back to evaluateJavascript in onPageStarted
+                            Log.d(TAG, "addDocumentStartJavaScript not supported; using evaluateJavascript fallback")
+                        }
+
                         loadUrl(websiteUrl)
                     }
                 },
