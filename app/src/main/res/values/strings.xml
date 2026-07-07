@@ -248,6 +248,13 @@
     <string name="docs_saved">Video info saved as text file</string>
     <string name="format_selection_desc">Select the format to download before starting the download</string>
     <string name="generate_new_cookies">Generate new cookies</string>
+    <string name="paste_cookies_manually">Paste Cookies Manually</string>
+    <string name="manual_cookies_active">Manual cookies set</string>
+    <string name="manual_cookie_dialog_title">Paste Cookies</string>
+    <string name="manual_cookie_dialog_desc">Paste cookies exported from your browser.\nSupported formats:\n• Netscape / cookies.txt\n• JSON (Cookie-Editor, EditThisCookie)\n• name=value; name=value</string>
+    <string name="manual_cookie_input_hint">Paste cookies here…</string>
+    <string name="clear_manual_cookies">Clear manual cookies</string>
+    <string name="import_cookies_from_file">Import from file</string>
     <string name="use_cookies">Use Cookies</string>
     <string name="remove_cookie_profile_desc">Remove this entry for \"%1$s\"? Please note that the cookies stored for this site will not be cleared.</string>
     <string name="custom_command_enabled_hint">Some options are unavailable when using custom command</string>

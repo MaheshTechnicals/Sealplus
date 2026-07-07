@@ -25,10 +25,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Cookie
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FileCopy
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.GeneratingTokens
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.MoreVert
@@ -58,6 +60,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -134,6 +138,7 @@ fun CookieProfilePage(
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showManualCookieDialog by remember { mutableStateOf(false) }
 
     fun refreshCookies() {
         scope.launch {
@@ -276,7 +281,9 @@ fun CookieProfilePage(
                             isCookieEnabled = false
                             COOKIES.updateBoolean(false)
                         } else if (
-                            (cookies.isEmpty() || !cookieManager.hasCookies()) && !isCookieEnabled
+                            // Disable help gate when any profile has manual cookies,
+                            // because those are always available without CookieManager.
+                            (cookies.isEmpty() || (!cookieManager.hasCookies() && cookies.none { it.content.isNotEmpty() })) && !isCookieEnabled
                         ) {
                             showHelpDialog = true
                         } else {
@@ -290,6 +297,10 @@ fun CookieProfilePage(
                 PreferenceItemVariant(
                     modifier = Modifier.padding(vertical = 4.dp),
                     title = item.url,
+                    // Show badge when the profile has manually pasted cookies so the
+                    // user knows this profile does not rely on the in-app browser.
+                    description = if (item.content.isNotEmpty())
+                        stringResource(R.string.manual_cookies_active) else null,
                     onClick = {
                         cookiesViewModel.setEditingProfile(item)
                         showEditDialog = true
@@ -334,10 +345,24 @@ fun CookieProfilePage(
                 cookiesViewModel.updateCookieProfile()
                 navigateToCookieGeneratorPage()
             },
+            onPasteCookiesManually = {
+                showEditDialog = false
+                showManualCookieDialog = true
+            },
         ) {
             showEditDialog = false
             cookieRefreshKey++
         }
+    }
+
+    if (showManualCookieDialog) {
+        ManualCookieInputDialog(
+            cookiesViewModel = cookiesViewModel,
+            onDismissRequest = {
+                showManualCookieDialog = false
+                cookieRefreshKey++
+            },
+        )
     }
 
     if (showDeleteDialog) {
@@ -364,13 +389,15 @@ fun CookieProfilePage(
 fun CookieGeneratorDialog(
     cookiesViewModel: CookiesViewModel,
     navigateToCookieGeneratorPage: () -> Unit = {},
+    onPasteCookiesManually: () -> Unit = {},
     onDismissRequest: () -> Unit,
 ) {
-
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val state by cookiesViewModel.stateFlow.collectAsStateWithLifecycle()
     val profile = state.editingCookieProfile
     val url = profile.url
+    val hasManualCookies = profile.content.isNotEmpty()
 
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { CookieManager.getInstance().flush() } }
     AlertDialog(
@@ -393,17 +420,186 @@ fun CookieGeneratorDialog(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 )
 
+                // Option 1: generate via the in-app WebView browser
                 TextButtonWithIcon(
                     onClick = { navigateToCookieGeneratorPage() },
                     icon = Icons.Outlined.GeneratingTokens,
                     text = stringResource(id = R.string.generate_new_cookies),
                 )
+
+                // Option 2: paste cookies from an external browser (Firefox, Kiwi…)
+                TextButtonWithIcon(
+                    onClick = { onPasteCookiesManually() },
+                    icon = Icons.Outlined.ContentPaste,
+                    text = stringResource(id = R.string.paste_cookies_manually),
+                )
+
+                // If the profile already has manual cookies, offer a clear action.
+                if (hasManualCookies) {
+                    TextButtonWithIcon(
+                        onClick = {
+                            cookiesViewModel.updateContent("")
+                            scope.launch(Dispatchers.IO) {
+                                cookiesViewModel.updateCookieProfile(
+                                    profile.copy(content = "")
+                                )
+                            }
+                            onDismissRequest()
+                        },
+                        icon = Icons.Outlined.DeleteForever,
+                        text = stringResource(id = R.string.clear_manual_cookies),
+                    )
+                }
             }
         },
         dismissButton = { DismissButton { onDismissRequest() } },
         confirmButton = {
             ConfirmButton(enabled = url.isNotEmpty()) {
                 cookiesViewModel.updateCookieProfile()
+                onDismissRequest()
+            }
+        },
+    )
+}
+
+/**
+ * Dialog that lets the user paste cookies manually into a profile.
+ *
+ * Accepts three formats (auto-detected):
+ *  1. Netscape HTTP Cookie File (tab-separated, as produced by cookies.txt exporters)
+ *  2. JSON array (as exported by "Cookie-Editor" / "EditThisCookie" browser extensions)
+ *  3. Cookie header value ("name=value; name=value; …")
+ *
+ * The content is stored in [CookieProfile.content] and takes priority over
+ * CookieManager when [DownloadUtil.getCookieListFromDatabase] runs.
+ */
+@Composable
+fun ManualCookieInputDialog(
+    cookiesViewModel: CookiesViewModel,
+    onDismissRequest: () -> Unit = {},
+) {
+    val state by cookiesViewModel.stateFlow.collectAsStateWithLifecycle()
+    val profile = state.editingCookieProfile
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Seed the text field with any previously saved content so the user can review/edit it.
+    var cookieText by remember { mutableStateOf(profile.content) }
+
+    // File-open launcher: reads any plain-text cookies file (Netscape, JSON, or header)
+    // and pre-fills the text field so the user can verify before saving.
+    val importFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        scope.launch(Dispatchers.IO) {
+            val content = runCatching {
+                context.contentResolver.openInputStream(uri)
+                    ?.bufferedReader()
+                    ?.readText()
+                    ?: ""
+            }.getOrDefault("")
+            if (content.isNotEmpty()) {
+                withContext(kotlinx.coroutines.Dispatchers.Main) { cookieText = content }
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.ContentPaste,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
+        title = { Text(stringResource(R.string.manual_cookie_dialog_title)) },
+        text = {
+            // No verticalScroll on the Column — the TextField handles its own
+            // internal scrolling via scrollState. Putting verticalScroll on the
+            // outer Column conflicts with the fixed-height TextField and prevents
+            // the text content from scrolling inside the box.
+            Column {
+                // Format guidance
+                Text(
+                    text = stringResource(R.string.manual_cookie_dialog_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+
+                // Cookie content input — fixed height, internal scroll, monospace font.
+                // scrollState enables scrolling within the 220dp box when content overflows.
+                val textFieldScrollState = rememberScrollState()
+                OutlinedTextField(
+                    value = cookieText,
+                    onValueChange = { cookieText = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.manual_cookie_input_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    },
+                    textStyle = TextStyle(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                    ),
+                    scrollState = textFieldScrollState,
+                    maxLines = Int.MAX_VALUE,
+                )
+
+                // Action row — three possible actions shown compactly
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Paste from system clipboard
+                    TextButtonWithIcon(
+                        onClick = {
+                            val clip = clipboardManager.getText()?.text ?: ""
+                            if (clip.isNotEmpty()) cookieText = clip
+                        },
+                        icon = Icons.Outlined.ContentPaste,
+                        text = stringResource(R.string.paste),
+                    )
+                    // Import from a cookies.txt / JSON file on device storage
+                    TextButtonWithIcon(
+                        onClick = {
+                            importFileLauncher.launch(
+                                arrayOf("text/plain", "application/json", "*/*")
+                            )
+                        },
+                        icon = Icons.Outlined.FolderOpen,
+                        text = stringResource(R.string.import_cookies_from_file),
+                    )
+                    // Clear the text box (only shown when there is content)
+                    if (cookieText.isNotEmpty()) {
+                        TextButtonWithIcon(
+                            onClick = { cookieText = "" },
+                            icon = Icons.Outlined.DeleteForever,
+                            text = stringResource(R.string.clear_manual_cookies),
+                        )
+                    }
+                }
+            }
+        },
+        dismissButton = { DismissButton { onDismissRequest() } },
+        confirmButton = {
+            ConfirmButton {
+                // Persist content into the profile and save to Room.
+                cookiesViewModel.updateContent(cookieText)
+                scope.launch(Dispatchers.IO) {
+                    cookiesViewModel.updateCookieProfile(
+                        profile.copy(content = cookieText)
+                    )
+                }
                 onDismissRequest()
             }
         },

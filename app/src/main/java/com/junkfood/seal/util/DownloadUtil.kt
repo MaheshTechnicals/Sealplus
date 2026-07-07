@@ -44,6 +44,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.Locale
@@ -51,6 +52,168 @@ import java.util.Locale
 object DownloadUtil {
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }
+
+    // -------------------------------------------------------------------------
+    // Manual cookie content parsing
+    //
+    // When a CookieProfile has non-empty `content`, the user pasted cookies
+    // manually (Netscape / JSON / name=value format). These are parsed here and
+    // used directly instead of reading from CookieManager.
+    // -------------------------------------------------------------------------
+
+    /** JSON shape produced by "Cookie-Editor" and "EditThisCookie" browser extensions. */
+    @Serializable
+    private data class CookieJson(
+        val name: String = "",
+        val value: String = "",
+        val domain: String = "",
+        val path: String = "/",
+        val secure: Boolean = false,
+        @SerialName("httpOnly") val httpOnly: Boolean = false,
+        // Both extension names in the wild:
+        val expirationDate: Double = 0.0,
+        val expires: Double = 0.0,
+        val session: Boolean = true,
+    )
+
+    /**
+     * Parses manually-pasted cookie text into a [List<Cookie>].
+     * Three input formats are supported:
+     *
+     *  1. **Netscape / cookies.txt** — tab-separated 7-field lines.
+     *  2. **JSON** — array of cookie objects exported by "Cookie-Editor" /
+     *     "EditThisCookie" browser extensions.
+     *  3. **Header / name=value** — the semicolon-delimited string you see
+     *     when you copy a `Cookie:` request header from a browser.
+     *
+     * @param profileUrl The URL of the [CookieProfile] — used to derive the
+     *   domain for format 3, where no domain is available in the text.
+     * @param content    The raw text the user pasted.
+     */
+    fun parseCookieContent(profileUrl: String, content: String): List<Cookie> {
+        val trimmed = content.trim()
+        if (trimmed.isEmpty()) return emptyList()
+
+        return runCatching {
+            when {
+                // JSON: starts with [ (array) or { (single object)
+                trimmed.startsWith('[') || trimmed.startsWith('{') ->
+                    parseJsonCookies(profileUrl, trimmed)
+
+                // Netscape: has at least one line that contains a tab character
+                // (comment lines start with # and are fine to skip)
+                trimmed.lines().any { it.isNotBlank() && !it.startsWith('#') && '\t' in it } ->
+                    parseNetscapeCookies(trimmed)
+
+                // Fallback: treat as Cookie header value  "name=val; name=val"
+                else -> parseHeaderCookies(profileUrl, trimmed)
+            }
+        }.getOrElse { e ->
+            Log.w(TAG, "parseCookieContent failed, attempting header fallback: ${e.message}")
+            runCatching { parseHeaderCookies(profileUrl, trimmed) }.getOrDefault(emptyList())
+        }
+    }
+
+    private fun parseJsonCookies(profileUrl: String, json: String): List<Cookie> {
+        // Wrap bare object in an array so the decoder always receives a list.
+        val normalised = if (json.trimStart().startsWith('{')) "[$json]" else json
+        val items = jsonFormat.decodeFromString<List<CookieJson>>(normalised)
+        val now = System.currentTimeMillis() / 1000L
+        val fallbackDomain = profileUrl.let {
+            val url = if (it.startsWith("http")) it else "https://$it"
+            "." + (Uri.parse(url).host?.removePrefix("www.") ?: return@let "")
+        }
+        return items.mapNotNull { c ->
+            if (c.name.isEmpty()) return@mapNotNull null
+            // Pick whichever expiry field is populated; 0 means session cookie
+            val expiry = when {
+                c.expirationDate > 0 -> c.expirationDate.toLong()
+                c.expires > 0        -> c.expires.toLong()
+                else                 -> 0L
+            }
+            if (expiry > 0L && expiry < now) return@mapNotNull null // expired
+            val domain = c.domain.let { d ->
+                when {
+                    d.isBlank()         -> fallbackDomain
+                    d.startsWith('.')   -> d
+                    else                -> ".$d"
+                }
+            }
+            Cookie(
+                domain            = domain,
+                name              = c.name,
+                value             = c.value,
+                includeSubdomains = true,
+                path              = c.path.ifEmpty { "/" },
+                secure            = c.secure,
+                expiry            = expiry,
+                isHttpOnly        = c.httpOnly,
+            )
+        }
+    }
+
+    private fun parseNetscapeCookies(text: String): List<Cookie> {
+        val now = System.currentTimeMillis() / 1000L
+        val cookies = mutableListOf<Cookie>()
+        text.lines().forEach { line ->
+            val trimmed = line.trim()
+            if (trimmed.isEmpty() || trimmed.startsWith('#')) return@forEach
+            val parts = trimmed.split('\t')
+            if (parts.size < 7) return@forEach
+            val domain            = parts[0]
+            val includeSubdomains = parts[1].uppercase() == "TRUE"
+            val path              = parts[2]
+            val secure            = parts[3].uppercase() == "TRUE"
+            val expiry            = parts[4].toLongOrNull() ?: 0L
+            val name              = parts[5]
+            // Value may itself contain tabs — re-join the remainder
+            val value             = parts.drop(6).joinToString("\t")
+            if (name.isEmpty()) return@forEach
+            if (expiry > 0L && expiry < now) return@forEach // skip expired
+            cookies.add(
+                Cookie(
+                    domain            = if (domain.startsWith('.')) domain else ".$domain",
+                    name              = name,
+                    value             = value,
+                    includeSubdomains = includeSubdomains,
+                    path              = path,
+                    secure            = secure,
+                    expiry            = expiry,
+                    isHttpOnly        = false,
+                )
+            )
+        }
+        return cookies
+    }
+
+    private fun parseHeaderCookies(profileUrl: String, header: String): List<Cookie> {
+        val rawUrl = if (profileUrl.startsWith("http")) profileUrl else "https://$profileUrl"
+        val host   = Uri.parse(rawUrl).host ?: ""
+        val domain = "." + if (host.startsWith("www.")) host.removePrefix("www.") else host
+        val cookies = mutableListOf<Cookie>()
+        // Strip a leading "Cookie: " HTTP header prefix if the user copied the whole line
+        val cookiePart = header.removePrefix("Cookie:").removePrefix("cookie:").trim()
+        cookiePart.split(';').forEach { pair ->
+            val eqIdx = pair.indexOf('=')
+            if (eqIdx < 0) return@forEach
+            val name  = pair.substring(0, eqIdx).trim()
+            val value = pair.substring(eqIdx + 1).trim()
+            if (name.isEmpty()) return@forEach
+            cookies.add(
+                Cookie(
+                    domain            = domain,
+                    name              = name,
+                    value             = value,
+                    includeSubdomains = true,
+                    path              = "/",
+                    secure            = false,
+                    expiry            = 0L,
+                    isHttpOnly        = false,
+                )
+            )
+        }
+        return cookies
+    }
 
     private const val TAG = "DownloadUtil"
 
@@ -474,6 +637,27 @@ object DownloadUtil {
         val cookies = mutableListOf<Cookie>()
 
         for (profile in profiles) {
+
+            // ------------------------------------------------------------------
+            // Manual cookie path: the user pasted cookies directly into the
+            // profile. Parse them and skip the CookieManager lookup entirely.
+            // ------------------------------------------------------------------
+            if (profile.content.isNotEmpty()) {
+                val manual = parseCookieContent(profile.url, profile.content)
+                if (manual.isNotEmpty()) {
+                    manual.forEach { c ->
+                        val key = "${c.domain}|${c.name}"
+                        if (seen.add(key)) cookies.add(c)
+                    }
+                    Log.d(TAG, "Profile '${profile.url}': using ${manual.size} manual cookie(s)")
+                    continue // skip CookieManager for this profile
+                }
+                Log.w(TAG, "Profile '${profile.url}': content is set but parsing returned 0 cookies")
+            }
+
+            // ------------------------------------------------------------------
+            // Automatic path: read cookies from the in-app WebView's CookieManager.
+            // ------------------------------------------------------------------
             // Normalise to HTTPS. CookieManager.getCookie() with an http:// URL silently
             // omits all Secure-flagged cookies. Facebook session cookies (c_user, xs),
             // Instagram session cookies (sessionid, csrftoken), and virtually every other
