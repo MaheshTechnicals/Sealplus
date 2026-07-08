@@ -35,7 +35,9 @@ import androidx.compose.material.icons.outlined.GeneratingTokens
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Surface
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,10 +60,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -473,6 +478,17 @@ fun CookieGeneratorDialog(
  * The content is stored in [CookieProfile.content] and takes priority over
  * CookieManager when [DownloadUtil.getCookieListFromDatabase] runs.
  */
+/**
+ * Full-control cookie paste dialog using [Dialog] + [Surface] instead of [AlertDialog].
+ *
+ * [AlertDialog] allocates its `text` slot with `weight(1f, fill=false)` inside a Box that
+ * can take the full dialog height. Any Column placed there (with or without verticalScroll)
+ * ends up with a blank gap between the last child and the action buttons because the Box
+ * expands to its weight-allocated height.
+ *
+ * Using a raw [Dialog] with [Surface] + `wrapContentHeight()` makes the dialog exactly as
+ * tall as its content — no gaps, no weight math.
+ */
 @Composable
 fun ManualCookieInputDialog(
     cookiesViewModel: CookiesViewModel,
@@ -484,11 +500,8 @@ fun ManualCookieInputDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Seed the text field with any previously saved content so the user can review/edit it.
     var cookieText by remember { mutableStateOf(profile.content) }
 
-    // File-open launcher: reads any plain-text cookies file (Netscape, JSON, or header)
-    // and pre-fills the text field so the user can verify before saving.
     val importFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -506,23 +519,42 @@ fun ManualCookieInputDialog(
         }
     }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        icon = {
-            Icon(
-                imageVector = Icons.Outlined.ContentPaste,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        },
-        title = { Text(stringResource(R.string.manual_cookie_dialog_title)) },
-        text = {
-            // verticalScroll makes the Column wrap to its content height instead of
-            // expanding to fill the AlertDialog's Box — without it, Material3's
-            // AlertDialog gives the text-content area the full available height and
-            // the children are laid out with a blank gap between them.
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                // Compact single-line format hint
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(fraction = 0.92f)
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = AlertDialogDefaults.containerColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+            ) {
+                // Icon
+                Icon(
+                    imageVector = Icons.Outlined.ContentPaste,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 16.dp),
+                )
+
+                // Title
+                Text(
+                    text = stringResource(R.string.manual_cookie_dialog_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                )
+
+                // Compact format hint
                 Text(
                     text = stringResource(R.string.manual_cookie_dialog_desc),
                     style = MaterialTheme.typography.bodySmall,
@@ -530,7 +562,7 @@ fun ManualCookieInputDialog(
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
 
-                // Cookie content input — monospace, fixed 180 dp height.
+                // Cookie text field — fixed 180 dp, maxLines=8 for deterministic height
                 OutlinedTextField(
                     value = cookieText,
                     onValueChange = { cookieText = it },
@@ -547,10 +579,10 @@ fun ManualCookieInputDialog(
                         fontFamily = FontFamily.Monospace,
                         fontSize = MaterialTheme.typography.bodySmall.fontSize,
                     ),
-                    maxLines = Int.MAX_VALUE,
+                    maxLines = 8,
                 )
 
-                // Action row — Paste · Import · Clear (clear only when field has content)
+                // Action row — Paste · Import · Clear
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -582,22 +614,28 @@ fun ManualCookieInputDialog(
                         )
                     }
                 }
-            }
-        },
-        dismissButton = { DismissButton { onDismissRequest() } },
-        confirmButton = {
-            ConfirmButton {
-                // Persist content into the profile and save to Room.
-                cookiesViewModel.updateContent(cookieText)
-                scope.launch(Dispatchers.IO) {
-                    cookiesViewModel.updateCookieProfile(
-                        profile.copy(content = cookieText)
-                    )
+
+                // Dialog buttons — right-aligned to match app style
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    DismissButton { onDismissRequest() }
+                    ConfirmButton {
+                        cookiesViewModel.updateContent(cookieText)
+                        scope.launch(Dispatchers.IO) {
+                            cookiesViewModel.updateCookieProfile(
+                                profile.copy(content = cookieText)
+                            )
+                        }
+                        onDismissRequest()
+                    }
                 }
-                onDismissRequest()
             }
-        },
-    )
+        }
+    }
 }
 
 @Composable

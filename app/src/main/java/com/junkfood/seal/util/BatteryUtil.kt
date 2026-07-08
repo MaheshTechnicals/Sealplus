@@ -14,6 +14,15 @@ object BatteryUtil {
 
     fun isIgnoringBatteryOptimizations(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
+        // On Xiaomi / Redmi / POCO devices running MIUI or HyperOS, the standard Android
+        // PowerManager.isIgnoringBatteryOptimizations() API is UNRELIABLE. MIUI/HyperOS
+        // manages its own proprietary battery restriction system (Optimized / Restricted /
+        // No restrictions) that is entirely separate from Android's battery optimization
+        // whitelist. The system API falsely returns true even when the app is in "Optimized"
+        // mode, which prevents the setup dialog from ever appearing. We therefore always
+        // report "not ignoring" for these devices so the user is always prompted to configure
+        // the MIUI/HyperOS-specific battery setting manually.
+        if (getManufacturer() == Manufacturer.XIAOMI) return false
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         if (pm.isIgnoringBatteryOptimizations(context.packageName)) return true
         return isIgnoringViaAppOps(context)
@@ -145,16 +154,27 @@ object BatteryUtil {
         return null
     }
 
+    @SuppressLint("BatteryLife")
     private fun tryXiaomiBatteryIntent(context: Context, pkg: String): Intent? {
-        val miuiDetails = Intent().apply {
-            setClassName(
-                "com.miui.securitycenter",
-                "com.miui.permcenter.permissions.PermissionsEditorActivity"
-            )
-            putExtra("extra_pkgname", pkg)
+        // 1. Standard Android ACTION — on MIUI/HyperOS this triggers the OEM-native system
+        //    dialog that directly adds the app to "No restrictions". Most reliable across
+        //    all MIUI versions and HyperOS 1/2 (Android 13–17+).
+        val standardIgnore = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = Uri.parse("package:$pkg")
         }
-        if (isIntentResolvable(context, miuiDetails)) return miuiDetails
+        if (isIntentResolvable(context, standardIgnore)) return standardIgnore
 
+        // 2. HyperOS / MIUI 16+ — unified power management app detail page
+        val hyperOsPower = Intent().apply {
+            setClassName(
+                "com.miui.powerkeeper",
+                "com.miui.powerkeeper.ui.HybridAppManageActivity"
+            )
+            putExtra("package_name", pkg)
+        }
+        if (isIntentResolvable(context, hyperOsPower)) return hyperOsPower
+
+        // 3. MIUI 12–15 — per-app battery use detail page
         val miuiBattery = Intent().apply {
             setClassName(
                 "com.miui.powerkeeper",
@@ -164,6 +184,17 @@ object BatteryUtil {
         }
         if (isIntentResolvable(context, miuiBattery)) return miuiBattery
 
+        // 4. Older MIUI — permissions editor (has battery section)
+        val miuiPermissions = Intent().apply {
+            setClassName(
+                "com.miui.securitycenter",
+                "com.miui.permcenter.permissions.PermissionsEditorActivity"
+            )
+            putExtra("extra_pkgname", pkg)
+        }
+        if (isIntentResolvable(context, miuiPermissions)) return miuiPermissions
+
+        // 5. Last resort — Security Center main screen (user navigates manually)
         val miuiSecurity = Intent().apply {
             setClassName(
                 "com.miui.securitycenter",

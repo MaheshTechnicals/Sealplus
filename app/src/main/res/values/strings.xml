@@ -111,7 +111,7 @@
     </string>
     <string name="battery_settings_desc_oppo">"On your device, also go to App Info > Battery usage > Allow background activity, and enable \"Auto start\" for this app."
     </string>
-    <string name="battery_settings_desc_xiaomi">"On your device, also go to App Info > Battery saver and select \"No restrictions\". Then enable \"Auto start\" in Settings > Apps > Manage apps."
+    <string name="battery_settings_desc_xiaomi">"On MIUI/HyperOS: Tap \"Open Settings\" and select \"No restrictions\". If that doesn\'t open directly, go to Settings > Apps > Manage apps > this app > Battery saver and choose \"No restrictions\". Also enable Auto-start in Security &amp; Privacy."
     </string>
     <string name="battery_settings_desc_vivo">"On your device, also go to App Info > Battery > Background restriction and select \"Don\'t restrict\"."
     </string>
