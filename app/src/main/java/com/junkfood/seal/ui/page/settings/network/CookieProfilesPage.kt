@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -487,8 +486,10 @@ fun CookieGeneratorDialog(
  * ends up with a blank gap between the last child and the action buttons because the Box
  * expands to its weight-allocated height.
  *
- * Using a raw [Dialog] with [Surface] + `wrapContentHeight()` makes the dialog exactly as
- * tall as its content — no gaps, no weight math.
+ * Using a raw [Dialog] wrapping `Box(fillMaxSize, contentAlignment=Center)` → [Surface]
+ * (no height modifier) → Column makes the dialog exactly as tall as its content.
+ * The Box is required because without it the Dialog's platform window provides full-screen
+ * height constraints that would force the Surface to be screen-tall.
  */
 @Composable
 fun ManualCookieInputDialog(
@@ -524,114 +525,128 @@ fun ManualCookieInputDialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth(fraction = 0.92f)
-                .wrapContentHeight(),
-            shape = MaterialTheme.shapes.extraLarge,
-            color = AlertDialogDefaults.containerColor,
-            tonalElevation = AlertDialogDefaults.TonalElevation,
+        // Box(fillMaxSize + contentAlignment=Center) is required so the Surface
+        // can size itself to content height naturally. Without this outer Box,
+        // the Dialog's platform window provides full-screen height constraints
+        // which force the Surface to be screen-tall regardless of wrapContentHeight().
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+            Surface(
+                // No height modifier — Column child determines height naturally.
+                modifier = Modifier.fillMaxWidth(fraction = 0.92f),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = AlertDialogDefaults.containerColor,
+                tonalElevation = AlertDialogDefaults.TonalElevation,
             ) {
-                // Icon
-                Icon(
-                    imageVector = Icons.Outlined.ContentPaste,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 16.dp),
-                )
-
-                // Title
-                Text(
-                    text = stringResource(R.string.manual_cookie_dialog_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                )
-
-                // Compact format hint
-                Text(
-                    text = stringResource(R.string.manual_cookie_dialog_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-
-                // Cookie text field — fixed 180 dp, maxLines=8 for deterministic height
-                OutlinedTextField(
-                    value = cookieText,
-                    onValueChange = { cookieText = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    placeholder = {
-                        Text(
-                            text = stringResource(R.string.manual_cookie_input_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    },
-                    textStyle = TextStyle(
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                    ),
-                    maxLines = 8,
-                )
-
-                // Action row — Paste · Import · Clear
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
                 ) {
-                    TextButtonWithIcon(
-                        onClick = {
-                            val clip = clipboardManager.getText()?.text ?: ""
-                            if (clip.isNotEmpty()) cookieText = clip
-                        },
-                        icon = Icons.Outlined.ContentPaste,
-                        text = stringResource(R.string.paste),
+                    // Icon
+                    Icon(
+                        imageVector = Icons.Outlined.ContentPaste,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 16.dp),
                     )
-                    TextButtonWithIcon(
-                        onClick = {
-                            importFileLauncher.launch(
-                                arrayOf("text/plain", "application/json", "*/*")
+
+                    // Title
+                    Text(
+                        text = stringResource(R.string.manual_cookie_dialog_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                    )
+
+                    // Compact format hint
+                    Text(
+                        text = stringResource(R.string.manual_cookie_dialog_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+
+                    // Cookie text field — fixed 180 dp, maxLines=8 for deterministic height
+                    OutlinedTextField(
+                        value = cookieText,
+                        onValueChange = { cookieText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        placeholder = {
+                            Text(
+                                text = stringResource(R.string.manual_cookie_input_hint),
+                                style = MaterialTheme.typography.bodySmall,
                             )
                         },
-                        icon = Icons.Outlined.FolderOpen,
-                        text = stringResource(R.string.import_cookies_from_file),
+                        textStyle = TextStyle(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        ),
+                        maxLines = 8,
                     )
-                    if (cookieText.isNotEmpty()) {
+
+                    // Action row — [Paste] [Import from file] ····· [🗑 icon]
+                    // Three TextButtonWithIcon items overflow on small screens, so the
+                    // Clear action uses an icon-only IconButton at the trailing end.
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         TextButtonWithIcon(
-                            onClick = { cookieText = "" },
-                            icon = Icons.Outlined.DeleteForever,
-                            text = stringResource(R.string.clear_manual_cookies),
+                            onClick = {
+                                val clip = clipboardManager.getText()?.text ?: ""
+                                if (clip.isNotEmpty()) cookieText = clip
+                            },
+                            icon = Icons.Outlined.ContentPaste,
+                            text = stringResource(R.string.paste),
                         )
-                    }
-                }
-
-                // Dialog buttons — right-aligned to match app style
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    DismissButton { onDismissRequest() }
-                    ConfirmButton {
-                        cookiesViewModel.updateContent(cookieText)
-                        scope.launch(Dispatchers.IO) {
-                            cookiesViewModel.updateCookieProfile(
-                                profile.copy(content = cookieText)
-                            )
+                        TextButtonWithIcon(
+                            onClick = {
+                                importFileLauncher.launch(
+                                    arrayOf("text/plain", "application/json", "*/*")
+                                )
+                            },
+                            icon = Icons.Outlined.FolderOpen,
+                            text = stringResource(R.string.import_cookies_from_file),
+                        )
+                        // Push trash icon to the far right
+                        Spacer(modifier = Modifier.weight(1f))
+                        if (cookieText.isNotEmpty()) {
+                            IconButton(onClick = { cookieText = "" }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.DeleteForever,
+                                    contentDescription = stringResource(R.string.clear_manual_cookies),
+                                    tint = MaterialTheme.colorScheme.error,
+                                )
+                            }
                         }
-                        onDismissRequest()
+                    }
+
+                    // Dialog buttons — right-aligned to match app style
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        DismissButton { onDismissRequest() }
+                        ConfirmButton {
+                            cookiesViewModel.updateContent(cookieText)
+                            scope.launch(Dispatchers.IO) {
+                                cookiesViewModel.updateCookieProfile(
+                                    profile.copy(content = cookieText)
+                                )
+                            }
+                            onDismissRequest()
+                        }
                     }
                 }
             }
