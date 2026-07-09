@@ -256,6 +256,9 @@
     <string name="clear_manual_cookies">Clear manual cookies</string>
     <string name="import_cookies_from_file">Import from file</string>
     <string name="cookie_account_ban_warning">Warning: Using cookies from your personal Facebook or Instagram account may get that account banned. It is strongly recommended to use a throwaway/secondary account.</string>
+    <string name="cookie_format_netscape">Netscape</string>
+    <string name="cookie_format_json">JSON</string>
+    <string name="cookie_format_header">name=value</string>
     <string name="use_cookies">Use Cookies</string>
     <string name="remove_cookie_profile_desc">Remove this entry for \"%1$s\"? Please note that the cookies stored for this site will not be cleared.</string>
     <string name="custom_command_enabled_hint">Some options are unavailable when using custom command</string>

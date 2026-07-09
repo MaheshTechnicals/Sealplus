@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -34,13 +35,16 @@ import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.GeneratingTokens
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -60,6 +64,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -491,6 +496,7 @@ fun CookieGeneratorDialog(
  * The Box is required because without it the Dialog's platform window provides full-screen
  * height constraints that would force the Surface to be screen-tall.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManualCookieInputDialog(
     cookiesViewModel: CookiesViewModel,
@@ -541,49 +547,103 @@ fun ManualCookieInputDialog(
                 tonalElevation = AlertDialogDefaults.TonalElevation,
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Icon
-                    Icon(
-                        imageVector = Icons.Outlined.ContentPaste,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                    // 1. HEADER BADGE
+                    Box(
                         modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(bottom = 16.dp),
-                    )
+                            .size(56.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = CircleShape,
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ContentPaste,
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
 
-                    // Title
+                    // 2. TITLE
                     Text(
                         text = stringResource(R.string.manual_cookie_dialog_title),
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     )
+                    Spacer(Modifier.height(4.dp))
 
-                    // Compact format hint
+                    // 3. SUBTITLE
                     Text(
                         text = stringResource(R.string.manual_cookie_dialog_desc),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     )
-                    Text(
-                        text = stringResource(R.string.cookie_account_ban_warning),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(bottom = 8.dp),
-                    )
+                    Spacer(Modifier.height(12.dp))
 
-                    // Cookie text field — fixed 180 dp, maxLines=8 for deterministic height
+                    // 4. SUPPORTED-FORMAT CHIPS
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(stringResource(R.string.cookie_format_netscape)) },
+                        )
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(stringResource(R.string.cookie_format_json)) },
+                        )
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(stringResource(R.string.cookie_format_header)) },
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+
+                    // 5. BAN-RISK WARNING CALLOUT
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.errorContainer,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.WarningAmber,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.cookie_account_ban_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+
+                    // 6. COOKIE INPUT FIELD
                     OutlinedTextField(
                         value = cookieText,
                         onValueChange = { cookieText = it },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp),
+                        label = { Text(stringResource(R.string.cookies)) },
                         placeholder = {
                             Text(
                                 text = stringResource(R.string.manual_cookie_input_hint),
@@ -594,37 +654,57 @@ fun ManualCookieInputDialog(
                             fontFamily = FontFamily.Monospace,
                             fontSize = MaterialTheme.typography.bodySmall.fontSize,
                         ),
+                        shape = MaterialTheme.shapes.medium,
                         maxLines = 8,
+                        supportingText = {
+                            Text(
+                                text = "${cookieText.length}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.End,
+                            )
+                        },
                     )
+                    Spacer(Modifier.height(12.dp))
 
-                    // Action row — [Paste] [Import from file] ····· [🗑 icon]
-                    // Three TextButtonWithIcon items overflow on small screens, so the
-                    // Clear action uses an icon-only IconButton at the trailing end.
+                    // 7. QUICK-ACTION ROW
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        TextButtonWithIcon(
+                        FilledTonalButton(
                             onClick = {
                                 val clip = clipboardManager.getText()?.text ?: ""
                                 if (clip.isNotEmpty()) cookieText = clip
                             },
-                            icon = Icons.Outlined.ContentPaste,
-                            text = stringResource(R.string.paste),
-                        )
-                        TextButtonWithIcon(
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ContentPaste,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(text = stringResource(R.string.paste))
+                        }
+                        FilledTonalButton(
                             onClick = {
                                 importFileLauncher.launch(
                                     arrayOf("text/plain", "application/json", "*/*")
                                 )
                             },
-                            icon = Icons.Outlined.FolderOpen,
-                            text = stringResource(R.string.import_cookies_from_file),
-                        )
-                        // Push trash icon to the far right
-                        Spacer(modifier = Modifier.weight(1f))
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.FolderOpen,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(text = stringResource(R.string.import_cookies_from_file))
+                        }
                         if (cookieText.isNotEmpty()) {
                             IconButton(onClick = { cookieText = "" }) {
                                 Icon(
@@ -635,13 +715,13 @@ fun ManualCookieInputDialog(
                             }
                         }
                     }
+                    Spacer(Modifier.height(8.dp))
 
-                    // Dialog buttons — right-aligned to match app style
+                    // 8. FOOTER BUTTONS
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         DismissButton { onDismissRequest() }
                         ConfirmButton(
