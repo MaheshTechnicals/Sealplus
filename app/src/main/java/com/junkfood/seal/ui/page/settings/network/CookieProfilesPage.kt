@@ -570,6 +570,12 @@ fun ManualCookieInputDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
+                    Text(
+                        text = stringResource(R.string.cookie_account_ban_warning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
 
                     // Cookie text field — fixed 180 dp, maxLines=8 for deterministic height
                     OutlinedTextField(
@@ -638,7 +644,10 @@ fun ManualCookieInputDialog(
                         horizontalArrangement = Arrangement.End,
                     ) {
                         DismissButton { onDismissRequest() }
-                        ConfirmButton {
+                        ConfirmButton(
+                            enabled = profile.url.trim().length > "https://".length &&
+                                      cookieText.isNotBlank(),
+                        ) {
                             cookiesViewModel.updateContent(cookieText)
                             scope.launch(Dispatchers.IO) {
                                 cookiesViewModel.updateCookieProfile(
