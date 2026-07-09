@@ -202,7 +202,7 @@ jobs:
         MESSAGE+="📱 <b>App Name:</b> Seal Plus\n\n"
         MESSAGE+="🏷️ <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-MESSAGE+="📋 <b>Changelog (v2.9):</b>\n\n"
+        MESSAGE+="📋 <b>Changelog (v2.9):</b>\n\n"
         MESSAGE+="<b>🍪 Manual Cookie Paste Dialog</b>\n"
         MESSAGE+="  ➤ Paste cookies in 3 formats: Netscape, JSON, Cookie Header\n"
         MESSAGE+="  ➤ Import from clipboard or from local file\n"
