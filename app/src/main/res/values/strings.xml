@@ -254,7 +254,7 @@
     <string name="manual_cookie_dialog_desc">Supports Netscape (.txt), JSON (Cookie-Editor) and name=value formats.</string>
     <string name="manual_cookie_input_hint">Paste cookies here…</string>
     <string name="clear_manual_cookies">Clear manual cookies</string>
-    <string name="import_cookies_from_file">Import from file</string>
+    <string name="import_cookies_from_file">Import</string>
     <string name="cookie_account_ban_warning">Warning: Using cookies from your personal Facebook or Instagram account may get that account banned. It is strongly recommended to use a throwaway/secondary account.</string>
     <string name="cookie_format_netscape">Netscape</string>
     <string name="cookie_format_json">JSON</string>
