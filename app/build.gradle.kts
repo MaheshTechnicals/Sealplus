@@ -45,7 +45,7 @@ android {
         applicationId = "com.maheshtechnicals.sealplus"
         minSdk = 24
         targetSdk = 37
-        versionCode = 208_000_400
+        versionCode = 209_000_400
         check(versionCode == currentVersionCode)
 
         versionName = baseVersionName

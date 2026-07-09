@@ -79,6 +79,11 @@
       "id": 16,
       "name": "Gonzalez German",
       "METHOD": "PAYPAL"
+    },
+    {
+      "id": 17,
+      "name": "mds08011",
+      "METHOD": "GITHUB"
     }
   ]
 }

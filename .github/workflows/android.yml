@@ -83,55 +83,64 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## ✨ Seal Plus v2.8.0 - Settings & About Redesign, Bulk Dependency Update, Website & SEO Overhaul
+          ## ✨ Seal Plus v2.9.0 - Cookies Overhaul, Download Docs, Anti-Bot Detection, MP4 Filter
           
           ---
           
-          ### 🎨 Settings & About Page Redesign
+          ### 🍪 Manual Cookie Paste Dialog
           
-          * **Full-Width Settings LazyColumn Layout**
-              + Settings page redesigned with `PreferenceItem` + trailing chevron icons throughout
-              + Visual grouping with spacers between sections
-              + Prominent sponsor card with `primaryContainer` color
+          * **Full Cookie Paste Interface** — Paste cookies manually in Netscape (.txt), JSON (Cookie-Editor), or Cookie Header (name=value) format
+          * **Import Options** — Paste from clipboard or import from a local .txt/.json file
+          * **Smart Validation** — Confirm button disabled until valid URL and non-empty cookie text
+          * **Priority** — Manually pasted cookies used first, skipping CookieManager
           
-          * **Card-Based About Page Redesign**
-              + 2-column grid of `CommunityCard` components
-              + Website link to sealplus.in, Auto-Update toggle as standalone Card
-              + Version & package name footer caption
+          ### ⚠️ Facebook/Instagram Account Ban Warning
           
-          ### 🔌 Accompanist → Platform API Migration
+          * Red warning callout inside the paste dialog — warns personal account cookies may get banned
+          * Recommends using a throwaway/secondary account for downloading
           
-          * **Permissions**: Replaced accompanist-permissions with `ActivityResultContracts.RequestPermission`
-          * **WebView**: Replaced accompanist-webview with platform `AndroidView` + `WebView`
-          * **Pager Indicators**: Replaced accompanist-pager-indicators with custom `Row` + `Box` dots
-          * Entire accompanist dependency bundle removed
+          ### 🛡️ Anti-Bot Detection for Meta Login Pages
           
-          ### 📦 Bulk Dependency Update
+          * **Two-Layer Bypass** — Sec-CH-UA header spoofing + JavaScript runtime shims
+          * Replaces "Android WebView" brand with "Google Chrome" in browser hints
+          * Shims `window.chrome`, disables `navigator.webdriver`, patches `userAgentData.brands`
           
-          * **Gradle 9.5.1 & AGP 9.2.1** — Upgraded from 8.13 / 8.13.2
-          * **Kotlin 2.3.21** with K2 Compiler — Upgraded from 2.0.21, KSP 2.3.9
-          * **Compose BOM 2026.05.01** — Upgraded from 2025.01.00
-          * **Coil 3.4.0** — Migrated from Coil 2 to Coil 3 (`io.coil-kt.coil3`)
-          * **Android SDK 37** — compileSdk/targetSdk upgraded to Android 17
-          * **Room 2.8.4, Koin 4.2.1, MMKV 1.3.16, Coroutines 1.11.0** — All bumped
+          ### 🔄 Multi-Window Popup Support
           
-          ### 🐛 Bug Fixes & Stability
+          * `window.open()` / `target="_blank"` popups render as closeable overlay inside the app
+          * Back button closes popup first, then navigates WebView back
           
-          * **LockScreen Biometric Fix** — Repeated prompt prevention, finishing guard
-          * **MainActivity LockScreen** — Deferred until after onboarding completes
-          * **QuickDownloadActivity** — Early return fix for finishing activity crash
-          * **DownloaderV2 Cleanup** — Network callback properly unregistered on crash/low memory
-          * **SponsorUtil Leak** — OkHttpClient per-call instead of singleton
-          * **DatabaseUtil** — Destructive migration fallback for safety
-          * **UpdateUtil** — checkForUpdate now safe with Dispatchers.IO + runCatching
+          ### 🔐 Cookie Management Rewrite
           
-          ### 🌍 Website Redesign & SEO Overhaul
+          * **Storage Rewrite** — Switched from direct SQLite to `CookieManager.getCookie()` API
+          * **HttpOnly & Expiry** — Cookies track HttpOnly flag; expired cookies auto-skipped
+          * **Auto-Refresh** — Cookies refresh on screen resume via lifecycle observer
+          * **Deduplication** — Cross-profile deduplication by `domain|name`
           
-          * Complete sealplus.in redesign — hero, support CTA, install guide, comparison table, FAQ
-          * New support.html (UPI/PayPal/GitHub Sponsors donations)
-          * New contact.html (Formspree contact form)
-          * Updated sitemap.xml, privacy.html, OG tags
-          * Complete CSS rewrite with glassmorphism design system
+          ### 📄 Download Documentation Feature
+          
+          * **Save Video Metadata** — New "Download Docs" saves title, uploader, date, duration, URL, tags, description as .txt
+          * Saved to `SealPlus/docs/` after download completes with success toast
+          * Toggle without selecting format to save docs only (no video download)
+          
+          ### 🔧 Download Resilience & Retry
+          
+          * **Retry Settings** — `--retries=10`, `--fragment-retries=10`, `--extractor-retries=3`, `--file-access-retries=3`
+          * **Exponential Backoff** — HTTP `exp=1:120`, fragment `exp=1:60` to prevent rate-limit issues
+          * **Extended Timeouts** — Socket timeout 5s→15s, info-probe retries 1→3
+          * **Aria2c** — Protocol scoping, `--file-allocation=none`, `--max-tries=5`, `--retry-wait=2`
+          * **Concurrent Fragments** now works alongside aria2c
+          
+          ### 🎬 Format Selection
+          
+          * **MP4-Only Filter** — Show only MP4/M4A formats; enabled by default
+          * **Coil 3 OkHttp** — Desktop Chrome User-Agent for reliable thumbnail loading
+          * **Implausible Size Filter** — Removes formats with unrealistically low bitrates
+          
+          ### 🎨 UI Polish
+          
+          * **Download Dialog V2** — verticalScroll layout, pill-shaped FilterChips, FlowRow settings, animated ExpandableTitle, segmented download type selector
+          * **Battery Optimization** — OEM detection for 8 manufacturers, manufacturer-specific intents, persistent dialog dismissal, Xiaomi HyperOS/MIUI targets
           
           ---
           
@@ -144,14 +153,17 @@ jobs:
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
           
-          ### ✨ Key Features (v2.8)
-          - 🎨 **Settings & About Redesign** - Card-based grid layout with chevron navigation
-          - 🔌 **Accompanist Removed** - Fully migrated to platform APIs
-          - 📦 **Bulk Dependency Update** - Gradle 9.5.1, Kotlin 2.3.21, Compose BOM 2026.05
-          - 🐛 **Bug Fixes** - Biometric, memory leaks, crash on finishing activity
-          - 🌐 **Website Overhaul** - New pages, SEO, glassmorphism design
-          - ⏯️ **Pause/Resume downloads** with queue support
-          - 🌐 Download from 1000+ sites via yt-dlp
+          ### ✨ Key Features (v2.9)
+          - 🍪 **Manual Cookie Paste** - 3 formats, clipboard/file import, smart validation
+          - ⚠️ **Account Ban Warning** - Safety notice for Facebook/Instagram cookies
+          - 🛡️ **Anti-Bot Detection** - Two-layer bypass for Meta login pages
+          - 🔄 **Multi-Window Popups** - Login popups handled inside the app
+          - 🔐 **Cookie Management Rewrite** - HttpOnly/expiry, auto-refresh, deduplication
+          - 📄 **Download Docs** - Save video metadata as text file
+          - 🔧 **Download Resilience** - Retry settings, exponential backoff, extended timeouts
+          - 🎬 **MP4-Only Filter** - Filter formats by MP4 compatibility
+          - 🎨 **Download Dialog Redesign** - Modern pill chips, animated sections
+          - 🔋 **Battery Optimization** - OEM-specific handling, persistent dismissal
           
           ### 📜 Full Changelog
           See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
@@ -190,57 +202,55 @@ jobs:
         MESSAGE+="📱 <b>App Name:</b> Seal Plus\n\n"
         MESSAGE+="🏷️ <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📋 <b>Changelog (v2.8):</b>\n\n"
-        MESSAGE+="<b>🎨 Settings &amp; About Page Redesign</b>\n"
-        MESSAGE+="  ➤ Full-width LazyColumn with PreferenceItem + chevron icons\n"
-        MESSAGE+="  ➤ Card-based About page with 2-column CommunityCard grid\n"
-        MESSAGE+="  ➤ New Website link to sealplus.in\n"
-        MESSAGE+="  ➤ Auto-Update standalone Card toggle\n\n"
-        MESSAGE+="<b>🔌 Accompanist → Platform API Migration</b>\n"
-        MESSAGE+="  ➤ Permissions replaced with ActivityResultContracts\n"
-        MESSAGE+="  ➤ WebView replaced with platform AndroidView\n"
-        MESSAGE+="  ➤ Pager indicators replaced with custom Row+Box dots\n"
-        MESSAGE+="  ➤ Entire accompanist dependency removed\n\n"
-        MESSAGE+="<b>📦 Bulk Dependency Update</b>\n"
-        MESSAGE+="  ➤ Gradle 9.5.1 &amp; AGP 9.2.1 (was 8.13 / 8.13.2)\n"
-        MESSAGE+="  ➤ Kotlin 2.3.21 with K2 Compiler (was 2.0.21)\n"
-        MESSAGE+="  ➤ Compose BOM 2026.05.01 (was 2025.01.00)\n"
-        MESSAGE+="  ➤ Coil 3.4.0 — migrated from Coil 2 to Coil 3\n"
-        MESSAGE+="  ➤ Android SDK 37 — compileSdk/targetSdk upgraded\n"
-        MESSAGE+="  ➤ Room 2.8.4, Koin 4.2.1, MMKV 1.3.16, Coroutines 1.11.0\n\n"
-        MESSAGE+="<b>🐛 Bug Fixes &amp; Stability</b>\n"
-        MESSAGE+="  ➤ LockScreen biometric prompt — repeated prompt prevention\n"
-        MESSAGE+="  ➤ LockScreen deferred until after onboarding completes\n"
-        MESSAGE+="  ➤ QuickDownloadActivity — early return crash fix\n"
-        MESSAGE+="  ➤ DownloaderV2 network callback cleanup on crash/memory\n"
-        MESSAGE+="  ➤ SponsorUtil OkHttpClient leak fix (per-call client)\n"
-        MESSAGE+="  ➤ DatabaseUtil destructive migration fallback\n"
-        MESSAGE+="  ➤ UpdateUtil checkForUpdate made safe with IO dispatcher\n\n"
-        MESSAGE+="<b>🌍 Website Redesign &amp; SEO Overhaul</b>\n"
-        MESSAGE+="  ➤ Complete sealplus.in redesign with new sections\n"
-        MESSAGE+="  ➤ New support.html (UPI, PayPal, GitHub Sponsors)\n"
-        MESSAGE+="  ➤ New contact.html (Formspree form)\n"
-        MESSAGE+="  ➤ Updated sitemap, privacy, OG tags, CSS redesign\n\n"
+MESSAGE+="📋 <b>Changelog (v2.9):</b>\n\n"
+        MESSAGE+="<b>🍪 Manual Cookie Paste Dialog</b>\n"
+        MESSAGE+="  ➤ Paste cookies in 3 formats: Netscape, JSON, Cookie Header\n"
+        MESSAGE+="  ➤ Import from clipboard or from local file\n"
+        MESSAGE+="  ➤ Smart validation — confirm disabled until valid URL + non-empty text\n"
+        MESSAGE+="  ➤ Manual cookies take priority over browser cookies\n\n"
+        MESSAGE+="<b>⚠️ Account Ban Warning</b>\n"
+        MESSAGE+="  ➤ Warning callout for Facebook/Instagram personal cookies\n"
+        MESSAGE+="  ➤ Recommends using throwaway/secondary account\n\n"
+        MESSAGE+="<b>🛡️ Anti-Bot Detection (Meta Login)</b>\n"
+        MESSAGE+="  ➤ Two-layer bypass: Sec-CH-UA header spoofing + JS shims\n"
+        MESSAGE+="  ➤ Hides WebView identity from Facebook/Instagram\n\n"
+        MESSAGE+="<b>🔄 Multi-Window Popups</b>\n"
+        MESSAGE+="  ➤ Login popups render as closeable overlay inside app\n"
+        MESSAGE+="  ➤ Back button: popup → navigate → dismiss\n\n"
+        MESSAGE+="<b>🔐 Cookie Management Rewrite</b>\n"
+        MESSAGE+="  ➤ SQLite → CookieManager.getCookie() API\n"
+        MESSAGE+="  ➤ HttpOnly tracking, expired cookies auto-skipped\n"
+        MESSAGE+="  ➤ Auto-refresh on screen resume, deduplication\n\n"
+        MESSAGE+="<b>📄 Download Documentation</b>\n"
+        MESSAGE+="  ➤ Save video metadata (title, date, URL, tags, description) as .txt\n"
+        MESSAGE+="  ➤ Saved to SealPlus/docs/ after download\n\n"
+        MESSAGE+="<b>🔧 Download Resilience</b>\n"
+        MESSAGE+="  ➤ Retry settings: 10 retries, 3 extractor retries, exponential backoff\n"
+        MESSAGE+="  ➤ Socket timeout 5s→15s, info-probe retries 1→3\n"
+        MESSAGE+="  ➤ Aria2c protocol scoping, concurrent fragments support\n\n"
+        MESSAGE+="<b>🎬 Format Selection</b>\n"
+        MESSAGE+="  ➤ MP4-only filter (default on)\n"
+        MESSAGE+="  ➤ Coil 3 OkHttp with desktop Chrome UA for thumbnails\n"
+        MESSAGE+="  ➤ Implausible size filter for unrealistic bitrates\n\n"
+        MESSAGE+="<b>🎨 UI Polish</b>\n"
+        MESSAGE+="  ➤ Download dialog V2: pill FilterChips, FlowRow, animated sections\n"
+        MESSAGE+="  ➤ Battery: OEM detection for 8 brands, persistent dismissal\n"
+        MESSAGE+="  ➤ Xiaomi HyperOS/MIUI battery intent targets\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="✨ <b>Key Features (v2.8):</b>\n"
-        MESSAGE+="🎨 Settings &amp; About Redesign — card-based grid with chevron navigation\n"
-        MESSAGE+="🔌 Accompanist Removed — fully migrated to platform APIs\n"
-        MESSAGE+="📦 Bulk Dependency Update — Gradle 9.5.1, Kotlin 2.3.21, Compose 2026.05\n"
-        MESSAGE+="🐛 Bug Fixes — biometric, memory leaks, crash fixes\n"
-        MESSAGE+="🌐 Website Overhaul — new pages, SEO, glassmorphism design\n"
-        MESSAGE+="⏯️ Pause/Resume with queue — continue interrupted downloads\n"
-        MESSAGE+="🌐 1000+ sites via yt-dlp — YouTube, TikTok, Instagram, and more\n\n"
+        MESSAGE+="✨ <b>Key Features (v2.9):</b>\n"
+        MESSAGE+="🍪 Manual Cookie Paste — 3 formats, clipboard/file import\n"
+        MESSAGE+="⚠️ Account Ban Warning — safety notice for personal cookies\n"
+        MESSAGE+="🛡️ Anti-Bot Detection — two-layer Meta login bypass\n"
+        MESSAGE+="🔄 Multi-Window Popups — login popups inside app\n"
+        MESSAGE+="🔐 Cookie Rewrite — HttpOnly, expiry, auto-refresh\n"
+        MESSAGE+="📄 Download Docs — save video metadata as .txt\n"
+        MESSAGE+="🔧 Download Resilience — retry settings, backoff, timeouts\n"
+        MESSAGE+="🎬 MP4-Only Filter — filter formats by compatibility\n"
+        MESSAGE+="🎨 Download Dialog Redesign — pill chips, animated sections\n"
+        MESSAGE+="🔋 Battery Optimization — OEM-specific, persistent dismiss\n"
+        MESSAGE+="🌐 1000+ sites via yt-dlp — YouTube, TikTok, Instagram\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📦 <b>Available APKs:</b>\n"
-        MESSAGE+="  ➤ Universal (All devices)\n"
-        MESSAGE+="  ➤ arm64-v8a (Modern phones)\n"
-        MESSAGE+="  ➤ armeabi-v7a (Older phones)\n"
-        MESSAGE+="  ➤ x86_64 / x86 (Tablets)\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="🔗 <b>Download Now:</b>\n"
-        MESSAGE+="<a href=\"${RELEASE_URL}\">Click here to download v${{ steps.version.outputs.VERSION }}</a>\n\n"
-        MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="💡 <b>Note:</b> v2.8 brings a complete Settings &amp; About page redesign, migration from Accompanist to platform APIs, bulk dependency updates (Gradle 9.5.1, Kotlin 2.3.21, Compose BOM 2026.05), critical bug fixes for biometric/crashes/memory leaks, and a full website overhaul with support/contact pages.\n\n"
+        MESSAGE+="💡 <b>Note:</b> v2.9 brings a full Cookies &amp; WebView overhaul with manual cookie paste dialog supporting 3 formats, two-layer anti-bot detection for Meta login pages, multi-window popup support, a rewritten cookie management system (SQLite→CookieManager API, HttpOnly/expiry), Download Documentation feature, enhanced download resilience with exponential backoff, MP4-only format filter, redesigned Download Dialog V2, and OEM-specific battery optimization.\n\n"
         MESSAGE+="🕐 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues

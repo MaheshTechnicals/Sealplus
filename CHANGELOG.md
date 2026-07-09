@@ -5,7 +5,100 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.8.0] - 2026-06-11
+## [2.9.0] - 2026-07-09
+
+### 🍪 Manual Cookie Paste Dialog
+
+* **Full Cookie Paste Interface** — Brand new `ManualCookieInputDialog` that lets you paste cookies directly into any profile without using the in-app browser
+* **Three Format Support** — Automatically detects and parses Netscape (.txt), JSON (Cookie-Editor / EditThisCookie), and standard Cookie Header (name=value) formats
+* **Import Options** — Paste from clipboard with one tap, or import from a .txt / .json file on your device using the system file picker
+* **Live Cookie Count** — Character counter on the input field shows exactly how much data you've pasted
+* **Format Chips** — Visual assist chips (Netscape / JSON / name=value) show supported formats at a glance
+* **Clear Action** — Trash icon button clears the field instantly, only shown when content exists
+* **Smart Validation** — Confirm button stays disabled until a valid URL and non-empty cookie text are entered
+* **Icon Badge** — Modern circular badge with primary container color replaces the plain icon for a polished look
+* **Priority Over Browser Cookies** — Profiles with manually pasted cookies are used first, skipping CookieManager entirely
+
+### ⚠️ Facebook/Instagram Account Ban Warning
+
+* **Safety Notice** — A prominent red warning callout (errorContainer background with WarningAmber icon) is displayed inside the paste dialog
+* **Clear Message** — Warns that using your personal Facebook or Instagram account cookies may get the account banned
+* **Recommendation** — Strongly advises using a throwaway or secondary account for downloading
+
+### 🛡️ Anti-Bot Detection for Meta Login Pages
+
+* **Two-Layer Bypass** — Implements a sophisticated two-layer approach to bypass Meta's (Facebook/Instagram) bot detection:
+  + **Layer 1 (Sec-CH-UA Header)**: Uses `UserAgentMetadata` API (WebView 112+) to rewrite the User-Agent client hints — replaces "Android WebView" brand with "Google Chrome" while preserving version numbers, preventing server-side detection via `Sec-CH-UA` headers
+  + **Layer 2 (JavaScript Runtime)**: Injects an `ANTI_DETECTION_SCRIPT` via `DocumentStartScript` API that shims `window.chrome` with full mock objects (`app`, `runtime`, `loadTimes`, `csi`), sets `navigator.webdriver = false`, patches `navigator.languages`, and overrides `navigator.userAgentData.brands` as a JS fallback
+* **Fallback Support** — On older WebView versions without `DocumentStartScript`, the script is injected via `onPageStarted` callback
+* **Transparent Background** — WebView background changed to transparent to prevent white flashes on dark-themed sites
+
+### 🔄 Multi-Window Popup Support for Login Flows
+
+* **Popup Window Handling** — WebView now supports `window.open()` and `target="_blank"` popups via `setSupportMultipleWindows(true)` and `WebChromeClient.onCreateWindow`
+* **Popup Overlay** — Popups render inside the app as a closeable overlay with its own `WebView`, keeping you in the login flow
+* **Back Button Priority** — Back press closes popup first, then navigates the main WebView back, then dismisses the page
+* **Cookie Sync** — Cookies are flushed on every `onPageFinished` and before navigation, ensuring login state is preserved
+
+### 🔐 Cookie Management & Database Rewrite
+
+* **Cookie Storage Rewrite** — Cookie reading completely rewritten from direct SQLite database access to `CookieManager.getCookie()` API, eliminating database path issues across Android versions
+* **HttpOnly & Expiry Support** — `Cookie` data class now tracks `isHttpOnly` flag and expiry timestamps; expired cookies are automatically skipped
+* **Chromium Timestamp Conversion** — Added `chromiumTimeToUnixTimestamp()` for accurate expiry comparison
+* **Lifecycle Auto-Refresh** — Cookies now refresh automatically every time the screen resumes (ON_RESUME lifecycle event), using `LaunchedEffect(cookieRefreshKey)` instead of the old `DisposableEffect(shouldUpdateCookies)` pattern
+* **Cross-Profile Deduplication** — Cookie list deduplicates by `domain|name` via HashSet when reading from multiple profiles
+* **Crash-Proof Startup** — Cookie file write at startup wrapped in `runCatching` to prevent disk-full crashes
+* **Manifest Update** — Added `<queries>` block with OEM package declarations for Android 11+ package visibility compliance
+
+### 📄 Download Documentation Feature
+
+* **Save Video Metadata as Text** — New "Download Docs" option that saves video title, uploader, upload date, duration, source URL, tags, and full description as a `.txt` file alongside your download
+* **Automatic Workflow** — After download completes, `DownloadUtils.writeDocsTextFile()` creates the file in a `SealPlus/docs/` subdirectory and shows a success toast
+* **Smart Toggle** — Toggle available in both DownloadDialogV2 and FormatPage; when enabled without selecting a format, tapping download directly saves docs without a video file
+* **Format Reset** — Suggested format selection resets automatically when docs mode is switched on/off
+* **Format Page Integration** — FormatConfig.downloadDocs flag, FilterChip toggle, overridePreferences passed to TaskFactory
+* **Persistence Removed** — Download docs toggle is session-only (defaults to false each time), keeping the dialog clean
+
+### 🔧 Download Resilience & Retry
+
+* **Enhanced Retry Settings** — New `enableRetryOptions()` extension on `YoutubeDLRequest` adds comprehensive retry configuration:
+  + `--retries=10`, `--fragment-retries=10`, `--extractor-retries=3`, `--file-access-retries=3`
+* **Exponential Backoff** — `--retry-sleep` uses HTTP exponential backoff `exp=1:120` and fragment-level backoff `exp=1:60` to prevent HTTP-429 rate-limit escalation
+* **Extended Timeouts** — Info-probe socket timeout increased from 5s to 15s; retry limit increased from 1 to 3
+* **Aria2c Protocol Scoping** — `--downloader` scoped to `http,https,ftp,ftps:libaria2c.so` instead of all protocols, improving compatibility
+* **External Downloader Args** — Added `--file-allocation=none`, `--max-tries=5`, `--retry-wait=2`, `--console-log-level=warn` for more reliable aria2c operation
+* **Concurrent Fragments** — `--concurrent-fragments` now works alongside aria2c when `concurrentFragments > 1`
+* **Network Availability Check** — FormatPage verifies network connectivity before allowing download to proceed
+
+### 🎬 Format Selection Improvements
+
+* **MP4-Only Filter** — New toggle that filters the format list to show only MP4-compatible formats (video: `mp4`, audio: `m4a`); enabled by default, gracefully falls back to unfiltered list if filtering would leave nothing
+* **Coil 3 OkHttp Network Fetcher** — Integrated `OkHttpNetworkFetcherFactory` for Coil 3 with a desktop Chrome 124 User-Agent interceptor, improving thumbnail and artwork loading reliability
+* **Implausible Size Filtering** — New `FormatValidator.filterImplausibleVideoSizes()` removes formats with unrealistically low bitrates for their resolution (e.g., 4K < 1500 kbps), with per-format debug logging
+
+### 🎨 UI Polish
+
+* **Download Dialog V2 Redesign**
+  + `ConfigurePage` now uses `verticalScroll` with `windowInsetsPadding` for proper keyboard handling
+  + Section titles upgraded to `Text` with `labelLarge`/`primary` styling replacing `DrawerSheetSubtitle`
+  + `FilterChip` components redesigned with `RoundedCornerShape(50dp)` and 36dp height for modern pill shape
+  + `FlowRow` used for additional settings, max 3 items per row with 8dp spacing
+  + `ExpandableTitle` converted to animated `Surface` card with `surfaceContainerLow`, 12dp rounded corners, and animated rotation arrow
+  + `SingleChoiceItem` redesigned with `primaryContainer` selection, circular check icon, semi-bold title font
+  + `DownloadTypeSelectionGroup` uses `SingleChoiceSegmentedButtonRow` for 3-type selection
+  + `ActionButtons` converted to `Row` with weighted cancel (1f) and action (2f) buttons, both pill-shaped 50dp
+  + Removed unused Cancel icon from action buttons; cancel text constrained to single line
+
+* **Battery Optimization Dialog**
+  + Centralized in new `BatteryUtil` object with OEM-specific detection for 8 manufacturers (OPPO, Realme, Xiaomi, Vivo, Huawei, Samsung, Motorola, Nothing)
+  + OEM-specific intent builders for battery settings (MIUI/HyperOS power keeper, OPPO/ColorOS, Vivo/iQOO, Huawei/Honor, Samsung)
+  + `isIgnoringViaAppOps()` checks both PowerManager and AppOps for accurate detection
+  + Xiaomi-specific: early return `false` because MIUI/HyperOS reports false positives; added HyperOS/MIUI 16+ and MIUI 12-15 intent targets
+  + Dialog dismissal now persisted via `BATTERY_DIALOG_DISMISSED` preference — once dismissed, dialog won't show again
+  + Dynamic OEM-specific description text loaded via `BatteryUtil.getBatterySettingsDescResId()`
+  + Updated Xiaomi battery settings instructions in strings with MIUI/HyperOS-specific steps
+
+---
 
 ### 🎨 Settings & About Page Redesign
 

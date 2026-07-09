@@ -172,77 +172,122 @@ English
 ## ⬇️ Download & Installation
 
 
-### 🚀 What's New in v2.8?
+### 🚀 What's New in v2.9?
 
 <details open>
-<summary><b>📱 Click to see latest updates - Settings/About Redesign, Dependency Overhaul, Website Redesign (June 11, 2026)</b></summary>
+<summary><b>📱 Click to see latest updates - Cookies Overhaul, Download Docs, Anti-Bot Detection, MP4 Filter (July 9, 2026)</b></summary>
 
-## ✨ Seal Plus v2.8.0 - Settings & About Redesign, Bulk Dependency Update, Website & SEO Overhaul
-
----
-
-### 🎨 Settings & About Page Redesign
-
-* **Full-Width Settings LazyColumn Layout**
-  + Settings page redesigned with `PreferenceItem` + trailing chevron icons throughout
-  + Visual grouping with spacers between Download → Customization → Extras sections
-  + Prominent sponsor card with `primaryContainer` color pairing
-
-* **Card-Based About Page Redesign**
-  + 2-column grid of `CommunityCard` components — Website, Release, Sponsor, Telegram, YouTube, Credits
-  + Auto-Update toggle as standalone Card with Switch control
-  + Version & package name footer caption
-  + Website link to sealplus.in
-
-### 🔌 Accompanist → Platform API Migration
-
-* Replaced accompanist-permissions with `ActivityResultContracts.RequestPermission`
-* Replaced accompanist-webview with platform `AndroidView` + `WebView`
-* Replaced accompanist-pager-indicators with custom `Row` + `Box` dots
-* Removed entire accompanist dependency bundle
-
-### 📦 Bulk Dependency Update
-
-* **Gradle 9.5.1 & AGP 9.2.1** — Upgraded from 8.13
-* **Kotlin 2.3.21** with K2 Compiler — Upgraded from 2.0.21
-* **Compose BOM 2026.05.01** — Upgraded from 2025.01.00
-* **Coil 3.4.0** — Migrated from Coil 2 to Coil 3 (`io.coil-kt.coil3`)
-* **Android SDK 37** — compileSdk/targetSdk upgraded to 37
-* **Room 2.8.4, Koin 4.2.1, MMKV 1.3.16, Coroutines 1.11.0** — All bumped
-
-### 🐛 Bug Fixes & Stability
-
-* LockScreen biometric prompt fixed — prevents repeated prompts and crashes on recomposition
-* LockScreen now deferred until after onboarding completes
-* QuickDownloadActivity early return fix for finishing activity
-* DownloaderV2 network callback properly cleaned up on crash and low memory
-* SponsorUtil OkHttpClient leak fixed — per-call client instead of singleton
-* DatabaseUtil destructive migration fallback added
-* UpdateUtil checkForUpdate made safe with `Dispatchers.IO` + `runCatching`
-
-### 🌍 Website Redesign & SEO Overhaul
-
-* Complete sealplus.in redesign with new hero, support CTA, install guide, comparison table, FAQ
-* New support.html page (UPI, PayPal, GitHub Sponsors donations)
-* New contact.html page (Formspree contact form)
-* Updated sitemap.xml, privacy.html, and OG tags
-* Complete CSS rewrite with glassmorphism design system
+## ✨ Seal Plus v2.9.0 - Cookies Overhaul, Download Documentation, Anti-Bot Detection, MP4 Filter
 
 ---
 
-### ✨ Key Features (v2.8)
+### 🍪 Manual Cookie Paste Dialog
 
-* 🎨 **Settings & About Redesign** - Card-based layout with grid and chevron navigation
-* 🔌 **Accompanist Removed** - Fully migrated to platform APIs
-* 📦 **Bulk Dependency Update** - Gradle 9.5.1, Kotlin 2.3.21, Compose BOM 2026.05
-* 🐛 **Bug Fixes** - Biometric, memory leaks, crash on finishing activity
-* 🌐 **Website Overhaul** - New pages, SEO, glassmorphism design
-* ⏯️ **Pause/Resume downloads** with queue support
+* **Full Cookie Paste Interface** — New dialog to paste cookies manually in Netscape (.txt), JSON (Cookie-Editor), or Cookie Header (name=value) format
+* **Import** — Paste from clipboard or import from a .txt/.json file on your device
+* **Smart Validation** — Confirm button stays disabled until valid URL and non-empty cookie text are entered
+* **Priority** — Manually pasted cookies take priority over browser-generated cookies
+
+### ⚠️ Facebook/Instagram Account Ban Warning
+
+* **Safety Notice** — Red warning callout inside the paste dialog warns that using personal account cookies may get the account banned
+* **Recommendation** — Advises using a throwaway or secondary account for downloading
+
+### 🛡️ Anti-Bot Detection for Meta Login Pages
+
+* **Two-Layer Bypass** — Combines User-Agent client hint spoofing (Sec-CH-UA header) with JavaScript runtime shims to bypass Meta's bot detection
+* **Layer 1** — Rewrites "Android WebView" brand to "Google Chrome" in Sec-CH-UA headers via `UserAgentMetadata` API
+* **Layer 2** — Injects anti-detection script shimming `window.chrome`, disabling `navigator.webdriver`, patching `userAgentData.brands`
+
+### 🔄 Multi-Window Popup Support
+
+* **Login Popups** — `window.open()` and `target="_blank"` popups render inside the app as a closeable overlay
+* **Back Button** — Closes popup first, then navigates back, then dismisses page
+
+### 🔐 Cookie Management Rewrite
+
+* **Storage Rewrite** — Cookie reading switched from direct SQLite to `CookieManager.getCookie()` API
+* **HttpOnly & Expiry** — Cookie data class tracks `isHttpOnly` and expiry; expired cookies automatically skipped
+* **Auto-Refresh** — Cookies refresh automatically when screen resumes via lifecycle observer
+* **Deduplication** — Cross-profile cookie deduplication by `domain|name`
+
+### 📄 Download Documentation Feature
+
+* **Save Video Metadata** — New "Download Docs" option saves title, uploader, date, duration, URL, tags, and description as a .txt file
+* **Automatic** — File saved to `SealPlus/docs/` after download completes with success toast
+* **Smart Toggle** — Enable without selecting a format to save docs only (no video download)
+
+### 🔧 Download Resilience & Retry
+
+* **Enhanced Retry Settings** — `--retries=10`, `--fragment-retries=10`, `--extractor-retries=3`, `--file-access-retries=3`
+* **Exponential Backoff** — HTTP backoff `exp=1:120`, fragment backoff `exp=1:60` to prevent rate-limit issues
+* **Extended Timeouts** — Socket timeout 5s→15s, info-probe retries 1→3
+* **Aria2c Improvements** — Protocol scoping, `--file-allocation=none`, `--max-tries=5`, `--retry-wait=2`
+* **Concurrent Fragments** — Now works alongside aria2c
+
+### 🎬 Format Selection
+
+* **MP4-Only Filter** — Toggle to show only MP4 (video) / M4A (audio) formats; enabled by default
+* **Coil 3 OkHttp** — Desktop Chrome User-Agent for reliable thumbnail loading
+* **Implausible Size Filter** — Auto-removes formats with unrealistically low bitrates for their resolution
+
+### 🎨 UI Polish
+
+* **Download Dialog V2 Redesign** — `verticalScroll` layout, pill-shaped FilterChips (50dp), FlowRow additional settings, animated ExpandableTitle, redesigned SingleChoiceItem with check icons, segmented button download type selector, weighted action buttons
+* **Battery Optimization** — OEM-specific detection for 8 manufacturers, manufacturer-specific intent builders, dialog dismissal persisted permanently, Xiaomi HyperOS/MIUI targets added
+
+---
+
+### ✨ Key Features (v2.9)
+
+* 🍪 **Manual Cookie Paste** - Paste cookies in 3 formats, import from clipboard/file
+* ⚠️ **Account Ban Warning** - Safety notice for Facebook/Instagram cookies
+* 🛡️ **Anti-Bot Detection** - Two-layer bypass for Meta login pages
+* 🔄 **Multi-Window Popups** - Login popups handled inside the app
+* 🔐 **Cookie Management Rewrite** - HttpOnly/expiry, auto-refresh, deduplication
+* 📄 **Download Docs** - Save video metadata as text file
+* 🔧 **Download Resilience** - Retry settings, exponential backoff, extended timeouts
+* 🎬 **MP4-Only Filter** - Filter formats by MP4 compatibility
+* 🎨 **Download Dialog Redesign** - Modern pill chips, animated sections
+* 🔋 **Battery Optimization** - OEM-specific handling, persistent dismissal
+* 🔄 **Retry failed downloads** - One-click recovery for failed downloads
 * 🌐 Download from 1000+ sites via yt-dlp
 
 ### 📜 Full Changelog
 
 See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
+
+</details>
+
+<details>
+<summary><b>📱 Previous Release - v2.8 (June 11, 2026)</b></summary>
+
+#### ✨ Seal Plus v2.8.0 - Settings & About Redesign, Dependency Overhaul, Website Redesign
+
+#### 🎨 Settings & About Page Redesign
+- ✅ **Full-Width Settings LazyColumn** - PreferenceItem + chevron icons throughout
+- ✅ **Card-Based About Page** - 2-column CommunityCard grid
+- ✅ **Website link** to sealplus.in, Auto-Update standalone Card
+
+#### 🔌 Accompanist → Platform API Migration
+- ✅ **Permissions** replaced with ActivityResultContracts
+- ✅ **WebView** replaced with platform AndroidView
+- ✅ **Entire accompanist** dependency bundle removed
+
+#### 📦 Bulk Dependency Update
+- ✅ **Gradle 9.5.1 & AGP 9.2.1** - Upgraded from 8.13
+- ✅ **Kotlin 2.3.21** with K2 Compiler, Compose BOM 2026.05
+- ✅ **Coil 3.4.0** - Migrated from Coil 2 to Coil 3
+- ✅ **Android SDK 37** - compileSdk/targetSdk upgraded
+
+#### 🐛 Bug Fixes & Stability
+- ✅ LockScreen biometric prompt fixed, crash fixes
+- ✅ Memory leak fixes in DownloaderV2 and SponsorUtil
+
+#### 🌍 Website Redesign & SEO Overhaul
+- ✅ New support/contact pages, glassmorphism design
+
+[View Full Changelog →](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md)
 
 </details>
 
@@ -424,17 +469,19 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 ### 🚀 Latest Releases
 
 - **Latest Stable**: [Download from GitHub Releases](https://github.com/MaheshTechnicals/Sealplus/releases/latest)
-  - ✅ **Current Version**: v2.8.0 (June 2026)
-  - 🎨 **Settings & About Redesign** - Card-based grid layout with chevron navigation
-  - 🔌 **Accompanist Removed** - Fully migrated to platform APIs (Permissions, WebView, Pager)
-  - 📦 **Bulk Dependency Update** - Gradle 9.5.1, Kotlin 2.3.21, AGP 9.2.1, Compose BOM 2026.05
-  - 🔄 **Coil 3 Migration** - Upgraded from Coil 2 to Coil 3 (io.coil-kt.coil3)
-  - 📱 **Android SDK 37** - compileSdk/targetSdk upgraded to Android 17
-  - 🐛 **LockScreen & Crash Fixes** - Biometric prompt stability, finishing activity crash
-  - 🧹 **Memory Leak Fixes** - DownloaderV2 callback cleanup, SponsorUtil OkHttpClient leak
-  - 🌐 **Website Redesign** - New support/contact pages, glassmorphism design, SEO overhaul
-  - ⏯️ **Pause/Resume Downloads** - Full download control with queue
+  - ✅ **Current Version**: v2.9.0 (July 2026)
+  - 🍪 **Manual Cookie Paste** - Paste cookies in 3 formats, import from clipboard/file
+  - ⚠️ **Account Ban Warning** - Safety notice for Facebook/Instagram personal cookies
+  - 🛡️ **Anti-Bot Detection** - Two-layer bypass for Meta login pages
+  - 🔄 **Multi-Window Popups** - Login popups handled inside the app
+  - 🔐 **Cookie Management Rewrite** - HttpOnly/expiry, auto-refresh, deduplication
+  - 📄 **Download Docs** - Save video metadata as text file alongside downloads
+  - 🔧 **Download Resilience** - Retry settings, exponential backoff, extended timeouts
+  - 🎬 **MP4-Only Filter** - Filter formats by MP4 compatibility
+  - 🎨 **Download Dialog Redesign** - Modern pill chips, animated sections
+  - 🔋 **Battery Optimization** - OEM-specific detection, persistent dismissal
   - 🌐 **1000+ Sites** - Download from YouTube, Instagram, TikTok & more
+  - 🔄 **Retry failed downloads** - One-click recovery for canceled/failed downloads
   - 🚀 **Auto-Update System** enabled for seamless updates
 
 - **Preview Builds**: [Download Pre-release Versions](https://github.com/MaheshTechnicals/Sealplus/releases) 
@@ -448,8 +495,8 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 |------------|---------------|
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target Android** | Android 17 (API 37) |
-| **Current Version** | 2.8.0 |
-| **Release Date** | June 11, 2026 |
+| **Current Version** | 2.9.0 |
+| **Release Date** | July 9, 2026 |
 
 ### 🏗️ Architecture Support
 
