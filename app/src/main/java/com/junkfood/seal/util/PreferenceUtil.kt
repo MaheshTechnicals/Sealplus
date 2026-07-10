@@ -122,6 +122,9 @@ const val MERGE_OUTPUT_MKV = "merge_to_mkv"
 const val USE_CUSTOM_AUDIO_PRESET = "custom_audio_preset"
 
 const val MERGE_MULTI_AUDIO_STREAM = "multi_audio_stream"
+const val SELECTED_AUDIO_LANGUAGES = "selected_audio_languages"
+const val DOWNLOAD_ALL_AUDIO_TRACKS = "download_all_audio_tracks"
+
 
 const val DOWNLOAD_TYPE_INITIALIZATION = "download_type_init"
 private const val DOWNLOAD_TYPE = "download_type"

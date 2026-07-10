@@ -24,6 +24,8 @@ object TaskFactory {
         newTitle: String,
         selectedSubtitles: List<String>,
         selectedAutoCaptions: List<String>,
+        selectedAudioLanguages: List<String> = emptyList(),
+        downloadAllAudio: Boolean = false,
         overridePreferences: DownloadPreferences? = null,
     ): TaskWithState {
         val fileSize =
@@ -39,8 +41,25 @@ object TaskFactory {
         val audioOnlyFormats = formatList.filter { it.isAudioOnly() }
         val videoFormats = formatList.filter { it.containsVideo() }
         val audioOnly = audioOnlyFormats.isNotEmpty() && videoFormats.isEmpty()
-        val mergeAudioStream = audioOnlyFormats.size > 1
-        val formatId = formatList.joinToString(separator = "+") { it.formatId.toString() }
+
+        // Multi-audio: when specific languages selected or all audio requested, build language-filtered format
+        val hasMultiAudio = selectedAudioLanguages.isNotEmpty() || downloadAllAudio
+        val mergeAudioStream = when {
+            hasMultiAudio -> true
+            else -> audioOnlyFormats.size > 1
+        }
+        val formatId = when {
+            downloadAllAudio -> formatList.joinToString(separator = "+") { it.formatId.toString() }
+            selectedAudioLanguages.isNotEmpty() && videoFormats.isNotEmpty() -> {
+                // Build format string with language-filtered audio
+                val videoIds = videoFormats.joinToString("+") { it.formatId.toString() }
+                val audioParts = selectedAudioLanguages.joinToString("+") { lang ->
+                    "ba[language=$lang]"
+                }
+                "$videoIds+$audioParts"
+            }
+            else -> formatList.joinToString(separator = "+") { it.formatId.toString() }
+        }
         
         // Check if we're merging video and audio (common for high-quality downloads)
         val isMergingVideoAudio = videoFormats.isNotEmpty() && audioOnlyFormats.isNotEmpty()
@@ -62,7 +81,9 @@ object TaskFactory {
                         newTitle = newTitle,
                         mergeAudioStream = mergeAudioStream,
                         extractAudio = extractAudio || audioOnly,
-                        mergeToMkv = shouldUseMp4,
+                        mergeToMkv = if (hasMultiAudio) true else shouldUseMp4,
+                        selectedAudioLanguages = selectedAudioLanguages,
+                        downloadAllAudio = downloadAllAudio,
                     )
                 }
                 .run {

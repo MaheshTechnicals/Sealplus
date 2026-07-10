@@ -417,6 +417,8 @@ object DownloadUtil {
         val mergeAudioStream: Boolean,
         val mergeToMkv: Boolean,
         val downloadDocs: Boolean = false,
+        val selectedAudioLanguages: List<String> = emptyList(),
+        val downloadAllAudio: Boolean = false,
     ) {
         companion object {
             val EMPTY =
@@ -474,6 +476,8 @@ object DownloadUtil {
                     mergeToMkv = false,
                     useCustomAudioPreset = false,
                     downloadDocs = false,
+                    selectedAudioLanguages = emptyList(),
+                    downloadAllAudio = false,
                 )
 
             fun createFromPreferences(): DownloadPreferences {
@@ -544,6 +548,12 @@ object DownloadUtil {
                     mergeAudioStream = false,
                     mergeToMkv =
                         (downloadSubtitle && embedSubtitle) || MERGE_OUTPUT_MKV.getBoolean(),
+                    selectedAudioLanguages =
+                        SELECTED_AUDIO_LANGUAGES.getString()
+                            .split(",")
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() },
+                    downloadAllAudio = DOWNLOAD_ALL_AUDIO_TRACKS.getBoolean(),
                 )
             }
         }
@@ -810,18 +820,41 @@ object DownloadUtil {
                 addOption("--add-metadata")
                 addOption("--no-embed-info-json")
                 if (formatIdString.isNotEmpty()) {
-                    addOption("-f", formatIdString)
-                    if (mergeAudioStream) {
+                    if (downloadAllAudio) {
+                        // Download best video + ALL audio-only formats
+                        addOption("-f", "bv*+mergeall[vcodec=none]")
                         addOption("--audio-multistreams")
-                    }
-                    // When merging video+audio formats (e.g., 303+251), ensure MP4 output
-                    // This handles high-quality downloads that need audio merged
-                    if (!mergeToMkv && formatIdString.contains("+")) {
+                        addOption("--merge-output-format", "mkv")
+                        addOption("--remux-video", "mkv")
+                    } else if (selectedAudioLanguages.isNotEmpty()) {
+                        // Multi-audio: use video format IDs + language-filtered audio
                         val formatParts = formatIdString.split("+")
-                        if (formatParts.size >= 2) {
-                            // Multiple formats means we're merging - ensure MP4 output
-                            addOption("--remux-video", "mp4")
-                            addOption("--merge-output-format", "mp4")
+                        val videoIds = formatParts.filter { id ->
+                            // Keep formats that are not purely audio-only (could be combined or video-only)
+                            // We rely on format_id strings not starting with known audio-only patterns
+                            id.all { it.isDigit() || it == '.' } || !id.startsWith("ba")
+                        }.joinToString("+").ifEmpty { "bv*" }
+                        val audioParts = selectedAudioLanguages.joinToString("+") { lang ->
+                            "ba[language=$lang]"
+                        }
+                        addOption("-f", "$videoIds+$audioParts")
+                        addOption("--audio-multistreams")
+                        addOption("--merge-output-format", "mkv")
+                        addOption("--remux-video", "mkv")
+                    } else {
+                        addOption("-f", formatIdString)
+                        if (mergeAudioStream) {
+                            addOption("--audio-multistreams")
+                        }
+                        // When merging video+audio formats (e.g., 303+251), ensure MP4 output
+                        // This handles high-quality downloads that need audio merged
+                        if (!mergeToMkv && formatIdString.contains("+")) {
+                            val formatParts = formatIdString.split("+")
+                            if (formatParts.size >= 2) {
+                                // Multiple formats means we're merging - ensure MP4 output
+                                addOption("--remux-video", "mp4")
+                                addOption("--merge-output-format", "mp4")
+                            }
                         }
                     }
                 } else {

@@ -93,6 +93,8 @@ data class Format(
     val tbr: Double? = null,
     @SerialName("filesize") val fileSize: Double? = null,
     @SerialName("filesize_approx") val fileSizeApprox: Double? = null,
+    @SerialName("language") val language: String? = null,
+    @SerialName("language_display") val languageDisplay: String? = null,
 ) {
     fun isAudioOnly(): Boolean = vcodec == null || vcodec == "none"
 
@@ -116,6 +118,28 @@ data class Format(
      * Check if format has a valid, non-empty URL
      */
     fun hasValidUrl(): Boolean = !url.isNullOrBlank()
+
+    /**
+     * Returns a human-readable language label for display in the format selection UI.
+     */
+    fun getLanguageLabel(): String? =
+        languageDisplay ?: language?.let { lang ->
+            java.util.Locale(lang).displayName.takeIf { it != lang }
+        }
+
+    companion object {
+        /**
+         * Extracts unique audio languages from a list of audio-only formats.
+         * Returns a map of language code -> display name, sorted by display name.
+         */
+        fun extractAudioLanguages(formats: List<Format>): Map<String, String> {
+            return formats
+                .filter { it.isAudioOnly() && !it.language.isNullOrBlank() }
+                .distinctBy { it.language }
+                .sortedBy { it.languageDisplay ?: it.language }
+                .associate { it.language!! to (it.getLanguageLabel() ?: it.language!!) }
+        }
+    }
     
     /**
      * Get a human-readable resolution label
