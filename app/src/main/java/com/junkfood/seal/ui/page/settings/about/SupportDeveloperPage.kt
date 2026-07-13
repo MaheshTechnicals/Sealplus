@@ -42,6 +42,7 @@ private const val TAG = "SupportDeveloperPage"
 fun SupportDeveloperPage(
     onNavigateBack: () -> Unit,
     onNavigateToSponsors: () -> Unit = {},
+    onNavigateToCrypto: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
@@ -254,7 +255,7 @@ fun SupportDeveloperPage(
                 DonationOptionCard(
                     iconRes = R.drawable.google_pay,
                     title = "UPI Payment",
-                    description = "maheshtechnicals@apl",
+                    description = "MaheshTechnicals@idbi",
                     gradient = if (isDarkTheme && isGradientDark) {
                         GradientBrushes.Primary
                     } else {
@@ -268,7 +269,7 @@ fun SupportDeveloperPage(
                     onClick = {
                         openUpiPayment(
                             context = context,
-                            upiId = "maheshtechnicals@apl",
+                            upiId = "MaheshTechnicals@idbi",
                             name = "Mahesh Technicals",
                             note = "Support Seal Plus Development"
                         )
@@ -309,6 +310,22 @@ fun SupportDeveloperPage(
                     onClick = {
                         uriHandler.openUri("https://github.com/sponsors/MaheshTechnicals")
                     }
+                )
+            }
+            
+            // Crypto Currency
+            item {
+                DonationOptionCard(
+                    iconRes = R.drawable.bitcoin,
+                    title = "Crypto Currency",
+                    description = "Support via USDT (BEP20)",
+                    gradient = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFF7931A),
+                            Color(0xFFF9B24D)
+                        )
+                    ),
+                    onClick = { onNavigateToCrypto() }
                 )
             }
             

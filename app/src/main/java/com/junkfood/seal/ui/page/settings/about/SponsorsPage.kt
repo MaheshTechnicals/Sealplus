@@ -359,6 +359,7 @@ private fun sponsorMethodIconRes(method: String): Int? {
         "PAYPAL" -> R.drawable.paypal
         "COFEE" -> R.drawable.coffee_cup
         "GITHUB" -> R.drawable.github
+        "CRYPTO" -> R.drawable.bitcoin
         else -> null
     }
 }

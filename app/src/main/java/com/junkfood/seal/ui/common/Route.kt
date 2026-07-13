@@ -36,6 +36,7 @@ object Route {
     const val PROXY_SETTINGS = "proxy_settings"
     const val ONBOARDING = "onboarding"
     const val SUPPORT_DEVELOPER = "support_developer"
+    const val CRYPTO_DONATION = "crypto_donation"
     const val HIDDEN_CONTENT = "hidden_content"
     const val SPONSORS = "sponsors"
 

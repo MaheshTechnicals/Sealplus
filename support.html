@@ -352,10 +352,10 @@
             </div>
             <div class="method-label">UPI</div>
           </div>
-          <div class="method-value">maheshtechnicals@apl</div>
+          <div class="method-value">MaheshTechnicals@idbi</div>
           <div class="method-note">Works with any UPI app.</div>
           <div class="method-actions">
-            <a class="btn btn-primary" href="upi://pay?pa=maheshtechnicals@apl&pn=Mahesh%20Technicals" aria-label="Pay via UPI">
+            <a class="btn btn-primary" href="upi://pay?pa=MaheshTechnicals@idbi&pn=Mahesh%20Technicals" aria-label="Pay via UPI">
               Pay via UPI
             </a>
           </div>
@@ -390,6 +390,23 @@
             <a class="btn btn-primary" href="https://github.com/sponsors/MaheshTechnicals" target="_blank" rel="noopener" aria-label="Sponsor on GitHub">
               Sponsor on GitHub
             </a>
+          </div>
+        </div>
+
+        <div class="method-card">
+          <div class="method-header">
+            <div class="method-logo" style="background:#ffffff; padding:6px;">
+              <img src="site/assets/img/bitcoin.png" alt="Crypto logo" width="36" height="36" loading="lazy" />
+            </div>
+            <div class="method-label">Crypto</div>
+          </div>
+          <div class="method-value">USDT (BEP20)</div>
+          <div class="method-value" style="font-size:.85rem; color:var(--accent-cyan); word-break:break-all; margin-top:-6px;">0x8c857c0FaDc6B3d58678Af5F5A28905a75Cc0c16</div>
+          <div class="method-note">BNB Smart Chain only. Sending via other networks may result in permanent loss.</div>
+          <div class="method-actions">
+            <button class="btn btn-primary" onclick="navigator.clipboard.writeText('0x8c857c0FaDc6B3d58678Af5F5A28905a75Cc0c16').then(()=>{const t=this.innerText;this.innerText='Copied!';setTimeout(()=>this.innerText=t,2000)});" aria-label="Copy crypto address">
+              Copy Address
+            </button>
           </div>
         </div>
       </div>
