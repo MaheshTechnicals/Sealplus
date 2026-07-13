@@ -1401,6 +1401,21 @@ private fun FormatPageImpl(
                 showSubtitleSelectionDialog = false
             },
         )
+    if (showAudioLanguageSelection)
+        AudioLanguageSelectionDialog(
+            availableAudioLanguages = availableAudioLanguages,
+            selectedAudioLanguages = selectedAudioLanguages,
+            downloadAllAudioTracks = downloadAllAudioTracks,
+            onDismissRequest = { showAudioLanguageSelection = false },
+            onConfirm = { langs, allAudio ->
+                selectedAudioLanguages.run {
+                    clear()
+                    addAll(langs)
+                }
+                downloadAllAudioTracks = allAudio
+                showAudioLanguageSelection = false
+            },
+        )
 }
 
 @Composable
@@ -1430,6 +1445,65 @@ private fun RenameDialog(
                     label = { Text(text = stringResource(id = R.string.title)) },
                     trailingIcon = { if (filename == initialValue) ClearButton { filename = "" } },
                 )
+            }
+        },
+    )
+}
+
+@Composable
+private fun AudioLanguageSelectionDialog(
+    availableAudioLanguages: Map<String, String>,
+    selectedAudioLanguages: List<String>,
+    downloadAllAudioTracks: Boolean,
+    onDismissRequest: () -> Unit,
+    onConfirm: (langs: List<String>, allAudio: Boolean) -> Unit,
+) {
+    val selectedLangs = remember {
+        mutableStateListOf<String>().apply { addAll(selectedAudioLanguages) }
+    }
+    var allAudio by remember { mutableStateOf(downloadAllAudioTracks) }
+
+    SealDialog(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            ConfirmButton { onConfirm(selectedLangs, allAudio) }
+        },
+        dismissButton = { DismissButton { onDismissRequest() } },
+        title = { Text(text = stringResource(id = R.string.audio_language)) },
+        icon = { Icon(imageVector = Icons.Outlined.Subtitles, contentDescription = null) },
+        text = {
+            Column {
+                LazyColumn(contentPadding = PaddingValues(vertical = 12.dp)) {
+                    item {
+                        DialogCheckBoxItem(
+                            checked = allAudio,
+                            onValueChange = {
+                                allAudio = !allAudio
+                                if (allAudio) selectedLangs.clear()
+                            },
+                            text = stringResource(R.string.download_all_audio),
+                        )
+                    }
+                    for ((code, displayName) in availableAudioLanguages) {
+                        item(key = code) {
+                            DialogCheckBoxItem(
+                                modifier = Modifier.animateItem(),
+                                checked = selectedLangs.contains(code),
+                                onValueChange = {
+                                    if (selectedLangs.contains(code)) {
+                                        selectedLangs.remove(code)
+                                    } else {
+                                        allAudio = false
+                                        selectedLangs.add(code)
+                                    }
+                                },
+                                text = displayName,
+                            )
+                        }
+                    }
+                }
+                androidx.compose.material3.HorizontalDivider()
             }
         },
     )

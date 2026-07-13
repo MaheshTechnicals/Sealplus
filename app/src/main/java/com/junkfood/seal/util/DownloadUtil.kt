@@ -820,24 +820,10 @@ object DownloadUtil {
                 addOption("--add-metadata")
                 addOption("--no-embed-info-json")
                 if (formatIdString.isNotEmpty()) {
-                    if (downloadAllAudio) {
-                        // Download best video + ALL audio-only formats
-                        addOption("-f", "bv*+mergeall[vcodec=none]")
-                        addOption("--audio-multistreams")
-                        addOption("--merge-output-format", "mkv")
-                        addOption("--remux-video", "mkv")
-                    } else if (selectedAudioLanguages.isNotEmpty()) {
-                        // Multi-audio: use video format IDs + language-filtered audio
-                        val formatParts = formatIdString.split("+")
-                        val videoIds = formatParts.filter { id ->
-                            // Keep formats that are not purely audio-only (could be combined or video-only)
-                            // We rely on format_id strings not starting with known audio-only patterns
-                            id.all { it.isDigit() || it == '.' } || !id.startsWith("ba")
-                        }.joinToString("+").ifEmpty { "bv*" }
-                        val audioParts = selectedAudioLanguages.joinToString("+") { lang ->
-                            "ba[language=$lang]"
-                        }
-                        addOption("-f", "$videoIds+$audioParts")
+                    if (downloadAllAudio || selectedAudioLanguages.isNotEmpty()) {
+                        // Multi-audio: formatIdString already contains proper video+audio IDs
+                        // from TaskFactory (one best-quality audio per language)
+                        addOption("-f", formatIdString)
                         addOption("--audio-multistreams")
                         addOption("--merge-output-format", "mkv")
                         addOption("--remux-video", "mkv")

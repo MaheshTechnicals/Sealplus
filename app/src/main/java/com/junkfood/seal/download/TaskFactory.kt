@@ -5,6 +5,7 @@ import com.junkfood.seal.download.Task.DownloadState.Idle
 import com.junkfood.seal.download.Task.DownloadState.ReadyWithInfo
 import com.junkfood.seal.util.DownloadUtil.DownloadPreferences
 import com.junkfood.seal.util.Format
+import com.junkfood.seal.util.Format.Companion.getEffectiveLanguage
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.VideoClip
 import com.junkfood.seal.util.VideoInfo
@@ -42,6 +43,8 @@ object TaskFactory {
         val videoFormats = formatList.filter { it.containsVideo() }
         val audioOnly = audioOnlyFormats.isNotEmpty() && videoFormats.isEmpty()
 
+        fun Format.safeId(): String = formatId ?: ""
+
         // Multi-audio: when specific languages selected or all audio requested, build language-filtered format
         val hasMultiAudio = selectedAudioLanguages.isNotEmpty() || downloadAllAudio
         val mergeAudioStream = when {
@@ -49,16 +52,53 @@ object TaskFactory {
             else -> audioOnlyFormats.size > 1
         }
         val formatId = when {
-            downloadAllAudio -> formatList.joinToString(separator = "+") { it.formatId.toString() }
-            selectedAudioLanguages.isNotEmpty() && videoFormats.isNotEmpty() -> {
-                // Build format string with language-filtered audio
-                val videoIds = videoFormats.joinToString("+") { it.formatId.toString() }
-                val audioParts = selectedAudioLanguages.joinToString("+") { lang ->
-                    "ba[language=$lang]"
+            downloadAllAudio -> {
+                // Group ALL available audio-only formats by language, pick best quality per language
+                val allAudioFormats = videoInfo.formats
+                    ?.filter { it.isAudioOnly() && !it.formatId.isNullOrBlank() }
+                    ?: emptyList()
+                val audioByLanguage = allAudioFormats
+                    .mapNotNull { format ->
+                        val lang = (getEffectiveLanguage(format) ?: return@mapNotNull null).lowercase()
+                        lang to format
+                    }
+                    .groupBy { it.first }
+                    .mapValues { (_, entries) -> entries.map { it.second } }
+
+                val bestPerLanguage = audioByLanguage.values
+                    .mapNotNull { formats -> formats.maxByOrNull { it.tbr ?: it.abr ?: 0.0 } }
+
+                if (bestPerLanguage.isNotEmpty() && videoFormats.isNotEmpty()) {
+                    val videoIds = videoFormats.mapNotNull { it.safeId().takeIf(String::isNotEmpty) }
+                        .joinToString("+")
+                    val audioIds = bestPerLanguage.mapNotNull { it.safeId().takeIf(String::isNotEmpty) }
+                        .joinToString("+")
+                    if (videoIds.isEmpty()) audioIds else "$videoIds+$audioIds"
+                } else if (bestPerLanguage.isNotEmpty()) {
+                    bestPerLanguage.mapNotNull { it.safeId().takeIf(String::isNotEmpty) }
+                        .joinToString("+")
+                } else {
+                    formatList.mapNotNull { it.safeId().takeIf(String::isNotEmpty) }
+                        .joinToString(separator = "+")
                 }
-                "$videoIds+$audioParts"
             }
-            else -> formatList.joinToString(separator = "+") { it.formatId.toString() }
+            selectedAudioLanguages.isNotEmpty() && videoFormats.isNotEmpty() -> {
+                // Find best audio format per requested language from ALL available formats
+                val allAudioFormats = videoInfo.formats
+                    ?.filter { it.isAudioOnly() && !it.formatId.isNullOrBlank() }
+                    ?: emptyList()
+                val videoIds = videoFormats.mapNotNull { it.safeId().takeIf(String::isNotEmpty) }
+                    .joinToString("+")
+                val audioParts = selectedAudioLanguages.mapNotNull { lang ->
+                    allAudioFormats
+                        .filter { (getEffectiveLanguage(it) ?: "").lowercase() == lang.lowercase() }
+                        .maxByOrNull { it.tbr ?: it.abr ?: 0.0 }
+                        ?.safeId()?.takeIf(String::isNotEmpty)
+                }.joinToString("+")
+                if (audioParts.isEmpty()) videoIds else "$videoIds+$audioParts"
+            }
+            else -> formatList.mapNotNull { it.safeId().takeIf(String::isNotEmpty) }
+                .joinToString(separator = "+")
         }
         
         // Check if we're merging video and audio (common for high-quality downloads)
