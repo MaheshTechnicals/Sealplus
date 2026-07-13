@@ -758,7 +758,7 @@ fun ConfigurePagePlaylistVariant(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 isQuickDownload = false,
                 preference = preferences,
-                selectedType = Audio,
+                selectedType = selectedType,
                 onPreferenceUpdate = {
                     onPreferencesUpdate(DownloadUtil.DownloadPreferences.createFromPreferences())
                 },
@@ -772,7 +772,7 @@ fun ConfigurePagePlaylistVariant(
             useFormatSelection = false,
             onCancel = onDismissRequest,
             onDownload = {
-                onDownload(initialDownloadType)
+                onDownload(selectedType)
                 onDismissRequest()
             },
             onFetchInfo = { throw IllegalStateException() },

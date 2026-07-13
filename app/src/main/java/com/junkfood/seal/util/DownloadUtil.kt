@@ -1008,17 +1008,19 @@ object DownloadUtil {
                     if (mergeAudioStream) {
                         addOption("--audio-multistreams")
                     }
-                } else if (convertAudio) {
-                    when (audioConvertFormat) {
-                        CONVERT_MP3 -> {
-                            addOption("--audio-format", "mp3")
-                        }
+                } else {
+                    addOption("-f", "ba/b")
+                    if (convertAudio) {
+                        when (audioConvertFormat) {
+                            CONVERT_MP3 -> {
+                                addOption("--audio-format", "mp3")
+                            }
 
-                        CONVERT_M4A -> {
-                            addOption("--audio-format", "m4a")
+                            CONVERT_M4A -> {
+                                addOption("--audio-format", "m4a")
+                            }
                         }
                     }
-                } else {
                     applyFormatSorter(preferences, toAudioFormatSorter())
                 }
 
