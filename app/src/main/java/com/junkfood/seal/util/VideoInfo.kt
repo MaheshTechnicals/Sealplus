@@ -93,8 +93,6 @@ data class Format(
     val tbr: Double? = null,
     @SerialName("filesize") val fileSize: Double? = null,
     @SerialName("filesize_approx") val fileSizeApprox: Double? = null,
-    @SerialName("language") val language: String? = null,
-    @SerialName("language_display") val languageDisplay: String? = null,
 ) {
     fun isAudioOnly(): Boolean = vcodec == null || vcodec == "none"
 
@@ -119,54 +117,6 @@ data class Format(
      */
     fun hasValidUrl(): Boolean = !url.isNullOrBlank()
 
-    /**
-     * Returns a human-readable language label for display in the format selection UI.
-     */
-    fun getLanguageLabel(): String? =
-        languageDisplay ?: language?.let { lang ->
-            val locale = java.util.Locale.forLanguageTag(lang)
-            locale.displayName.takeIf { it != lang }
-        }
-
-    companion object {
-        private val LANGUAGE_TAG_REGEX = Regex("""\[(\w{2}(?:-\w+)?)\]""")
-
-        /**
-         * Extracts language code from format_note string.
-         * YouTube format_note looks like: "[en-US] English (US) original (default), medium, IOS, webm_dash"
-         * Returns the language code (e.g., "en-US") or null.
-         */
-        fun extractLanguageFromFormatNote(formatNote: String?): String? {
-            if (formatNote.isNullOrBlank()) return null
-            return LANGUAGE_TAG_REGEX.find(formatNote)?.groupValues?.get(1)
-        }
-
-        /**
-         * Returns the effective language code for a format, checking the language
-         * field first, then parsing format_note as a fallback.
-         */
-        fun getEffectiveLanguage(format: Format): String? =
-            format.language?.takeIf { it.isNotBlank() }
-                ?: extractLanguageFromFormatNote(format.formatNote)
-
-        /**
-         * Extracts unique audio languages from a list of audio-only formats.
-         * Parses language from both the `language` field and `format_note` tag (e.g. [en-US]).
-         * Returns a map of language code -> display name, sorted by display name.
-         */
-        fun extractAudioLanguages(formats: List<Format>): Map<String, String> {
-            return formats
-                .filter { it.isAudioOnly() }
-                .mapNotNull { format ->
-                    val langCode = (getEffectiveLanguage(format) ?: return@mapNotNull null).lowercase()
-                    langCode to (format.getLanguageLabel() ?: langCode)
-                }
-                .distinctBy { it.first }
-                .sortedBy { it.second }
-                .toMap()
-        }
-    }
-    
     /**
      * Get a human-readable resolution label
      */

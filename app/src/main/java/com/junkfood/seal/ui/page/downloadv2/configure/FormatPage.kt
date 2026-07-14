@@ -221,8 +221,6 @@ private data class FormatConfig(
     val selectedSubtitles: List<String>,
     val selectedAutoCaptions: List<String>,
     val downloadDocs: Boolean = false,
-    val selectedAudioLanguages: List<String> = emptyList(),
-    val downloadAllAudio: Boolean = false,
 )
 
 @Composable
@@ -255,11 +253,6 @@ fun FormatPage(
     // fully-muxed video+audio and should default to a direct combined download.
     val siteSplitsStreams = requiresStreamMerging(videoInfo)
 
-    // Extract available audio languages from formats for multi-audio support
-    val availableAudioLanguages = remember(videoInfo) {
-        Format.extractAudioLanguages(videoInfo.formats ?: emptyList())
-    }
-
     FormatPageImpl(
         modifier = modifier,
         videoInfo = videoInfo,
@@ -269,7 +262,6 @@ fun FormatPage(
         siteSplitsStreams = siteSplitsStreams,
         selectedSubtitleCodes = initialSelectedSubtitles,
         isClippingAvailable = VIDEO_CLIP.getBoolean() && (videoInfo.duration ?: .0) >= 0,
-        availableAudioLanguages = availableAudioLanguages,
     ) { config ->
         with(config) {
             diffSubtitleLanguages =
@@ -292,9 +284,6 @@ fun FormatPage(
                     )
                 } else null
 
-                // When Suggested format is used and audio languages are selected,
-                // pass them through; for custom format, the user's own audio format
-                // selection takes priority when no languages are explicitly chosen
                 val taskWithState = TaskFactory.createWithConfigurations(
                     videoInfo = videoInfo,
                     formatList = formatList,
@@ -303,8 +292,6 @@ fun FormatPage(
                     newTitle = newTitle,
                     selectedSubtitles = selectedSubtitles,
                     selectedAutoCaptions = selectedAutoCaptions,
-                    selectedAudioLanguages = selectedAudioLanguages,
-                    downloadAllAudio = downloadAllAudio,
                     overridePreferences = prefs,
                 )
                 downloader.enqueue(taskWithState)
@@ -432,7 +419,6 @@ private fun FormatPageImpl(
     siteSplitsStreams: Boolean = true,
     isClippingAvailable: Boolean = false,
     selectedSubtitleCodes: Set<String>,
-    availableAudioLanguages: Map<String, String> = emptyMap(),
     onNavigateBack: () -> Unit = {},
     onDownloadPressed: (FormatConfig) -> Unit = { _ -> },
 ) {
@@ -762,11 +748,6 @@ private fun FormatPageImpl(
 
     val selectedAutoCaptions = remember { mutableStateListOf<String>() }
 
-    // Audio language selection state for multi-audio/dub support
-    val selectedAudioLanguages = remember { mutableStateListOf<String>() }
-    var showAudioLanguageSelection by remember { mutableStateOf(false) }
-    var downloadAllAudioTracks by remember { mutableStateOf(false) }
-
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
@@ -811,8 +792,6 @@ private fun FormatPageImpl(
                                     selectedSubtitles = selectedSubtitles,
                                     selectedAutoCaptions = selectedAutoCaptions,
                                     downloadDocs = downloadDocs,
-                                    selectedAudioLanguages = selectedAudioLanguages.toList(),
-                                    downloadAllAudio = downloadAllAudioTracks,
                                 )
                             )
                         }
@@ -1031,69 +1010,6 @@ private fun FormatPageImpl(
                                             }
                                         },
                                         label = formats.first().run { name ?: protocol ?: code },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Audio Language Selection (multi-audio / dub support)
-            if (!audioOnly && availableAudioLanguages.isNotEmpty() && !isValidatingFormats) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 16.dp).padding(horizontal = 12.dp),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.audio_language),
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.weight(1f),
-                            )
-                            ClickableTextAction(
-                                visible = availableAudioLanguages.size > 4,
-                                text = stringResource(
-                                    id = androidx.appcompat.R.string.abc_activity_chooser_view_see_all
-                                ),
-                            ) {
-                                showAudioLanguageSelection = true
-                            }
-                        }
-
-                        LazyRow(
-                            modifier = Modifier.padding(top = 8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // "All audio" option
-                            item {
-                                VideoFilterChip(
-                                    selected = downloadAllAudioTracks,
-                                    onClick = {
-                                        downloadAllAudioTracks = !downloadAllAudioTracks
-                                        if (downloadAllAudioTracks) {
-                                            selectedAudioLanguages.clear()
-                                        }
-                                    },
-                                    label = stringResource(R.string.download_all_audio),
-                                )
-                            }
-                            for ((code, displayName) in availableAudioLanguages) {
-                                item {
-                                    VideoFilterChip(
-                                        selected = selectedAudioLanguages.contains(code),
-                                        onClick = {
-                                            if (selectedAudioLanguages.contains(code)) {
-                                                selectedAudioLanguages.remove(code)
-                                            } else {
-                                                downloadAllAudioTracks = false
-                                                selectedAudioLanguages.add(code)
-                                            }
-                                        },
-                                        label = displayName,
                                     )
                                 }
                             }
@@ -1401,21 +1317,6 @@ private fun FormatPageImpl(
                 showSubtitleSelectionDialog = false
             },
         )
-    if (showAudioLanguageSelection)
-        AudioLanguageSelectionDialog(
-            availableAudioLanguages = availableAudioLanguages,
-            selectedAudioLanguages = selectedAudioLanguages,
-            downloadAllAudioTracks = downloadAllAudioTracks,
-            onDismissRequest = { showAudioLanguageSelection = false },
-            onConfirm = { langs, allAudio ->
-                selectedAudioLanguages.run {
-                    clear()
-                    addAll(langs)
-                }
-                downloadAllAudioTracks = allAudio
-                showAudioLanguageSelection = false
-            },
-        )
 }
 
 @Composable
@@ -1445,65 +1346,6 @@ private fun RenameDialog(
                     label = { Text(text = stringResource(id = R.string.title)) },
                     trailingIcon = { if (filename == initialValue) ClearButton { filename = "" } },
                 )
-            }
-        },
-    )
-}
-
-@Composable
-private fun AudioLanguageSelectionDialog(
-    availableAudioLanguages: Map<String, String>,
-    selectedAudioLanguages: List<String>,
-    downloadAllAudioTracks: Boolean,
-    onDismissRequest: () -> Unit,
-    onConfirm: (langs: List<String>, allAudio: Boolean) -> Unit,
-) {
-    val selectedLangs = remember {
-        mutableStateListOf<String>().apply { addAll(selectedAudioLanguages) }
-    }
-    var allAudio by remember { mutableStateOf(downloadAllAudioTracks) }
-
-    SealDialog(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-        onDismissRequest = onDismissRequest,
-        confirmButton = {
-            ConfirmButton { onConfirm(selectedLangs, allAudio) }
-        },
-        dismissButton = { DismissButton { onDismissRequest() } },
-        title = { Text(text = stringResource(id = R.string.audio_language)) },
-        icon = { Icon(imageVector = Icons.Outlined.Subtitles, contentDescription = null) },
-        text = {
-            Column {
-                LazyColumn(contentPadding = PaddingValues(vertical = 12.dp)) {
-                    item {
-                        DialogCheckBoxItem(
-                            checked = allAudio,
-                            onValueChange = {
-                                allAudio = !allAudio
-                                if (allAudio) selectedLangs.clear()
-                            },
-                            text = stringResource(R.string.download_all_audio),
-                        )
-                    }
-                    for ((code, displayName) in availableAudioLanguages) {
-                        item(key = code) {
-                            DialogCheckBoxItem(
-                                modifier = Modifier.animateItem(),
-                                checked = selectedLangs.contains(code),
-                                onValueChange = {
-                                    if (selectedLangs.contains(code)) {
-                                        selectedLangs.remove(code)
-                                    } else {
-                                        allAudio = false
-                                        selectedLangs.add(code)
-                                    }
-                                },
-                                text = displayName,
-                            )
-                        }
-                    }
-                }
-                androidx.compose.material3.HorizontalDivider()
             }
         },
     )
