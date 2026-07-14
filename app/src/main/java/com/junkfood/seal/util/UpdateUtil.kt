@@ -41,14 +41,11 @@ object UpdateUtil {
     private const val TAG = "UpdateUtil"
 
     private fun getClient(): OkHttpClient {
-        val builder = OkHttpClient.Builder()
+        return OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-        ProxyManager.getActiveProxy()?.let { proxy ->
-            builder.proxy(proxy)
-        }
-        return builder.build()
+            .build()
     }
 
     private val requestForLatestRelease =

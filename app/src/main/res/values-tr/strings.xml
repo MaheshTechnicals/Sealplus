@@ -324,8 +324,6 @@
     <string name="new_task">Yeni indirme başlat</string>
     <string name="start">Başla</string>
     <string name="edit_template">\"%1$s\" şablonunu düzenle</string>
-    <string name="proxy">Vekil Sunucu (Proxy)</string>
-    <string name="proxy_desc">İnternete bağlanırken vekil sunucu kullan</string>
     <string name="legacy">Eski Sürüm</string>
     <string name="quality">Kalite</string>
     <string name="enable_notifications">Bildirimlere izin verilsin mi?</string>
@@ -596,39 +594,7 @@
     <string name="aria2c_connections">Aria2c Bağlantı Sayısı</string>
     <string name="aria2c_connections_desc">Her dosya için %d farklı kanaldan (bağlantıdan) indirilecek</string>
     
-    <!-- Proxy Settings strings -->
-    <string name="proxy_settings">Vekil Sunucu (Proxy) Ayarları</string>
-    <string name="enable_proxy">Proxy Kullanımını Aç</string>
-    <string name="proxy_toggle_description">Tüm indirme işlemlerinizi bir proxy sunucusu üzerinden geçirin</string>
-    <string name="proxy_type">Proxy Türü</string>
-    <string name="free_proxy">Ücretsiz Proxy</string>
-    <string name="custom_proxy">Özel Proxy</string>
-    <string name="connection_status">Bağlantı Durumu</string>
-    <string name="not_tested">Henüz test edilmedi. Çalıştığından emin olmak için \'Bağlantıyı Test Et\'e dokunun.</string>
     <string name="testing">Test ediliyor…</string>
-    <string name="testing_connection">Ağ bağlantısı test ediliyor…</string>
-    <string name="test_connection">Bağlantıyı Test Et</string>
-    <string name="speed_test_results">Hız Testi Sonuçları</string>
-    <string name="run_speed_test">Hız Testi Başlat</string>
-    <string name="testing_speed">İndirme hızı ölçülüyor…</string>
-    <string name="latency">Gecikme (Ping)</string>
-    <string name="download_speed">İndirme Hızı</string>
-    <string name="upload_latency">Yükleme Gecikmesi</string>
-    <string name="free_proxy_settings">Ücretsiz Proxy Ayarları</string>
-    <string name="select_country">Ülke Seç</string>
-    <string name="selected_proxy">Şu Anki Proxy</string>
-    <string name="fetch_proxies">Proxy Listesini Güncelle</string>
-    <string name="loading_proxies">Sunucular bulunuyor…</string>
-    <string name="select_proxy">Sunucu Seç</string>
-    <string name="custom_proxy_settings">Özel Proxy Ayarları</string>
-    <string name="proxy_host">Sunucu / IP Adresi</string>
-    <string name="proxy_port">Port (Bağlantı Noktası)</string>
-    <string name="proxy_protocol">Protokol</string>
-    <string name="save_configuration">Ayarları Kaydet</string>
-    <string name="auto_connect_proxy">Çalışan İlk Sunucuya Otomatik Bağlan</string>
-    <string name="manual_select_proxy">Listeden Kendim Seçeceğim</string>
-    <string name="proxy_info_title">Nasıl Çalışır?</string>
-    <string name="proxy_info_description">Bu özelliği açtığınızda uygulamanın tüm internet trafiği seçtiğiniz proxy sunucusundan geçer. Bu sayede bölgesel engelleri aşabilir veya gizliliğinizi koruyabilirsiniz. Ayarları kaydetmeden önce bağlantıyı test edip çalıştığından emin olmayı unutmayın.</string>
     
     <!-- Sponsor Support Dialog -->
     <string name="support_us">Bize Destek Olun ✨</string>

@@ -10,7 +10,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.OfflineBolt
 import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,7 +40,6 @@ import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.util.CONCURRENT
 import com.junkfood.seal.util.MAX_RATE
-import com.junkfood.seal.util.PROXY_URL
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.PreferenceUtil.getString
 import com.junkfood.seal.util.PreferenceUtil.updateString
@@ -155,36 +153,5 @@ fun ConcurrentDownloadDialog(onDismissRequest: () -> Unit) {
     )
 }
 
-@Composable
-fun ProxyConfigurationDialog(onDismissRequest: () -> Unit = {}) {
-    var proxyUrl by remember { mutableStateOf(PROXY_URL.getString()) }
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        icon = { Icon(Icons.Outlined.VpnKey, null, tint = MaterialTheme.colorScheme.primary) },
-        title = { Text(stringResource(R.string.proxy)) },
-        text = {
-            Column {
-                Text(
-                    stringResource(R.string.proxy_desc),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 24.dp),
-                    value = proxyUrl,
-                    label = { Text(stringResource(R.string.proxy)) },
-                    onValueChange = { proxyUrl = it },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-            }
-        },
-        dismissButton = { DismissButton { onDismissRequest() } },
-        confirmButton = {
-            ConfirmButton {
-                PROXY_URL.updateString(proxyUrl)
-                onDismissRequest()
-            }
-        },
-    )
-}
 
 

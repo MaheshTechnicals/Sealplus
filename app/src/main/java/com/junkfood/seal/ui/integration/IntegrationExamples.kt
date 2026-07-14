@@ -109,7 +109,7 @@ fun PremiumSettingsPageExample() {
                 AnimatedCardContainer(delayMillis = 300) {
                     PremiumGlassCard(
                         title = "Network Preferences",
-                        description = "Configure proxy, rate limit, and cookies",
+                        description = "Configure rate limit and cookies",
                         icon = Icons.Outlined.Settings,
                         onClick = { /* Navigate to network settings */ }
                     )

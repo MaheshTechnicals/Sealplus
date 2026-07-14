@@ -148,8 +148,6 @@
     <string name="sponsor_msg">Seal Plus יהיה תמיד קוד פתוח ובחינם לכולם. אם אתה אוהב את זה, בבקשה שקול לתת לי חסות ב-GitHub!</string>
     <string name="clear_all_cookies_desc">האם למחוק לצמיתות את כל העוגיות המאוחסנות באפליקציה?</string>
     <string name="clip_video_desc">צור קטעי וידאו בדף בחירת הפורמט</string>
-    <string name="proxy">פרוקסי</string>
-    <string name="proxy_desc">השתמש בפרוקסי כדי להתחבר לאינטרנט</string>
     <string name="legacy">מיושן</string>
     <string name="enable_notifications_desc">היישום צריך את ההרשאה שלך כדי להציג התראות לגבי סטטוס הורדה והתקדמות.</string>
     <string name="clip_video_dialog_msg">הורדות המשתמשות בתכונה זו יואצלו ל-FFmpeg להורדת קטעים נבחרים של הסרטון, תכונה זו עדיין ניסיונית והחיתוך לא יהיה מדויק לחלוטין. לא כל הפורמטים תומכים בתכונה זו וייתכן שתחווה מהירויות הורדה איטיות יותר.</string>
@@ -459,7 +457,6 @@
     <string name="authentication_failed">האימות נכשל</string>
     <string name="authentication_methods">שיטות אימות</string>
     <string name="authentication_timeout">פסק זמן לאימות</string>
-    <string name="auto_connect_proxy">התחבר אוטומטית לפרוקסי פעיל</string>
     <string name="average_speed">מהירות ממוצעת</string>
     <string name="backspace">מחיקה אחורה</string>
     <string name="biometric_available">אימות ביומטרי זמין</string>
@@ -477,9 +474,6 @@
     <string name="completed">הושלם</string>
     <string name="concurrent_downloads_desc">מקסימום: %d הורדות בו-זמנית</string>
     <string name="confirm_pin">אשר קוד PIN</string>
-    <string name="connection_status">מצב חיבור</string>
-    <string name="custom_proxy">פרוקסי מותאם</string>
-    <string name="custom_proxy_settings">הגדרות פרוקסי מותאם</string>
     <string name="details">פרטים</string>
     <string name="directory_not_supported">תיקייה זו אינה נתמכת</string>
     <string name="disable_security">בטל אבטחה</string>
@@ -488,11 +482,9 @@
     <string name="download_date">תאריך הורדה</string>
     <string name="download_details">פרטי הורדה</string>
     <string name="download_error">שגיאת הורדה</string>
-    <string name="download_speed">מהירות הורדה</string>
     <string name="download_time">זמן הורדה</string>
     <string name="duration">משך</string>
     <string name="enable_app_lock">הפעל נעילת אפליקציה</string>
-    <string name="enable_proxy">הפעל פרוקסי</string>
     <string name="enter_current_pin_to_continue">הזן את קוד ה-PIN הנוכחי כדי להמשיך</string>
     <string name="enter_new_pin">הזן קוד PIN חדש</string>
     <string name="enter_pin_4_6_digits">הזן קוד PIN בן 4 ספרות</string>
@@ -503,21 +495,15 @@
     <string name="exit">יציאה</string>
     <string name="exit_app_message">האם אתה בטוח שברצונך לצאת? הורדות פעילות ימשיכו ברקע.</string>
     <string name="exit_app_title">לצאת מ-Seal Plus?</string>
-    <string name="fetch_proxies">טען פרוקסים</string>
     <string name="file_format">פורמט קובץ</string>
     <string name="file_name">שם קובץ</string>
     <string name="file_path">נתיב קובץ</string>
     <string name="file_size">גודל קובץ</string>
-    <string name="free_proxy">פרוקסי חינמי</string>
-    <string name="free_proxy_settings">הגדרות פרוקסי חינמי</string>
     <string name="grant_permission">הענק הרשאה</string>
     <string name="home">בית</string>
     <string name="immediately">מיידית</string>
     <string name="incorrect_pin_attempts">קוד PIN שגוי. נותרו %d ניסיונות.</string>
-    <string name="latency">עיכוב</string>
-    <string name="loading_proxies">טוען פרוקסים…</string>
     <string name="lock_app_with_pin_biometric">נעל אפליקציה עם PIN / טביעת אצבע / פנים</string>
-    <string name="manual_select_proxy">בחר ידנית מהרשימה</string>
     <string name="max_concurrent_downloads">הורדות במקביל</string>
     <string name="maybe_later">אולי מאוחר יותר</string>
     <string name="mobile_only">רשת סלולרית בלבד</string>
@@ -529,7 +515,6 @@
     <string name="no_check_certificate">התעלם מתעודות SSL</string>
     <string name="no_check_certificate_desc">דלג על אימות תעודות SSL (נדרש לרשתות עם סינון כגון נטפרי)</string>
     <string name="not_implemented_yet">טרם מומש!</string>
-    <string name="not_tested">טרם נבדק. לחץ על \'בדוק חיבור\' לאימות.</string>
     <string name="notification_error_sound_desc">הפעל צליל כשהורדה נכשלת</string>
     <string name="notification_error_sound_settings">צליל שגיאה</string>
     <string name="notification_led_desc">הצג נורית LED עם סיום הורדות</string>
@@ -551,14 +536,6 @@
     <string name="pins_do_not_match">קודי ה-PIN אינם תואמים. אנא נסה שוב.</string>
     <string name="platform">פלטפורמה</string>
     <string name="protect_app_with_pin_biometric">הגן על האפליקציה עם PIN או אימות ביומטרי</string>
-    <string name="proxy_host">כתובת מארח / IP</string>
-    <string name="proxy_info_description">כשמופעל, כל בקשות ההורדה יועברו דרך שרת הפרוקסי. זה יכול לעזור לעקוף הגבלות אזוריות או לשפר פרטיות. בדוק את החיבור לפני ההפעלה.</string>
-    <string name="proxy_info_title">איך זה עובד</string>
-    <string name="proxy_port">פורט</string>
-    <string name="proxy_protocol">פרוטוקול פרוקסי</string>
-    <string name="proxy_settings">הגדרות פרוקסי</string>
-    <string name="proxy_toggle_description">העבר את כל ההורדות דרך שרת פרוקסי</string>
-    <string name="proxy_type">סוג פרוקסי</string>
     <string name="queue_status">תור</string>
     <string name="recent_downloads">הורדות אחרונות</string>
     <string name="require_auth_on_launch">דרוש אימות בפתיחה</string>
@@ -568,8 +545,6 @@
     <string name="reset_options">אפשרויות איפוס</string>
     <string name="resolution">רזולוציה</string>
     <string name="retry">נסה שוב</string>
-    <string name="run_speed_test">הרץ בדיקת מהירות</string>
-    <string name="save_configuration">שמור תצורה</string>
     <string name="saved_urls">קישורים שמורים</string>
     <string name="seal_plus" translatable="false">Seal Plus</string>
     <string name="sealplus_extras">תוספות Sealplus</string>
@@ -580,15 +555,11 @@
     <string name="security_info_message">נעילת האפליקציה מגינה על פרטיותך על ידי דרישת אימות לגישה אל Seal Plus. קוד ה-PIN שמור בצורה מאובטחת במכשיר.</string>
     <string name="security_options">אפשרויות אבטחה</string>
     <string name="security_settings">הגדרות אבטחה</string>
-    <string name="select_country">בחר מדינה</string>
-    <string name="select_proxy">בחר פרוקסי</string>
     <string name="select_timeout_duration">בחר משך פסק הזמן:</string>
-    <string name="selected_proxy">פרוקסי נבחר</string>
     <string name="skip">דלג</string>
     <string name="smart_notifications">התראות חכמות</string>
     <string name="smart_notifications_desc">התאם אישית את התנהגות ההתראות עבור מצבי משימה שונים</string>
     <string name="source_url">כתובת מקור</string>
-    <string name="speed_test_results">תוצאות בדיקת מהירות</string>
     <string name="sponsor_dialog_frequency_desc">בחר כמה פעמים להציג את תזכורת התמיכה</string>
     <string name="sponsor_dialog_frequency_title">תזכורת תמיכה</string>
     <string name="sponsor_dialog_message">Seal Plus נבנה בלב ונשמה — חינמי, קוד פתוח, וללא פרסומות. התמיכה שלך עוזרת לממן פיתוח פעיל, עדכונים מהירים, ביצועים טובים יותר ותכונות חדשות מרגשות.</string>
@@ -604,10 +575,7 @@
     <string name="status_merging">ממזג...</string>
     <string name="status_paused">מושהה</string>
     <string name="support_us">תמוך בנו ✨</string>
-    <string name="test_connection">בדוק חיבור</string>
     <string name="testing">בודק…</string>
-    <string name="testing_connection">בודק חיבור…</string>
-    <string name="testing_speed">בודק מהירות…</string>
     <string name="timeout_minutes">%d דקות</string>
     <string name="timeout_updated">פסק הזמן עודכן</string>
     <string name="too_many_attempts">יותר מדי ניסיונות שגויים. אנא נסה שוב מאוחר יותר.</string>
@@ -615,7 +583,6 @@
     <string name="unlock_seal_plus">פתח את Seal Plus</string>
     <string name="unlock_with_fingerprint_face">פתח עם טביעת אצבע או זיהוי פנים</string>
     <string name="update_your_pin_code">עדכן את קוד ה-PIN שלך</string>
-    <string name="upload_latency">עיכוב העלאה</string>
     <string name="use_biometric">השתמש בביומטריה</string>
     <string name="use_biometric_authentication">השתמש באימות ביומטרי</string>
     <string name="verify_old_pin">אמת קוד PIN נוכחי</string>

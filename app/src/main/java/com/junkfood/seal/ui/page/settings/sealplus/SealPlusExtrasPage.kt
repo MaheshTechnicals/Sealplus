@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.VolunteerActivism
@@ -74,7 +73,6 @@ import kotlin.math.roundToInt
 fun SealPlusExtrasPage(
     onNavigateBack: () -> Unit,
     onNavigateToSecurity: () -> Unit = {},
-    onNavigateToProxySettings: () -> Unit = {},
     onNavigateToHiddenContent: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -347,19 +345,6 @@ fun SealPlusExtrasPage(
                 )
             }
             
-            item {
-                PreferenceSubtitle(text = stringResource(R.string.network_settings))
-            }
-
-            item {
-                PreferenceItem(
-                    title = stringResource(R.string.proxy_settings),
-                    description = stringResource(R.string.proxy_toggle_description),
-                    icon = Icons.Outlined.Public,
-                    onClick = { onNavigateToProxySettings() }
-                )
-            }
-
             item {
                 PreferenceItem(
                     title = stringResource(R.string.network_type_restriction),

@@ -60,7 +60,6 @@ object SponsorUtil {
         OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
-            .apply { ProxyManager.getActiveProxy()?.let { proxy(it) } }
             .build()
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }

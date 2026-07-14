@@ -25,15 +25,10 @@ private const val TAG = "FormatValidator"
  */
 object FormatValidator {
 
-    // Shared client — avoids allocating a new thread/connection pool per validateFormat call.
-    // Proxy is set once at construction time; callers must call refreshClient() if the proxy changes.
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(5, TimeUnit.SECONDS)
         .readTimeout(5, TimeUnit.SECONDS)
         .followRedirects(true)
-        .also { builder ->
-            ProxyManager.getActiveProxy()?.let { proxy -> builder.proxy(proxy) }
-        }
         .build()
 
     // Known unsupported codecs that may cause issues

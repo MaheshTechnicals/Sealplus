@@ -96,20 +96,6 @@ const val EMBED_THUMBNAIL = "embed_thumbnail"
 const val FORMAT_SELECTION = "format_selection"
 const val VIDEO_CLIP = "video_clip"
 const val SHOW_SPONSOR_MSG = "sponsor_msg_v1"
-const val PROXY = "proxy"
-const val PROXY_URL = "proxy_url"
-
-// Proxy Settings - New comprehensive proxy configuration
-const val PROXY_ENABLED = "proxy_enabled"
-const val PROXY_USE_FREE = "proxy_use_free"
-const val PROXY_FREE_COUNTRY = "proxy_free_country"
-const val PROXY_FREE_ADDRESS = "proxy_free_address"
-const val PROXY_CUSTOM_HOST = "proxy_custom_host"
-const val PROXY_CUSTOM_PORT = "proxy_custom_port"
-const val PROXY_CUSTOM_TYPE = "proxy_custom_type"
-const val PROXY_LAST_VALIDATED = "proxy_last_validated"
-const val PROXY_IS_WORKING = "proxy_is_working"
-
 const val OUTPUT_TEMPLATE = "output_template"
 const val CUSTOM_OUTPUT_TEMPLATE = "custom_output_template"
 const val DOWNLOAD_ARCHIVE = "download_archive"
@@ -260,10 +246,6 @@ private val StringPreferenceDefaults =
         SUBTITLE_LANGUAGE to "en.*,.*-orig",
         OUTPUT_TEMPLATE to DownloadUtil.OUTPUT_TEMPLATE_ID,
         CUSTOM_OUTPUT_TEMPLATE to DownloadUtil.OUTPUT_TEMPLATE_ID,
-        PROXY_FREE_COUNTRY to "US",
-        PROXY_FREE_ADDRESS to "",
-        PROXY_CUSTOM_HOST to "",
-        PROXY_CUSTOM_TYPE to "HTTP",
     )
 
 private val BooleanPreferenceDefaults =
@@ -282,9 +264,6 @@ private val BooleanPreferenceDefaults =
         NOTIFICATION_SUCCESS_SOUND to true,
         NOTIFICATION_ERROR_SOUND to true,
         ONBOARDING_COMPLETED to false,
-        PROXY_ENABLED to false,
-        PROXY_USE_FREE to true,
-        PROXY_IS_WORKING to false,
         FORMAT_LIST_VIEW to false,
         FORMAT_MP4_ONLY to true,
         DOWNLOAD_DOCS to false,
@@ -313,13 +292,11 @@ private val IntPreferenceDefaults =
         NETWORK_PAUSE_DELAY_SECONDS to 25,
         MAX_CONCURRENT_DOWNLOADS to 1,
         ARIA2C_CONNECTIONS to 16,
-        PROXY_CUSTOM_PORT to 8080,
         SPONSOR_DIALOG_FREQUENCY to SPONSOR_FREQ_WEEKLY,
     )
 
 private val LongPreferenceDefaults = mapOf(
     YT_DLP_UPDATE_INTERVAL to DEFAULT_INTERVAL,
-    PROXY_LAST_VALIDATED to 0L,
     SPONSOR_DIALOG_LAST_SHOWN to 0L,
 )
 

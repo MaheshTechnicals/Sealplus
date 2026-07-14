@@ -267,9 +267,6 @@ object DownloadUtil {
                         addOption("-x")
                     }
                     applyFormatSorter(this, toFormatSorter())
-                    if (proxy) {
-                        enableProxy(proxyUrl)
-                    }
                     if (forceIpv4) {
                         addOption("-4")
                     }
@@ -323,9 +320,6 @@ object DownloadUtil {
                     applyFormatSorter(this@with, toFormatSorter())
                     if (cookies) {
                         enableCookies(userAgentString)
-                    }
-                    if (proxy) {
-                        enableProxy(proxyUrl)
                     }
                     if (forceIpv4) {
                         addOption("-4")
@@ -403,8 +397,6 @@ object DownloadUtil {
         val videoClips: List<VideoClip>,
         val splitByChapter: Boolean,
         val debug: Boolean,
-        val proxy: Boolean,
-        val proxyUrl: String,
         val newTitle: String,
         val userAgentString: String,
         val outputTemplate: String,
@@ -459,8 +451,6 @@ object DownloadUtil {
                     videoClips = emptyList(),
                     splitByChapter = false,
                     debug = false,
-                    proxy = false,
-                    proxyUrl = "",
                     newTitle = "",
                     userAgentString = "",
                     outputTemplate = "",
@@ -519,18 +509,6 @@ object DownloadUtil {
                     videoClips = emptyList(),
                     splitByChapter = false,
                     debug = DEBUG.getBoolean(),
-                    proxy = ProxyManager.isProxyActive() || PROXY.getBoolean(),
-                    proxyUrl = if (ProxyManager.isProxyActive()) {
-                        val proxyAddress = ProxyManager.loadProxyConfig().getProxyAddress()
-                        if (BuildConfig.DEBUG) Log.d("DownloadUtil", "Using new proxy system (address redacted in release)")
-                        proxyAddress
-                    } else if (PROXY.getBoolean()) {
-                        val legacyProxy = PROXY_URL.getString()
-                        if (BuildConfig.DEBUG) Log.d("DownloadUtil", "Using legacy proxy (address redacted in release)")
-                        legacyProxy
-                    } else {
-                        ""
-                    },
                     newTitle = "",
                     userAgentString =
                         USER_AGENT_STRING.run { if (USER_AGENT.getBoolean()) getString() else "" },
@@ -540,7 +518,7 @@ object DownloadUtil {
                     restrictFilenames = RESTRICT_FILENAMES.getBoolean(),
                     supportAv1HardwareDecoding = checkIfAv1HardwareAccelerated(),
                     forceIpv4 = FORCE_IPV4.getBoolean(),
-                    noCheckCertificate = NO_CHECK_CERTIFICATE.getBoolean() && !ProxyManager.isProxyActive(),
+                    noCheckCertificate = NO_CHECK_CERTIFICATE.getBoolean(),
                     mergeAudioStream = false,
                     mergeToMkv =
                         (downloadSubtitle && embedSubtitle) || MERGE_OUTPUT_MKV.getBoolean(),
@@ -577,9 +555,6 @@ object DownloadUtil {
                 }
         }
     }
-
-    private fun YoutubeDLRequest.enableProxy(proxyUrl: String): YoutubeDLRequest =
-        this.addOption("--proxy", proxyUrl)
 
     private fun YoutubeDLRequest.useDownloadArchive(): YoutubeDLRequest =
         this.addOption("--download-archive", context.getArchiveFile().absolutePath)
@@ -1171,9 +1146,6 @@ object DownloadUtil {
                     }
                     if (restrictFilenames) {
                         addOption("--restrict-filenames")
-                    }
-                    if (proxy) {
-                        enableProxy(proxyUrl)
                     }
                     if (forceIpv4) {
                         addOption("-4")
