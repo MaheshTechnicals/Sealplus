@@ -84,6 +84,16 @@
       "id": 17,
       "name": "mds08011",
       "METHOD": "GITHUB"
+    },
+    {
+      "id": 18,
+      "name": "Farooq Memon",
+      "METHOD": "PAYPAL"
+    },
+    {
+      "id": 19,
+      "name": "Alexandru Betco",
+      "METHOD": "PAYPAL"
     }
   ]
 }
