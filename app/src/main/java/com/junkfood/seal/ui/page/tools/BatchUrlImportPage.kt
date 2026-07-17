@@ -143,13 +143,13 @@ fun BatchUrlImportPage(
     val isDarkMode = LocalDarkTheme.current.isDarkTheme()
 
     var urlText by remember { mutableStateOf("") }
+    var preferences by remember {
+        mutableStateOf(DownloadUtil.DownloadPreferences.createFromPreferences())
+    }
     var selectedType by remember {
         mutableStateOf(
             if (preferences.extractAudio) DownloadType.Audio else DownloadType.Video
         )
-    }
-    var preferences by remember {
-        mutableStateOf(DownloadUtil.DownloadPreferences.createFromPreferences())
     }
     var showLinksExpanded by remember { mutableStateOf(false) }
     var showVideoPresetDialog by remember { mutableStateOf(false) }
@@ -250,7 +250,7 @@ fun BatchUrlImportPage(
                             Modifier.background(GradientBrush, RoundedCornerShape(32.dp))
                         } else {
                             Modifier
-                        }
+                        } as Modifier
                         Box(
                             modifier = Modifier.fillMaxSize().then(bgMod),
                             contentAlignment = Alignment.Center,
