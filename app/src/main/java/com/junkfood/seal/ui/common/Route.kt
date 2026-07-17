@@ -39,6 +39,7 @@ object Route {
     const val HIDDEN_CONTENT = "hidden_content"
     const val SPONSORS = "sponsors"
     const val MORE_TOOLS = "more_tools"
+    const val BATCH_URL_IMPORT = "batch_url_import"
 
     const val TASK_HASHCODE = "task_hashcode"
     const val TEMPLATE_ID = "template_id"

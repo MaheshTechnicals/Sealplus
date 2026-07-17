@@ -69,6 +69,7 @@ import com.junkfood.seal.ui.page.settings.security.SecuritySettingsPage
 import com.junkfood.seal.ui.page.settings.troubleshooting.TroubleShootingPage
 import com.junkfood.seal.ui.page.videolist.VideoListPage
 import com.junkfood.seal.ui.page.hidden.HiddenContentPage
+import com.junkfood.seal.ui.page.tools.BatchUrlImportPage
 import com.junkfood.seal.ui.page.tools.MoreToolsPage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -169,7 +170,17 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                 }
                 animatedComposable(Route.MORE_TOOLS) {
                     MoreToolsPage(
-                        onNavigateBack = onNavigateBack
+                        onNavigateBack = onNavigateBack,
+                        onNavigateToBatchUrlImport = {
+                            navController.navigate(Route.BATCH_URL_IMPORT) {
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
+                animatedComposable(Route.BATCH_URL_IMPORT) {
+                    BatchUrlImportPage(
+                        onNavigateBack = onNavigateBack,
                     )
                 }
                 slideInVerticallyComposable(

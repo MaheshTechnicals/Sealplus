@@ -63,14 +63,15 @@ import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.theme.GradientBrushes
 import com.junkfood.seal.ui.theme.GradientDarkColors
-import com.junkfood.seal.util.makeToast
 import androidx.compose.ui.platform.LocalContext
+import com.junkfood.seal.util.makeToast
 
 private data class ToolItem(
     val id: Int,
     val titleRes: Int,
     val descRes: Int,
     val icon: ImageVector,
+    val isComingSoon: Boolean = true,
 )
 
 private val tools = listOf(
@@ -79,6 +80,7 @@ private val tools = listOf(
         titleRes = R.string.batch_url_import,
         descRes = R.string.batch_url_import_desc,
         icon = Icons.Outlined.PlaylistAdd,
+        isComingSoon = false,
     ),
     ToolItem(
         id = 2,
@@ -104,7 +106,9 @@ private val tools = listOf(
 @Composable
 fun MoreToolsPage(
     onNavigateBack: () -> Unit,
+    onNavigateToBatchUrlImport: (() -> Unit)? = null,
 ) {
+    val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val isGradientDark = LocalGradientDarkMode.current
 
@@ -156,6 +160,16 @@ fun MoreToolsPage(
                         tool = tool,
                         index = index,
                         isGradientDark = isGradientDark,
+                        onClick = {
+                            when (tool.id) {
+                                1 -> onNavigateToBatchUrlImport?.invoke()
+                                else -> {
+                                    context.makeToast(
+                                        "${context.getString(tool.titleRes)} — ${context.getString(R.string.feature_unavailable)}"
+                                    )
+                                }
+                            }
+                        },
                     )
                 }
             }
@@ -216,8 +230,8 @@ private fun ToolCard(
     tool: ToolItem,
     index: Int,
     isGradientDark: Boolean,
+    onClick: () -> Unit = {},
 ) {
-    val context = LocalContext.current
     var visible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -278,11 +292,7 @@ private fun ToolCard(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = {
-                    context.makeToast(
-                        "${context.getString(tool.titleRes)} — ${context.getString(R.string.feature_unavailable)}"
-                    )
-                },
+                onClick = onClick,
             ),
     ) {
         Column(
@@ -350,35 +360,37 @@ private fun ToolCard(
                 )
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(
-                            if (isGradientDark) {
-                                GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.2f)
-                            } else {
-                                MaterialTheme.colorScheme.secondaryContainer
-                            }
-                        )
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
+            if (tool.isComingSoon) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = stringResource(R.string.coming_soon_placeholder),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                        color = if (isGradientDark) {
-                            GradientDarkColors.GradientPrimaryEnd
-                        } else {
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        },
-                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(
+                                if (isGradientDark) {
+                                    GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.2f)
+                                } else {
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                }
+                            )
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.coming_soon_placeholder),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                            color = if (isGradientDark) {
+                                GradientDarkColors.GradientPrimaryEnd
+                            } else {
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            },
+                        )
+                    }
                 }
             }
         }
