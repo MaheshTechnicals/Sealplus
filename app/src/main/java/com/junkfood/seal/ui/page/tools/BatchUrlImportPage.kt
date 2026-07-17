@@ -30,8 +30,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -79,7 +77,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -345,14 +342,6 @@ fun BatchUrlImportPage(
                         },
                         shape = RoundedCornerShape(12.dp),
                         maxLines = 12,
-                        trailingIcon = {
-                            Text(
-                                text = "${urlText.length}/200",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = counterColor,
-                                modifier = Modifier.padding(end = 12.dp),
-                            )
-                        },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             lineHeight = 22.sp,
                         ),
@@ -365,9 +354,15 @@ fun BatchUrlImportPage(
                             focusedContainerColor = bg,
                             unfocusedContainerColor = bg,
                         ),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {}),
                     )
+                    Spacer(Modifier.height(4.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        Text(
+                            text = "${urlText.length}/200",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = counterColor,
+                        )
+                    }
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = {
