@@ -178,9 +178,12 @@ private fun SectionHeader(isGradientDark: Boolean) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(
-                        if (isGradientDark) GradientBrushes.Primary
-                        else MaterialTheme.colorScheme.primaryContainer
+                    .then(
+                        if (isGradientDark) {
+                            Modifier.background(GradientBrushes.Primary)
+                        } else {
+                            Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+                        }
                     ),
                 contentAlignment = Alignment.Center,
             ) {
