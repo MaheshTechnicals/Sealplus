@@ -14,13 +14,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -30,15 +33,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.outlined.AudioFile
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.HighQuality
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.MusicNote
@@ -51,6 +53,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -75,7 +78,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
 import com.junkfood.seal.download.DownloaderV2
 import com.junkfood.seal.download.Task
@@ -112,11 +114,11 @@ import org.koin.compose.koinInject
 private object BatchColors {
     val Background = Color(0xFF09090B)
     val Surface = Color(0xFF14141A)
-    val SurfaceVariant = Color(0xFF1A1A22)
+    val SurfaceVariant = Color(0xFF1E1E28)
     val Primary = Color(0xFF7C4DFF)
-    val Border = Color(0xFF2D2D35)
+    val Border = Color(0xFF2A2A35)
     val TextPrimary = Color(0xFFFFFFFF)
-    val TextSecondary = Color(0xFFB2B2B8)
+    val TextSecondary = Color(0xFF9E9EAB)
     val Success = Color(0xFF22C55E)
     val Warning = Color(0xFFF59E0B)
 }
@@ -151,7 +153,7 @@ fun BatchUrlImportPage(
             if (preferences.extractAudio) DownloadType.Audio else DownloadType.Video
         )
     }
-    var showLinksExpanded by remember { mutableStateOf(false) }
+    var showLinksExpanded by remember { mutableStateOf(true) }
     var showVideoPresetDialog by remember { mutableStateOf(false) }
     var showAudioPresetDialog by remember { mutableStateOf(false) }
 
@@ -165,7 +167,7 @@ fun BatchUrlImportPage(
     val textPrimary = if (isDarkMode) BatchColors.TextPrimary else MaterialTheme.colorScheme.onSurface
     val textSecondary = if (isDarkMode) BatchColors.TextSecondary else MaterialTheme.colorScheme.onSurfaceVariant
 
-    val chipSelectedBg = if (isDarkMode) BatchColors.Primary.copy(alpha = 0.15f)
+    val chipSelectedBg = if (isDarkMode) BatchColors.Primary.copy(alpha = 0.12f)
     else MaterialTheme.colorScheme.primaryContainer
     val chipSelectedBorder = if (isDarkMode) BatchColors.Primary
     else MaterialTheme.colorScheme.primary
@@ -178,47 +180,38 @@ fun BatchUrlImportPage(
 
     Scaffold(
         containerColor = bg,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            Column {
-                Spacer(Modifier.height(12.dp))
+            Column(modifier = Modifier.statusBarsPadding()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     BackButton(onNavigateBack)
-                    Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                    Spacer(Modifier.width(4.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.batch_url_import),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp,
-                            ),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = textPrimary,
                         )
                         Text(
-                            text = "Download multiple links together",
+                            text = "Download multiple links",
                             style = MaterialTheme.typography.bodySmall,
                             color = textSecondary,
                         )
                     }
-                    IconButton(onClick = { /* Help: TBD */ }) {
-                        Icon(
-                            Icons.Outlined.HelpOutline,
-                            contentDescription = "Help",
-                            tint = textSecondary,
-                        )
-                    }
                 }
-                Spacer(Modifier.height(4.dp))
-                HorizontalDivider(color = border.copy(alpha = 0.5f))
+                HorizontalDivider(color = border.copy(alpha = 0.4f))
             }
         },
         bottomBar = {
-            Surface(color = bg, shadowElevation = 8.dp) {
+            Surface(color = bg) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     Button(
                         onClick = {
@@ -236,18 +229,19 @@ fun BatchUrlImportPage(
                             context.makeToast(context.getString(R.string.task_added))
                             onNavigateBack()
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(64.dp),
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
                         enabled = detectedUrls.isNotEmpty(),
-                        shape = RoundedCornerShape(32.dp),
+                        shape = RoundedCornerShape(26.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent,
                             disabledContainerColor = surfaceVariant,
                         ),
                     ) {
                         val bgMod = if (detectedUrls.isNotEmpty()) {
-                            Modifier.background(GradientBrush, RoundedCornerShape(32.dp))
+                            Modifier.background(
+                                GradientBrush,
+                                RoundedCornerShape(26.dp),
+                            )
                         } else {
                             Modifier
                         } as Modifier
@@ -259,19 +253,17 @@ fun BatchUrlImportPage(
                                 Icon(
                                     Icons.Filled.Download,
                                     contentDescription = null,
-                                    modifier = Modifier.size(22.dp),
-                                    tint = if (detectedUrls.isNotEmpty()) Color.White
-                                    else textSecondary,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (detectedUrls.isNotEmpty()) Color.White else textSecondary,
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(
                                     text = if (detectedUrls.isEmpty()) stringResource(R.string.download)
                                     else stringResource(R.string.download_task_count, detectedUrls.size),
-                                    style = MaterialTheme.typography.titleMedium.copy(
+                                    style = MaterialTheme.typography.titleSmall.copy(
                                         fontWeight = FontWeight.SemiBold,
                                     ),
-                                    color = if (detectedUrls.isNotEmpty()) Color.White
-                                    else textSecondary,
+                                    color = if (detectedUrls.isNotEmpty()) Color.White else textSecondary,
                                 )
                             }
                         }
@@ -288,44 +280,31 @@ fun BatchUrlImportPage(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // ── URL Input Card ──
+            // ── URL Input + Paste inline ──
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = surface,
-                border = BorderStroke(1.dp, border.copy(alpha = 0.6f)),
-                tonalElevation = 0.dp,
+                border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Outlined.Link,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = primary,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.video_url),
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                            color = textPrimary,
-                        )
-                    }
-                    Spacer(Modifier.height(12.dp))
+                Column(modifier = Modifier.padding(12.dp)) {
                     OutlinedTextField(
                         value = urlText,
-                        onValueChange = {
-                            if (it.length <= 200) urlText = it
+                        onValueChange = { if (it.length <= 200) urlText = it },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp),
+                        placeholder = {
+                            Text(
+                                "Paste links here...",
+                                color = textSecondary.copy(alpha = 0.5f),
+                            )
                         },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                        placeholder = { Text("Paste one or more URLs here...", color = textSecondary.copy(alpha = 0.5f)) },
-                        shape = RoundedCornerShape(24.dp),
-                        maxLines = 8,
+                        shape = RoundedCornerShape(12.dp),
+                        maxLines = 6,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = primary.copy(alpha = 0.5f),
-                            unfocusedBorderColor = border.copy(alpha = 0.4f),
+                            focusedBorderColor = primary.copy(alpha = 0.4f),
+                            unfocusedBorderColor = border.copy(alpha = 0.3f),
                             cursorColor = primary,
                             focusedTextColor = textPrimary,
                             unfocusedTextColor = textPrimary,
@@ -333,162 +312,62 @@ fun BatchUrlImportPage(
                             unfocusedContainerColor = bg,
                         ),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { /* dismiss keyboard */ }),
+                        keyboardActions = KeyboardActions(onDone = {}),
                     )
                     Spacer(Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Text(
-                            text = "${urlText.length}/200",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = textSecondary.copy(alpha = 0.7f),
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Outlined.Link,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = primary,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "${urlText.length}/200",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = textSecondary.copy(alpha = 0.6f),
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                clipboardManager.getText()?.let {
+                                    urlText = findURLsFromString(it.toString()).joinToString("\n")
+                                }
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = primary,
+                            ),
+                            border = BorderStroke(1.dp, primary.copy(alpha = 0.4f)),
+                            contentPadding = ButtonDefaults.TextButtonContentPadding,
+                        ) {
+                            Icon(
+                                Icons.Outlined.ContentPaste,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                "Paste",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Paste Button ──
-            Button(
-                onClick = {
-                    clipboardManager.getText()?.let {
-                        urlText = findURLsFromString(it.toString()).joinToString("\n")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize().background(GradientBrush, RoundedCornerShape(18.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Outlined.ContentPaste,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = Color.White,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Paste from Clipboard",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = Color.White,
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ── Selection Info (Links count) ──
-            Surface(
-                modifier = Modifier.fillMaxWidth().animateContentSize(),
-                shape = RoundedCornerShape(20.dp),
-                color = surface,
-                border = BorderStroke(1.dp, border.copy(alpha = 0.6f)),
-                tonalElevation = 0.dp,
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { showLinksExpanded = !showLinksExpanded },
-                            )
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(chipSelectedBg, RoundedCornerShape(10.dp)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Link,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = primary,
-                                )
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "${detectedUrls.size} Links Selected",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                    color = textPrimary,
-                                )
-                            }
-                        }
-                        if (detectedUrls.isNotEmpty()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (detectedUrls.size > 1) {
-                                    Text(
-                                        text = if (showLinksExpanded) "Collapse" else "View All",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = primary,
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .clickable {
-                                            urlText = ""
-                                            showLinksExpanded = false
-                                        }
-                                        .padding(8.dp),
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.clear),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (isDarkMode) BatchColors.Warning else textSecondary,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    AnimatedVisibility(
-                        visible = showLinksExpanded && detectedUrls.size > 1,
-                        enter = expandVertically(),
-                        exit = shrinkVertically(),
-                    ) {
-                        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
-                            HorizontalDivider(color = border.copy(alpha = 0.4f))
-                            Spacer(Modifier.height(8.dp))
-                            detectedUrls.forEachIndexed { index, url ->
-                                Text(
-                                    text = "${index + 1}. $url",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = textSecondary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                if (index < detectedUrls.lastIndex) {
-                                    Spacer(Modifier.height(4.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
             // ── Download Type ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 listOf(
                     DownloadType.Video to (Icons.Outlined.PlayCircle to "Download video"),
@@ -506,339 +385,403 @@ fun BatchUrlImportPage(
                                 updatePreferences()
                             },
                         ),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(14.dp),
                         color = if (isSelected) chipSelectedBg else surface,
                         border = BorderStroke(
                             1.5.dp,
                             if (isSelected) chipSelectedBorder else chipUnselectedBorder,
                         ),
-                        tonalElevation = 0.dp,
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                modifier = Modifier.size(28.dp),
+                                modifier = Modifier.size(22.dp),
                                 tint = if (isSelected) primary else textSecondary,
                             )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                text = when (type) {
-                                    DownloadType.Video -> stringResource(R.string.video)
-                                    DownloadType.Audio -> stringResource(R.string.audio)
-                                    else -> ""
-                                },
-                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                                color = if (isSelected) textPrimary else textSecondary,
-                            )
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = textSecondary.copy(alpha = 0.7f),
-                            )
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = when (type) {
+                                        DownloadType.Video -> stringResource(R.string.video)
+                                        DownloadType.Audio -> stringResource(R.string.audio)
+                                        else -> ""
+                                    },
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                                    color = if (isSelected) textPrimary else textSecondary,
+                                )
+                                Text(
+                                    text = desc,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = textSecondary.copy(alpha = 0.7f),
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // ── Format Selection ──
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                color = surface,
-                border = BorderStroke(1.dp, border.copy(alpha = 0.6f)),
-                tonalElevation = 0.dp,
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            // ── Selection Info ──
+            if (detectedUrls.isNotEmpty()) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().animateContentSize(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = surface,
+                    border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
                 ) {
-                    Icon(
-                        imageVector = if (selectedType == DownloadType.Video) Icons.Outlined.HighQuality
-                        else Icons.Outlined.AudioFile,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = primary,
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (selectedType == DownloadType.Video) {
-                                PreferenceStrings.getVideoPresetText(preferences)
-                            } else {
-                                PreferenceStrings.getAudioPresetText(preferences)
-                            },
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                            color = textPrimary,
-                        )
-                        Text(
-                            text = if (selectedType == DownloadType.Video) {
-                                stringResource(R.string.video_format_preference)
-                            } else {
-                                stringResource(R.string.audio_format)
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = textSecondary,
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
-                                when (selectedType) {
-                                    DownloadType.Video -> showVideoPresetDialog = true
-                                    DownloadType.Audio -> showAudioPresetDialog = true
-                                    else -> {}
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { showLinksExpanded = !showLinksExpanded },
+                                )
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(chipSelectedBg, RoundedCornerShape(8.dp)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Link,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = primary,
+                                    )
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "${detectedUrls.size} link${if (detectedUrls.size != 1) "s" else ""}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                    color = textPrimary,
+                                )
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (detectedUrls.size > 1) {
+                                    Text(
+                                        text = if (showLinksExpanded) "Collapse" else "View all",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = primary,
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = {
+                                                urlText = ""
+                                                showLinksExpanded = true
+                                            },
+                                        )
+                                        .padding(6.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Close,
+                                        contentDescription = stringResource(R.string.clear),
+                                        modifier = Modifier.size(14.dp),
+                                        tint = textSecondary,
+                                    )
                                 }
                             }
-                            .padding(10.dp),
-                    ) {
-                        Icon(
-                            Icons.Outlined.Edit,
-                            contentDescription = stringResource(R.string.edit),
-                            modifier = Modifier.size(20.dp),
-                            tint = primary,
-                        )
+                        }
+                        AnimatedVisibility(
+                            visible = showLinksExpanded && detectedUrls.size > 1,
+                            enter = expandVertically(),
+                            exit = shrinkVertically(),
+                        ) {
+                            Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 8.dp)) {
+                                HorizontalDivider(color = border.copy(alpha = 0.3f))
+                                Spacer(Modifier.height(6.dp))
+                                detectedUrls.forEachIndexed { index, url ->
+                                    Text(
+                                        text = "${index + 1}. $url",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = textSecondary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    if (index < detectedUrls.lastIndex) {
+                                        Spacer(Modifier.height(2.dp))
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+                Spacer(Modifier.height(12.dp))
             }
 
-            Spacer(Modifier.height(20.dp))
-
-            // ── Video / Audio Quality Chips ──
-            if (selectedType == DownloadType.Video) {
-                Text(
-                    text = stringResource(R.string.video_resolution),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = textPrimary,
-                )
-                Spacer(Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    val chips = listOf(
-                        QualityChipItem(RES_HIGHEST, "Best", "Auto", Icons.Outlined.LocalFireDepartment),
-                        QualityChipItem(1, "2160P", "4K"),
-                        QualityChipItem(2, "1440P", "2K"),
-                        QualityChipItem(3, "1080P", "FHD"),
-                        QualityChipItem(4, "720P", "HD"),
-                        QualityChipItem(5, "480P", "SD"),
-                    )
-                    chips.forEach { chip ->
-                        val sel = preferences.videoResolution == chip.value
-                        QualityChip(
-                            selected = sel,
-                            title = chip.label,
-                            subtitle = chip.subtitle,
-                            icon = chip.icon,
-                            chipSelectedBg = chipSelectedBg,
-                            chipSelectedBorder = chipSelectedBorder,
-                            chipUnselectedBorder = chipUnselectedBorder,
-                            primary = primary,
-                            textPrimary = textPrimary,
-                            textSecondary = textSecondary,
-                            onClick = {
-                                VIDEO_QUALITY.updateInt(chip.value)
-                                updatePreferences()
-                            },
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-
-                // ── Preferred Video Format ──
-                Text(
-                    text = stringResource(R.string.video_format_preference),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = textPrimary,
-                )
-                Spacer(Modifier.height(10.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OptionCard(
-                        selected = preferences.videoFormat == FORMAT_QUALITY,
-                        title = "Quality",
-                        subtitle = "Recommended",
-                        chipSelectedBorder = chipSelectedBorder,
-                        chipUnselectedBorder = chipUnselectedBorder,
-                        chipSelectedBg = chipSelectedBg,
-                        surface = surface,
-                        primary = primary,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        onClick = {
-                            VIDEO_FORMAT.updateInt(FORMAT_QUALITY)
-                            updatePreferences()
-                        },
-                    )
-                    OptionCard(
-                        selected = preferences.videoFormat == FORMAT_COMPATIBILITY,
-                        title = "Legacy",
-                        subtitle = "Compatibility",
-                        chipSelectedBorder = chipSelectedBorder,
-                        chipUnselectedBorder = chipUnselectedBorder,
-                        chipSelectedBg = chipSelectedBg,
-                        surface = surface,
-                        primary = primary,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        onClick = {
-                            VIDEO_FORMAT.updateInt(FORMAT_COMPATIBILITY)
-                            updatePreferences()
-                        },
-                    )
-                }
-            } else {
-                // ── Audio Quality ──
-                Text(
-                    text = stringResource(R.string.audio_quality),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = textPrimary,
-                )
-                Spacer(Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    val chips = listOf(
-                        QualityChipItem(NOT_SPECIFIED, "Best", icon = Icons.Outlined.LocalFireDepartment),
-                        QualityChipItem(HIGH, "192K"),
-                        QualityChipItem(MEDIUM, "128K"),
-                        QualityChipItem(LOW, "64K"),
-                    )
-                    chips.forEach { chip ->
-                        val sel = preferences.audioQuality == chip.value
-                        QualityChip(
-                            selected = sel,
-                            title = chip.label,
-                            subtitle = chip.subtitle,
-                            icon = chip.icon,
-                            chipSelectedBg = chipSelectedBg,
-                            chipSelectedBorder = chipSelectedBorder,
-                            chipUnselectedBorder = chipUnselectedBorder,
-                            primary = primary,
-                            textPrimary = textPrimary,
-                            textSecondary = textSecondary,
-                            onClick = {
-                                AUDIO_QUALITY.updateInt(chip.value)
-                                USE_CUSTOM_AUDIO_PRESET.updateBoolean(chip.value != NOT_SPECIFIED)
-                                updatePreferences()
-                            },
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-
-                // ── Audio Format ──
-                Text(
-                    text = stringResource(R.string.audio_format),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = textPrimary,
-                )
-                Spacer(Modifier.height(10.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OptionCard(
-                        selected = preferences.audioFormat == OPUS,
-                        title = "OPUS",
-                        subtitle = "",
-                        chipSelectedBorder = chipSelectedBorder,
-                        chipUnselectedBorder = chipUnselectedBorder,
-                        chipSelectedBg = chipSelectedBg,
-                        surface = surface,
-                        primary = primary,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        onClick = {
-                            AUDIO_FORMAT.updateInt(OPUS)
-                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
-                            updatePreferences()
-                        },
-                    )
-                    OptionCard(
-                        selected = preferences.audioFormat == M4A,
-                        title = "M4A",
-                        subtitle = "",
-                        chipSelectedBorder = chipSelectedBorder,
-                        chipUnselectedBorder = chipUnselectedBorder,
-                        chipSelectedBg = chipSelectedBg,
-                        surface = surface,
-                        primary = primary,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        onClick = {
-                            AUDIO_FORMAT.updateInt(M4A)
-                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
-                            updatePreferences()
-                        },
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // ── Download Summary ──
+            // ── Format Selection Card ──
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = surface,
-                border = BorderStroke(1.dp, border.copy(alpha = 0.6f)),
-                tonalElevation = 0.dp,
+                border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier.padding(12.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(chipSelectedBg, RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center,
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Outlined.Info,
+                            imageVector = if (selectedType == DownloadType.Video) Icons.Outlined.HighQuality
+                            else Icons.Outlined.AudioFile,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                             tint = primary,
                         )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column {
+                        Spacer(Modifier.width(8.dp))
                         Text(
-                            text = stringResource(R.string.format_selection),
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                            text = if (selectedType == DownloadType.Video) "Video Settings"
+                            else "Audio Settings",
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = textPrimary,
                         )
-                        Text(
-                            text = if (selectedType == DownloadType.Video)
-                                "${PreferenceStrings.getVideoResolutionDesc(preferences.videoResolution)} · ${
-                                    if (preferences.videoFormat == FORMAT_QUALITY) "MP4"
-                                    else "WebM"
-                                } · ${PreferenceStrings.getAudioQualityDesc(preferences.audioQuality)}"
-                            else
-                                "${if (preferences.audioFormat == OPUS) "OPUS" else "M4A"} · ${
-                                    PreferenceStrings.getAudioQualityDesc(preferences.audioQuality)
-                                }",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = textSecondary,
-                        )
+                        Spacer(Modifier.weight(1f))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        when (selectedType) {
+                                            DownloadType.Video -> showVideoPresetDialog = true
+                                            DownloadType.Audio -> showAudioPresetDialog = true
+                                            else -> {}
+                                        }
+                                    },
+                                )
+                                .padding(6.dp),
+                        ) {
+                            Icon(
+                                Icons.Outlined.Edit,
+                                contentDescription = stringResource(R.string.edit),
+                                modifier = Modifier.size(16.dp),
+                                tint = primary,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    HorizontalDivider(color = border.copy(alpha = 0.3f))
+                    Spacer(Modifier.height(8.dp))
+
+                    // ── Video / Audio Quality ──
+                    if (selectedType == DownloadType.Video) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Resolution",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                color = textSecondary,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                val chips = listOf(
+                                    QualityChipItem(RES_HIGHEST, "Best", icon = Icons.Outlined.LocalFireDepartment),
+                                    QualityChipItem(1, "4K"),
+                                    QualityChipItem(2, "1440p"),
+                                    QualityChipItem(3, "1080p"),
+                                    QualityChipItem(4, "720p"),
+                                    QualityChipItem(5, "480p"),
+                                )
+                                chips.forEach { chip ->
+                                    val sel = preferences.videoResolution == chip.value
+                                    CompactChip(
+                                        selected = sel,
+                                        title = chip.label,
+                                        icon = chip.icon,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            VIDEO_QUALITY.updateInt(chip.value)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Format",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                color = textSecondary,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                listOf(
+                                    FORMAT_QUALITY to "Quality (Recommended)",
+                                    FORMAT_COMPATIBILITY to "Legacy",
+                                ).forEach { (value, label) ->
+                                    val sel = preferences.videoFormat == value
+                                    CompactRadioChip(
+                                        selected = sel,
+                                        label = label,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            VIDEO_FORMAT.updateInt(value)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Quality",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                color = textSecondary,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                val chips = listOf(
+                                    QualityChipItem(NOT_SPECIFIED, "Best", icon = Icons.Outlined.LocalFireDepartment),
+                                    QualityChipItem(HIGH, "192K"),
+                                    QualityChipItem(MEDIUM, "128K"),
+                                    QualityChipItem(LOW, "64K"),
+                                )
+                                chips.forEach { chip ->
+                                    val sel = preferences.audioQuality == chip.value
+                                    CompactChip(
+                                        selected = sel,
+                                        title = chip.label,
+                                        icon = chip.icon,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            AUDIO_QUALITY.updateInt(chip.value)
+                                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(chip.value != NOT_SPECIFIED)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Format",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                color = textSecondary,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                listOf(
+                                    OPUS to "OPUS",
+                                    M4A to "M4A",
+                                ).forEach { (value, label) ->
+                                    val sel = preferences.audioFormat == value
+                                    CompactRadioChip(
+                                        selected = sel,
+                                        label = label,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            AUDIO_FORMAT.updateInt(value)
+                                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // ── Footer ──
+            // ── Download Summary ──
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                color = chipSelectedBg,
+                border = BorderStroke(1.dp, chipSelectedBorder.copy(alpha = 0.3f)),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Outlined.HighQuality,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = primary,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = if (selectedType == DownloadType.Video) {
+                            "${PreferenceStrings.getVideoResolutionDesc(preferences.videoResolution)} · ${
+                                if (preferences.videoFormat == FORMAT_QUALITY) "MP4" else "WebM"
+                            }"
+                        } else {
+                            "${if (preferences.audioFormat == OPUS) "OPUS" else "M4A"} · ${
+                                PreferenceStrings.getAudioQualityDesc(preferences.audioQuality)
+                            }"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textPrimary,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── Footer Badges ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 listOf(
                     Triple(Icons.Outlined.Shield, "Secure", BatchColors.Success),
@@ -847,22 +790,22 @@ fun BatchUrlImportPage(
                 ).forEach { (icn, lbl, clr) ->
                     Surface(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
-                        color = surface,
-                        border = BorderStroke(1.dp, border.copy(alpha = 0.4f)),
-                        tonalElevation = 0.dp,
+                        shape = RoundedCornerShape(8.dp),
+                        color = chipSelectedBg,
+                        border = BorderStroke(1.dp, border.copy(alpha = 0.3f)),
                     ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = 12.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 imageVector = icn,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(12.dp),
                                 tint = clr,
                             )
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.width(4.dp))
                             Text(
                                 text = lbl,
                                 style = MaterialTheme.typography.labelSmall,
@@ -873,7 +816,7 @@ fun BatchUrlImportPage(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 
@@ -927,13 +870,11 @@ fun BatchUrlImportPage(
     }
 }
 
-// ── Reusable Components ──
-
+// ── Compact Chip ──
 @Composable
-private fun QualityChip(
+private fun CompactChip(
     selected: Boolean,
     title: String,
-    subtitle: String,
     icon: ImageVector?,
     chipSelectedBg: Color,
     chipSelectedBorder: Color,
@@ -945,58 +886,46 @@ private fun QualityChip(
 ) {
     Surface(
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(10.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(10.dp),
         color = if (selected) chipSelectedBg else Color.Transparent,
-        border = BorderStroke(
-            1.5.dp,
-            if (selected) chipSelectedBorder else chipUnselectedBorder,
-        ),
-        tonalElevation = 0.dp,
+        border = BorderStroke(1.dp, if (selected) chipSelectedBorder else chipUnselectedBorder),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(12.dp),
                     tint = if (selected) primary else textSecondary,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.width(4.dp))
             }
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                 color = if (selected) textPrimary else textSecondary,
             )
-            if (subtitle.isNotEmpty()) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = textSecondary.copy(alpha = 0.7f),
-                )
-            }
         }
     }
 }
 
+// ── Compact Radio Chip ──
 @Composable
-private fun OptionCard(
+private fun CompactRadioChip(
     selected: Boolean,
-    title: String,
-    subtitle: String,
+    label: String,
+    chipSelectedBg: Color,
     chipSelectedBorder: Color,
     chipUnselectedBorder: Color,
-    chipSelectedBg: Color,
-    surface: Color,
     primary: Color,
     textPrimary: Color,
     textSecondary: Color,
@@ -1004,27 +933,23 @@ private fun OptionCard(
 ) {
     Surface(
         modifier = Modifier
-            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
             ),
-        shape = RoundedCornerShape(16.dp),
-        color = if (selected) chipSelectedBg else surface,
-        border = BorderStroke(
-            1.5.dp,
-            if (selected) chipSelectedBorder else chipUnselectedBorder,
-        ),
-        tonalElevation = 0.dp,
+        shape = RoundedCornerShape(10.dp),
+        color = if (selected) chipSelectedBg else Color.Transparent,
+        border = BorderStroke(1.dp, if (selected) chipSelectedBorder else chipUnselectedBorder),
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
-                    .size(22.dp)
+                    .size(14.dp)
                     .clip(CircleShape)
                     .background(
                         if (selected) primary else chipUnselectedBorder,
@@ -1036,26 +961,17 @@ private fun OptionCard(
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(8.dp),
                         tint = Color.White,
                     )
                 }
             }
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    color = if (selected) textPrimary else textSecondary,
-                )
-                if (subtitle.isNotEmpty()) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = textSecondary.copy(alpha = 0.7f),
-                    )
-                }
-            }
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                color = if (selected) textPrimary else textSecondary,
+            )
         }
     }
 }
