@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
 import com.junkfood.seal.download.DownloaderV2
 import com.junkfood.seal.download.Task
@@ -60,8 +61,20 @@ import com.junkfood.seal.util.AUDIO_QUALITY
 import com.junkfood.seal.util.DownloadType
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.EXTRACT_AUDIO
+import com.junkfood.seal.util.FORMAT_COMPATIBILITY
+import com.junkfood.seal.util.FORMAT_QUALITY
+import com.junkfood.seal.util.HIGH
+import com.junkfood.seal.util.LOW
+import com.junkfood.seal.util.M4A
+import com.junkfood.seal.util.MEDIUM
+import com.junkfood.seal.util.NOT_SPECIFIED
+import com.junkfood.seal.util.OPUS
+import com.junkfood.seal.util.PreferenceStrings
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
+import com.junkfood.seal.util.RES_HIGHEST
+import com.junkfood.seal.util.RES_LOWEST
+import com.junkfood.seal.util.ULTRA_LOW
 import com.junkfood.seal.util.USE_CUSTOM_AUDIO_PRESET
 import com.junkfood.seal.util.VIDEO_FORMAT
 import com.junkfood.seal.util.VIDEO_QUALITY
@@ -200,14 +213,26 @@ fun BatchUrlImportPage(
             Spacer(Modifier.height(16.dp))
 
             DrawerSheetSubtitle(text = stringResource(R.string.format_selection))
-            Spacer(Modifier.height(8.dp))
-            Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            Spacer(Modifier.height(4.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = if (selectedType == DownloadType.Video)
+                        PreferenceStrings.getVideoPresetText(preferences)
+                    else
+                        PreferenceStrings.getAudioPresetText(preferences),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isGradientDark) GradientDarkColors.OnSurface.copy(alpha = 0.7f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
                 ButtonChip(
                     icon = Icons.Outlined.Edit,
-                    label = stringResource(
-                        if (selectedType == DownloadType.Video) R.string.video
-                        else R.string.audio
-                    ),
+                    label = stringResource(R.string.edit),
                     onClick = {
                         when (selectedType) {
                             DownloadType.Video -> showVideoPresetDialog = true
@@ -216,6 +241,164 @@ fun BatchUrlImportPage(
                         }
                     },
                 )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (selectedType == DownloadType.Video) {
+                Text(
+                    text = stringResource(R.string.video_resolution),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isGradientDark) GradientDarkColors.OnSurface.copy(alpha = 0.6f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    val resolutions = listOf(
+                        RES_HIGHEST to "Best",
+                        1 to "2160p",
+                        2 to "1440p",
+                        3 to "1080p",
+                        4 to "720p",
+                        5 to "480p",
+                        6 to "360p",
+                        RES_LOWEST to "Worst",
+                    )
+                    resolutions.forEach { (res, label) ->
+                        FilterChip(
+                            selected = preferences.videoResolution == res,
+                            onClick = {
+                                VIDEO_QUALITY.updateInt(res)
+                                preferences = DownloadUtil.DownloadPreferences.createFromPreferences()
+                            },
+                            label = { Text(label, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = if (isGradientDark)
+                                    GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.3f)
+                                else MaterialTheme.colorScheme.primaryContainer,
+                            ),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.video_format_preference),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isGradientDark) GradientDarkColors.OnSurface.copy(alpha = 0.6f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    FilterChip(
+                        selected = preferences.videoFormat == FORMAT_QUALITY,
+                        onClick = {
+                            VIDEO_FORMAT.updateInt(FORMAT_QUALITY)
+                            preferences = DownloadUtil.DownloadPreferences.createFromPreferences()
+                        },
+                        label = { Text(stringResource(R.string.quality)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isGradientDark)
+                                GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.3f)
+                            else MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                    FilterChip(
+                        selected = preferences.videoFormat == FORMAT_COMPATIBILITY,
+                        onClick = {
+                            VIDEO_FORMAT.updateInt(FORMAT_COMPATIBILITY)
+                            preferences = DownloadUtil.DownloadPreferences.createFromPreferences()
+                        },
+                        label = { Text(stringResource(R.string.legacy)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isGradientDark)
+                                GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.3f)
+                            else MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                }
+            } else {
+                Text(
+                    text = stringResource(R.string.audio_quality),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isGradientDark) GradientDarkColors.OnSurface.copy(alpha = 0.6f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    val qualities = listOf(
+                        NOT_SPECIFIED to "Best",
+                        HIGH to "192K",
+                        MEDIUM to "128K",
+                        LOW to "64K",
+                        ULTRA_LOW to "32K",
+                    )
+                    qualities.forEach { (quality, label) ->
+                        FilterChip(
+                            selected = preferences.audioQuality == quality,
+                            onClick = {
+                                AUDIO_QUALITY.updateInt(quality)
+                                USE_CUSTOM_AUDIO_PRESET.updateBoolean(quality != NOT_SPECIFIED)
+                                preferences = DownloadUtil.DownloadPreferences.createFromPreferences()
+                            },
+                            label = { Text(label, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = if (isGradientDark)
+                                    GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.3f)
+                                else MaterialTheme.colorScheme.primaryContainer,
+                            ),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.audio_format),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isGradientDark) GradientDarkColors.OnSurface.copy(alpha = 0.6f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    FilterChip(
+                        selected = preferences.audioFormat == OPUS,
+                        onClick = {
+                            AUDIO_FORMAT.updateInt(OPUS)
+                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
+                            preferences = DownloadUtil.DownloadPreferences.createFromPreferences()
+                        },
+                        label = { Text("OPUS") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isGradientDark)
+                                GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.3f)
+                            else MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                    FilterChip(
+                        selected = preferences.audioFormat == M4A,
+                        onClick = {
+                            AUDIO_FORMAT.updateInt(M4A)
+                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
+                            preferences = DownloadUtil.DownloadPreferences.createFromPreferences()
+                        },
+                        label = { Text("M4A") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isGradientDark)
+                                GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.3f)
+                            else MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                }
             }
 
             Spacer(Modifier.height(24.dp))
