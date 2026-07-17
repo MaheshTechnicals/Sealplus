@@ -243,10 +243,12 @@ fun BatchUrlImportPage(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(
-                                    if (detectedUrls.isNotEmpty()) GradientBrush
-                                    else surfaceVariant,
-                                    RoundedCornerShape(25.dp),
+                                .clip(RoundedCornerShape(25.dp))
+                                .then(
+                                    if (detectedUrls.isNotEmpty())
+                                        Modifier.background(GradientBrush)
+                                    else
+                                        Modifier.background(surfaceVariant)
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
