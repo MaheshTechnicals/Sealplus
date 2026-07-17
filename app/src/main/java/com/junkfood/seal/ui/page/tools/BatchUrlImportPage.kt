@@ -54,6 +54,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -562,7 +565,7 @@ fun BatchUrlImportPage(
                 border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(12.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -582,9 +585,9 @@ fun BatchUrlImportPage(
                         Spacer(Modifier.weight(1f))
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
-                                .background(chipSelectedBg, CircleShape)
+                                .background(chipSelectedBg.copy(alpha = 0.5f), CircleShape)
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     onClick = {
@@ -600,12 +603,12 @@ fun BatchUrlImportPage(
                             Icon(
                                 Icons.Outlined.Edit,
                                 contentDescription = stringResource(R.string.edit),
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(14.dp),
                                 tint = primary,
                             )
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(10.dp))
 
                     if (selectedType == DownloadType.Video) {
                         Text(
@@ -613,7 +616,7 @@ fun BatchUrlImportPage(
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -647,38 +650,37 @@ fun BatchUrlImportPage(
                                 }
                             }
                         }
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(10.dp))
                         Text(
                             text = "Format",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(8.dp))
-                        Row(
+                        Spacer(Modifier.height(6.dp))
+                        SingleChoiceSegmentedButtonRow(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            listOf(
-                                FORMAT_QUALITY to "Quality",
-                                FORMAT_COMPATIBILITY to "Legacy",
-                            ).forEach { (value, label) ->
-                                val sel = preferences.videoFormat == value
-                                Box(modifier = Modifier.weight(1f)) {
-                                    SegmentedChip(
-                                        selected = sel,
-                                        label = label,
-                                        chipSelectedBg = chipSelectedBg,
-                                        chipSelectedBorder = chipSelectedBorder,
-                                        chipUnselectedBorder = chipUnselectedBorder,
-                                        primary = primary,
-                                        textPrimary = textPrimary,
-                                        textSecondary = textSecondary,
-                                        onClick = {
-                                            VIDEO_FORMAT.updateInt(value)
-                                            updatePreferences()
-                                        },
-                                    )
-                                }
+                            SegmentedButton(
+                                selected = preferences.videoFormat == FORMAT_QUALITY,
+                                onClick = {
+                                    VIDEO_FORMAT.updateInt(FORMAT_QUALITY)
+                                    updatePreferences()
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                colors = segmentedColors(textPrimary, textSecondary, chipSelectedBg, chipUnselectedBorder),
+                            ) {
+                                Text("Quality", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
+                            }
+                            SegmentedButton(
+                                selected = preferences.videoFormat == FORMAT_COMPATIBILITY,
+                                onClick = {
+                                    VIDEO_FORMAT.updateInt(FORMAT_COMPATIBILITY)
+                                    updatePreferences()
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                colors = segmentedColors(textPrimary, textSecondary, chipSelectedBg, chipUnselectedBorder),
+                            ) {
+                                Text("Legacy", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                             }
                         }
                     } else {
@@ -687,7 +689,7 @@ fun BatchUrlImportPage(
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -720,39 +722,39 @@ fun BatchUrlImportPage(
                                 }
                             }
                         }
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(10.dp))
                         Text(
                             text = "Format",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(8.dp))
-                        Row(
+                        Spacer(Modifier.height(6.dp))
+                        SingleChoiceSegmentedButtonRow(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            listOf(
-                                OPUS to "OPUS",
-                                M4A to "M4A",
-                            ).forEach { (value, label) ->
-                                val sel = preferences.audioFormat == value
-                                Box(modifier = Modifier.weight(1f)) {
-                                    SegmentedChip(
-                                        selected = sel,
-                                        label = label,
-                                        chipSelectedBg = chipSelectedBg,
-                                        chipSelectedBorder = chipSelectedBorder,
-                                        chipUnselectedBorder = chipUnselectedBorder,
-                                        primary = primary,
-                                        textPrimary = textPrimary,
-                                        textSecondary = textSecondary,
-                                        onClick = {
-                                            AUDIO_FORMAT.updateInt(value)
-                                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
-                                            updatePreferences()
-                                        },
-                                    )
-                                }
+                            SegmentedButton(
+                                selected = preferences.audioFormat == OPUS,
+                                onClick = {
+                                    AUDIO_FORMAT.updateInt(OPUS)
+                                    USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
+                                    updatePreferences()
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                colors = segmentedColors(textPrimary, textSecondary, chipSelectedBg, chipUnselectedBorder),
+                            ) {
+                                Text("OPUS", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
+                            }
+                            SegmentedButton(
+                                selected = preferences.audioFormat == M4A,
+                                onClick = {
+                                    AUDIO_FORMAT.updateInt(M4A)
+                                    USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
+                                    updatePreferences()
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                colors = segmentedColors(textPrimary, textSecondary, chipSelectedBg, chipUnselectedBorder),
+                            ) {
+                                Text("M4A", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                             }
                         }
                     }
@@ -955,41 +957,16 @@ private fun CompactChip(
     }
 }
 
-// ── Segmented Chip (for Format toggle rows) ──
-@Composable
-private fun SegmentedChip(
-    selected: Boolean,
-    label: String,
-    chipSelectedBg: Color,
-    chipSelectedBorder: Color,
-    chipUnselectedBorder: Color,
-    primary: Color,
+private fun segmentedColors(
     textPrimary: Color,
     textSecondary: Color,
-    onClick: () -> Unit,
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = onClick,
-            ),
-        shape = RoundedCornerShape(8.dp),
-        color = if (selected) chipSelectedBg else Color.Transparent,
-        border = if (selected) BorderStroke(0.dp, Color.Transparent)
-        else BorderStroke(1.dp, chipUnselectedBorder),
-    ) {
-        Box(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                color = if (selected) textPrimary else textSecondary,
-            )
-        }
-    }
-}
+    chipSelectedBg: Color,
+    chipUnselectedBorder: Color,
+) = SegmentedButtonDefaults.colors(
+    activeContainerColor = chipSelectedBg,
+    activeContentColor = textPrimary,
+    inactiveContainerColor = Color.Transparent,
+    inactiveContentColor = textSecondary,
+    activeBorderColor = chipUnselectedBorder.copy(alpha = 0.3f),
+    inactiveBorderColor = chipUnselectedBorder,
+)
