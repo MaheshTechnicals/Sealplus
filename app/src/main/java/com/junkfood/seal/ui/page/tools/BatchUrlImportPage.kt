@@ -145,7 +145,7 @@ fun BatchUrlImportPage(
     var urlText by remember { mutableStateOf("") }
     var selectedType by remember {
         mutableStateOf(
-            if (EXTRACT_AUDIO.getBoolean()) DownloadType.Audio else DownloadType.Video
+            if (preferences.extractAudio) DownloadType.Audio else DownloadType.Video
         )
     }
     var preferences by remember {
@@ -246,14 +246,13 @@ fun BatchUrlImportPage(
                             disabledContainerColor = surfaceVariant,
                         ),
                     ) {
+                        val bgMod = if (detectedUrls.isNotEmpty()) {
+                            Modifier.background(GradientBrush, RoundedCornerShape(32.dp))
+                        } else {
+                            Modifier
+                        }
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    if (detectedUrls.isNotEmpty()) GradientBrush
-                                    else Color.Transparent,
-                                    RoundedCornerShape(32.dp),
-                                ),
+                            modifier = Modifier.fillMaxSize().then(bgMod),
                             contentAlignment = Alignment.Center,
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
