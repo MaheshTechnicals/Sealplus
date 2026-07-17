@@ -957,6 +957,7 @@ private fun CompactChip(
     }
 }
 
+@Composable
 private fun segmentedColors(
     textPrimary: Color,
     textSecondary: Color,
