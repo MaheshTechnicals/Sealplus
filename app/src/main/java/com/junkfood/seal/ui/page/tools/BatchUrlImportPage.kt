@@ -11,7 +11,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -334,7 +333,6 @@ fun BatchUrlImportPage(
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             lineHeight = 22.sp,
                         ),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = primary.copy(alpha = 0.4f),
                             unfocusedBorderColor = border.copy(alpha = 0.3f),
