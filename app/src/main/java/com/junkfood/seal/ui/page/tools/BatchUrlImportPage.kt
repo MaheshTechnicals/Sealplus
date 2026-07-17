@@ -1,7 +1,9 @@
 package com.junkfood.seal.ui.page.tools
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
@@ -417,6 +419,21 @@ fun BatchUrlImportPage(
                 ).forEach { (type, pair) ->
                     val (icon, desc) = pair
                     val isSelected = selectedType == type
+                    val selectedBgAnim by animateColorAsState(
+                        targetValue = if (isSelected) chipSelectedBg else surface,
+                        animationSpec = tween(250),
+                        label = "cardBg"
+                    )
+                    val selectedIconTint by animateColorAsState(
+                        targetValue = if (isSelected) primary else textSecondary,
+                        animationSpec = tween(250),
+                        label = "cardIconTint"
+                    )
+                    val selectedTextColor by animateColorAsState(
+                        targetValue = if (isSelected) textPrimary else textSecondary,
+                        animationSpec = tween(250),
+                        label = "cardTextColor"
+                    )
                     Surface(
                         modifier = Modifier.weight(1f).clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -427,7 +444,7 @@ fun BatchUrlImportPage(
                             },
                         ),
                         shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) chipSelectedBg else surface,
+                        color = selectedBgAnim,
                         border = if (isSelected) null
                         else BorderStroke(1.dp, chipUnselectedBorder),
                     ) {
@@ -439,7 +456,7 @@ fun BatchUrlImportPage(
                                 imageVector = icon,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = if (isSelected) primary else textSecondary,
+                                tint = selectedIconTint,
                             )
                             Spacer(Modifier.width(8.dp))
                             Column {
@@ -450,7 +467,7 @@ fun BatchUrlImportPage(
                                         else -> ""
                                     },
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = if (isSelected) textPrimary else textSecondary,
+                                    color = selectedTextColor,
                                 )
                                 Text(
                                     text = desc,
@@ -929,6 +946,21 @@ private fun CompactChip(
     textSecondary: Color,
     onClick: () -> Unit,
 ) {
+    val bgAnim by animateColorAsState(
+        targetValue = if (selected) chipSelectedBg else Color.Transparent,
+        animationSpec = tween(250),
+        label = "chipBg"
+    )
+    val contentAnim by animateColorAsState(
+        targetValue = if (selected) primary else textSecondary,
+        animationSpec = tween(250),
+        label = "chipContent"
+    )
+    val textAnim by animateColorAsState(
+        targetValue = if (selected) textPrimary else textSecondary,
+        animationSpec = tween(250),
+        label = "chipText"
+    )
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -938,7 +970,7 @@ private fun CompactChip(
                 onClick = onClick,
             ),
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) chipSelectedBg else Color.Transparent,
+        color = bgAnim,
         border = if (selected) BorderStroke(0.dp, Color.Transparent)
         else BorderStroke(1.dp, chipUnselectedBorder),
     ) {
@@ -952,14 +984,14 @@ private fun CompactChip(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(11.dp),
-                    tint = if (selected) primary else textSecondary,
+                    tint = contentAnim,
                 )
                 Spacer(Modifier.width(3.dp))
             }
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                color = if (selected) textPrimary else textSecondary,
+                color = textAnim,
             )
         }
     }
