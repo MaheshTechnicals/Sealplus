@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -234,8 +235,8 @@ fun BatchUrlImportPage(
                             disabledContainerColor = Color.Transparent,
                         ),
                         elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp,
-                            pressedElevation = 4.dp,
+                            defaultElevation = 6.dp,
+                            pressedElevation = 8.dp,
                         ),
                     ) {
                         Box(
@@ -313,7 +314,7 @@ fun BatchUrlImportPage(
                     OutlinedTextField(
                         value = urlText,
                         onValueChange = { if (it.length <= 200) urlText = it },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp),
                         placeholder = {
                             Text(
                                 "Paste one or more URLs here...",
@@ -321,7 +322,7 @@ fun BatchUrlImportPage(
                             )
                         },
                         shape = RoundedCornerShape(12.dp),
-                        maxLines = 4,
+                        maxLines = 12,
                         trailingIcon = {
                             Text(
                                 text = "${urlText.length}/200",
@@ -330,6 +331,10 @@ fun BatchUrlImportPage(
                                 modifier = Modifier.padding(end = 12.dp),
                             )
                         },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            lineHeight = 22.sp,
+                        ),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = primary.copy(alpha = 0.4f),
                             unfocusedBorderColor = border.copy(alpha = 0.3f),
@@ -349,34 +354,29 @@ fun BatchUrlImportPage(
                                 urlText = findURLsFromString(it.toString()).joinToString("\n")
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        modifier = Modifier.fillMaxWidth().height(40.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent,
+                            containerColor = primary,
                         ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp),
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(GradientBrush),
-                            contentAlignment = Alignment.Center,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Outlined.ContentPaste,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color.White,
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    "Paste from Clipboard",
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = Color.White,
-                                )
-                            }
+                            Icon(
+                                Icons.Outlined.ContentPaste,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                                tint = Color.White,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "Paste from Clipboard",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
+                                color = Color.White,
+                            )
                         }
                     }
                 }
@@ -398,7 +398,6 @@ fun BatchUrlImportPage(
                     Surface(
                         modifier = Modifier.weight(1f).clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
                             onClick = {
                                 selectedType = type
                                 EXTRACT_AUDIO.updateBoolean(type == DownloadType.Audio)
@@ -413,13 +412,13 @@ fun BatchUrlImportPage(
                         ),
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(16.dp),
                                 tint = if (isSelected) primary else textSecondary,
                             )
                             Spacer(Modifier.width(8.dp))
@@ -460,7 +459,6 @@ fun BatchUrlImportPage(
                                 .fillMaxWidth()
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
                                     onClick = { showLinksExpanded = !showLinksExpanded },
                                 )
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -549,7 +547,7 @@ fun BatchUrlImportPage(
 
             // ── Format Settings Card ──
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
                 shape = RoundedCornerShape(20.dp),
                 color = surface,
                 border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
@@ -575,8 +573,9 @@ fun BatchUrlImportPage(
                         Spacer(Modifier.weight(1f))
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(chipSelectedBg, RoundedCornerShape(8.dp))
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(chipSelectedBg, CircleShape)
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     onClick = {
@@ -586,13 +585,13 @@ fun BatchUrlImportPage(
                                             else -> {}
                                         }
                                     },
-                                )
-                                .padding(6.dp),
+                                ),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 Icons.Outlined.Edit,
                                 contentDescription = stringResource(R.string.edit),
-                                modifier = Modifier.size(14.dp),
+                                modifier = Modifier.size(16.dp),
                                 tint = primary,
                             )
                         }
@@ -761,7 +760,7 @@ fun BatchUrlImportPage(
                 border = BorderStroke(1.dp, chipSelectedBorder.copy(alpha = 0.25f)),
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
@@ -779,20 +778,27 @@ fun BatchUrlImportPage(
                             tint = primary,
                         )
                     }
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = if (selectedType == DownloadType.Video) {
-                            "${PreferenceStrings.getVideoResolutionDesc(preferences.videoResolution)} · ${
-                                if (preferences.videoFormat == FORMAT_QUALITY) "MP4" else "WebM"
-                            } · Video + Audio"
-                        } else {
-                            "${if (preferences.audioFormat == OPUS) "OPUS" else "M4A"} · ${
-                                PreferenceStrings.getAudioQualityDesc(preferences.audioQuality)
-                            } · Audio"
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = textPrimary,
-                    )
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = if (selectedType == DownloadType.Video) {
+                                "${PreferenceStrings.getVideoResolutionDesc(preferences.videoResolution)} · ${
+                                    if (preferences.videoFormat == FORMAT_QUALITY) "MP4" else "WebM"
+                                } · Video + Audio"
+                            } else {
+                                "${if (preferences.audioFormat == OPUS) "OPUS" else "M4A"} · ${
+                                    PreferenceStrings.getAudioQualityDesc(preferences.audioQuality)
+                                } · Audio"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = textPrimary,
+                        )
+                        Text(
+                            text = "Current selection",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            color = textSecondary.copy(alpha = 0.6f),
+                        )
+                    }
                 }
             }
 
@@ -836,7 +842,7 @@ fun BatchUrlImportPage(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
         }
     }
 
@@ -910,7 +916,6 @@ private fun CompactChip(
             .clip(RoundedCornerShape(10.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
                 onClick = onClick,
             ),
         shape = RoundedCornerShape(10.dp),
@@ -960,7 +965,6 @@ private fun SegmentedChip(
             .clip(RoundedCornerShape(8.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
                 onClick = onClick,
             ),
         shape = RoundedCornerShape(8.dp),
