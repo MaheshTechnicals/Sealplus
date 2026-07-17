@@ -35,7 +35,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.outlined.AudioFile
-import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Edit
@@ -44,7 +43,6 @@ import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.PlayCircle
-import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +58,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -121,7 +120,6 @@ private object BatchColors {
     val Border = Color(0xFF2A2A35)
     val TextPrimary = Color(0xFFFFFFFF)
     val TextSecondary = Color(0xFF9E9EAB)
-    val Success = Color(0xFF22C55E)
     val Warning = Color(0xFFF59E0B)
 }
 
@@ -829,46 +827,6 @@ fun BatchUrlImportPage(
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                             color = textSecondary.copy(alpha = 0.6f),
                         )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // ── Footer Badges ──
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                listOf(
-                    Triple(Icons.Outlined.Shield, "Secure", BatchColors.Success),
-                    Triple(Icons.Outlined.Bolt, "Fast", BatchColors.Warning),
-                    Triple(Icons.Outlined.CheckCircle, "Best Quality", BatchColors.Primary),
-                ).forEach { (icn, lbl, clr) ->
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(6.dp),
-                        color = surface,
-                        border = BorderStroke(1.dp, border.copy(alpha = 0.3f)),
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Icon(
-                                imageVector = icn,
-                                contentDescription = null,
-                                modifier = Modifier.size(9.dp),
-                                tint = clr,
-                            )
-                            Spacer(Modifier.width(2.dp))
-                            Text(
-                                text = lbl,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                color = textSecondary,
-                            )
-                        }
                     }
                 }
             }
