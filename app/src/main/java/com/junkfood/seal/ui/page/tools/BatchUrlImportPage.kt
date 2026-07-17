@@ -7,7 +7,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,7 +50,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -183,7 +181,7 @@ fun BatchUrlImportPage(
         topBar = {
             Column(modifier = Modifier.statusBarsPadding()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     BackButton(onNavigateBack)
@@ -292,7 +290,7 @@ fun BatchUrlImportPage(
             // ── URL Input Card ──
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = surface,
                 border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
             ) {
@@ -307,7 +305,7 @@ fun BatchUrlImportPage(
                         Spacer(Modifier.width(6.dp))
                         Text(
                             text = "Video Links",
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = textPrimary,
                         )
                     }
@@ -315,15 +313,23 @@ fun BatchUrlImportPage(
                     OutlinedTextField(
                         value = urlText,
                         onValueChange = { if (it.length <= 200) urlText = it },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                         placeholder = {
                             Text(
-                                "Paste YouTube URLs here...",
+                                "Paste one or more URLs here...",
                                 color = textSecondary.copy(alpha = 0.5f),
                             )
                         },
                         shape = RoundedCornerShape(12.dp),
-                        maxLines = 5,
+                        maxLines = 4,
+                        trailingIcon = {
+                            Text(
+                                text = "${urlText.length}/200",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = textSecondary.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(end = 12.dp),
+                            )
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = primary.copy(alpha = 0.4f),
                             unfocusedBorderColor = border.copy(alpha = 0.3f),
@@ -336,19 +342,8 @@ fun BatchUrlImportPage(
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = {}),
                     )
-                    Spacer(Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        Text(
-                            text = "${urlText.length}/200",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = textSecondary.copy(alpha = 0.6f),
-                        )
-                    }
                     Spacer(Modifier.height(8.dp))
-                    OutlinedButton(
+                    Button(
                         onClick = {
                             clipboardManager.getText()?.let {
                                 urlText = findURLsFromString(it.toString()).joinToString("\n")
@@ -356,21 +351,33 @@ fun BatchUrlImportPage(
                         },
                         modifier = Modifier.fillMaxWidth().height(44.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = primary,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
                         ),
-                        border = BorderStroke(1.dp, primary.copy(alpha = 0.4f)),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
                     ) {
-                        Icon(
-                            Icons.Outlined.ContentPaste,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            "Paste from Clipboard",
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(GradientBrush),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Outlined.ContentPaste,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.White,
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    "Paste from Clipboard",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = Color.White,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -398,7 +405,7 @@ fun BatchUrlImportPage(
                                 updatePreferences()
                             },
                         ),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(20.dp),
                         color = if (isSelected) chipSelectedBg else surface,
                         border = BorderStroke(
                             1.5.dp,
@@ -412,7 +419,7 @@ fun BatchUrlImportPage(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(18.dp),
                                 tint = if (isSelected) primary else textSecondary,
                             )
                             Spacer(Modifier.width(8.dp))
@@ -443,7 +450,7 @@ fun BatchUrlImportPage(
             if (detectedUrls.isNotEmpty()) {
                 Surface(
                     modifier = Modifier.fillMaxWidth().animateContentSize(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(20.dp),
                     color = surface,
                     border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
                 ) {
@@ -543,7 +550,7 @@ fun BatchUrlImportPage(
             // ── Format Settings Card ──
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = surface,
                 border = BorderStroke(1.dp, border.copy(alpha = 0.5f)),
             ) {
@@ -569,6 +576,7 @@ fun BatchUrlImportPage(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
+                                .background(chipSelectedBg, RoundedCornerShape(8.dp))
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     onClick = {
@@ -584,14 +592,12 @@ fun BatchUrlImportPage(
                             Icon(
                                 Icons.Outlined.Edit,
                                 contentDescription = stringResource(R.string.edit),
-                                modifier = Modifier.size(16.dp),
-                                tint = textSecondary,
+                                modifier = Modifier.size(14.dp),
+                                tint = primary,
                             )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
-                    HorizontalDivider(color = border.copy(alpha = 0.3f))
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     if (selectedType == DownloadType.Video) {
                         Text(
@@ -599,9 +605,9 @@ fun BatchUrlImportPage(
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(6.dp))
+                        Spacer(Modifier.height(8.dp))
                         Row(
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             val chips = listOf(
@@ -614,50 +620,57 @@ fun BatchUrlImportPage(
                             )
                             chips.forEach { chip ->
                                 val sel = preferences.videoResolution == chip.value
-                                CompactChip(
-                                    selected = sel,
-                                    title = chip.label,
-                                    icon = chip.icon,
-                                    chipSelectedBg = chipSelectedBg,
-                                    chipSelectedBorder = chipSelectedBorder,
-                                    chipUnselectedBorder = chipUnselectedBorder,
-                                    primary = primary,
-                                    textPrimary = textPrimary,
-                                    textSecondary = textSecondary,
-                                    onClick = {
-                                        VIDEO_QUALITY.updateInt(chip.value)
-                                        updatePreferences()
-                                    },
-                                )
+                                Box(modifier = Modifier.weight(1f)) {
+                                    CompactChip(
+                                        selected = sel,
+                                        title = chip.label,
+                                        icon = chip.icon,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            VIDEO_QUALITY.updateInt(chip.value)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
                             }
                         }
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(12.dp))
                         Text(
                             text = "Format",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
                             listOf(
                                 FORMAT_QUALITY to "Quality",
                                 FORMAT_COMPATIBILITY to "Legacy",
                             ).forEach { (value, label) ->
                                 val sel = preferences.videoFormat == value
-                                SegmentedChip(
-                                    selected = sel,
-                                    label = label,
-                                    chipSelectedBg = chipSelectedBg,
-                                    chipSelectedBorder = chipSelectedBorder,
-                                    chipUnselectedBorder = chipUnselectedBorder,
-                                    primary = primary,
-                                    textPrimary = textPrimary,
-                                    textSecondary = textSecondary,
-                                    onClick = {
-                                        VIDEO_FORMAT.updateInt(value)
-                                        updatePreferences()
-                                    },
-                                )
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SegmentedChip(
+                                        selected = sel,
+                                        label = label,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            VIDEO_FORMAT.updateInt(value)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
                             }
                         }
                     } else {
@@ -666,9 +679,9 @@ fun BatchUrlImportPage(
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(6.dp))
+                        Spacer(Modifier.height(8.dp))
                         Row(
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             val chips = listOf(
@@ -679,52 +692,59 @@ fun BatchUrlImportPage(
                             )
                             chips.forEach { chip ->
                                 val sel = preferences.audioQuality == chip.value
-                                CompactChip(
-                                    selected = sel,
-                                    title = chip.label,
-                                    icon = chip.icon,
-                                    chipSelectedBg = chipSelectedBg,
-                                    chipSelectedBorder = chipSelectedBorder,
-                                    chipUnselectedBorder = chipUnselectedBorder,
-                                    primary = primary,
-                                    textPrimary = textPrimary,
-                                    textSecondary = textSecondary,
-                                    onClick = {
-                                        AUDIO_QUALITY.updateInt(chip.value)
-                                        USE_CUSTOM_AUDIO_PRESET.updateBoolean(chip.value != NOT_SPECIFIED)
-                                        updatePreferences()
-                                    },
-                                )
+                                Box(modifier = Modifier.weight(1f)) {
+                                    CompactChip(
+                                        selected = sel,
+                                        title = chip.label,
+                                        icon = chip.icon,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            AUDIO_QUALITY.updateInt(chip.value)
+                                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(chip.value != NOT_SPECIFIED)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
                             }
                         }
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(12.dp))
                         Text(
                             text = "Format",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = textSecondary,
                         )
-                        Spacer(Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
                             listOf(
                                 OPUS to "OPUS",
                                 M4A to "M4A",
                             ).forEach { (value, label) ->
                                 val sel = preferences.audioFormat == value
-                                SegmentedChip(
-                                    selected = sel,
-                                    label = label,
-                                    chipSelectedBg = chipSelectedBg,
-                                    chipSelectedBorder = chipSelectedBorder,
-                                    chipUnselectedBorder = chipUnselectedBorder,
-                                    primary = primary,
-                                    textPrimary = textPrimary,
-                                    textSecondary = textSecondary,
-                                    onClick = {
-                                        AUDIO_FORMAT.updateInt(value)
-                                        USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
-                                        updatePreferences()
-                                    },
-                                )
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SegmentedChip(
+                                        selected = sel,
+                                        label = label,
+                                        chipSelectedBg = chipSelectedBg,
+                                        chipSelectedBorder = chipSelectedBorder,
+                                        chipUnselectedBorder = chipUnselectedBorder,
+                                        primary = primary,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        onClick = {
+                                            AUDIO_FORMAT.updateInt(value)
+                                            USE_CUSTOM_AUDIO_PRESET.updateBoolean(true)
+                                            updatePreferences()
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -736,20 +756,29 @@ fun BatchUrlImportPage(
             // ── Download Summary ──
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = chipSelectedBg,
                 border = BorderStroke(1.dp, chipSelectedBorder.copy(alpha = 0.25f)),
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        Icons.Outlined.CheckCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = BatchColors.Success,
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(primary.copy(alpha = 0.15f), RoundedCornerShape(5.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = if (selectedType == DownloadType.Video) Icons.Outlined.HighQuality
+                            else Icons.Outlined.AudioFile,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = primary,
+                        )
+                    }
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = if (selectedType == DownloadType.Video) {
@@ -877,6 +906,7 @@ private fun CompactChip(
 ) {
     Surface(
         modifier = Modifier
+            .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -885,20 +915,22 @@ private fun CompactChip(
             ),
         shape = RoundedCornerShape(10.dp),
         color = if (selected) chipSelectedBg else Color.Transparent,
-        border = BorderStroke(1.dp, if (selected) chipSelectedBorder else chipUnselectedBorder),
+        border = if (selected) BorderStroke(0.dp, Color.Transparent)
+        else BorderStroke(1.dp, chipUnselectedBorder),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
         ) {
             if (icon != null) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(12.dp),
+                    modifier = Modifier.size(11.dp),
                     tint = if (selected) primary else textSecondary,
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(3.dp))
             }
             Text(
                 text = title,
@@ -924,6 +956,7 @@ private fun SegmentedChip(
 ) {
     Surface(
         modifier = Modifier
+            .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -932,13 +965,18 @@ private fun SegmentedChip(
             ),
         shape = RoundedCornerShape(8.dp),
         color = if (selected) chipSelectedBg else Color.Transparent,
-        border = BorderStroke(1.dp, if (selected) chipSelectedBorder else chipUnselectedBorder),
+        border = if (selected) BorderStroke(0.dp, Color.Transparent)
+        else BorderStroke(1.dp, chipUnselectedBorder),
     ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-            color = if (selected) textPrimary else textSecondary,
-        )
+        Box(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                color = if (selected) textPrimary else textSecondary,
+            )
+        }
     }
 }
