@@ -162,6 +162,14 @@ fun BatchUrlImportPage(
     var showAudioPresetDialog by remember { mutableStateOf(false) }
 
     val detectedUrls = remember(urlText) { findURLsFromString(urlText).distinct() }
+    var showPasteSuccess by remember { mutableStateOf(false) }
+
+    if (showPasteSuccess) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(1800)
+            showPasteSuccess = false
+        }
+    }
 
     val bg = if (isDarkMode) BatchColors.Background else MaterialTheme.colorScheme.background
     val surface = if (isDarkMode) BatchColors.Surface else MaterialTheme.colorScheme.surface
@@ -364,6 +372,7 @@ fun BatchUrlImportPage(
                             clipboardManager.getText()?.let {
                                 urlText = findURLsFromString(it.toString()).joinToString("\n")
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showPasteSuccess = true
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(40.dp),
@@ -378,14 +387,15 @@ fun BatchUrlImportPage(
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
-                                Icons.Outlined.ContentPaste,
+                                imageVector = if (showPasteSuccess) Icons.Outlined.CheckCircle
+                                else Icons.Outlined.ContentPaste,
                                 contentDescription = null,
                                 modifier = Modifier.size(15.dp),
                                 tint = Color.White,
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "Paste from Clipboard",
+                                if (showPasteSuccess) "URLs Pasted!" else "Paste from Clipboard",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
                                 color = Color.White,
                             )
@@ -418,10 +428,8 @@ fun BatchUrlImportPage(
                         ),
                         shape = RoundedCornerShape(20.dp),
                         color = if (isSelected) chipSelectedBg else surface,
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSelected) chipSelectedBorder else chipUnselectedBorder,
-                        ),
+                        border = if (isSelected) null
+                        else BorderStroke(1.dp, chipUnselectedBorder),
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
