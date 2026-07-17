@@ -7,6 +7,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,8 +68,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -139,6 +142,7 @@ fun BatchUrlImportPage(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val haptic = LocalHapticFeedback.current
     val isDarkMode = LocalDarkTheme.current.isDarkTheme()
 
     var urlText by remember { mutableStateOf("") }
@@ -170,6 +174,12 @@ fun BatchUrlImportPage(
     else MaterialTheme.colorScheme.primary
     val chipUnselectedBorder = if (isDarkMode) BatchColors.Border
     else MaterialTheme.colorScheme.outlineVariant
+
+    val counterColor = when {
+        urlText.length >= 190 -> Color(0xFFEF4444)
+        urlText.length >= 160 -> BatchColors.Warning
+        else -> textSecondary.copy(alpha = 0.6f)
+    }
 
     fun updatePreferences() {
         preferences = DownloadUtil.DownloadPreferences.createFromPreferences()
@@ -326,7 +336,7 @@ fun BatchUrlImportPage(
                             Text(
                                 text = "${urlText.length}/200",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = textSecondary.copy(alpha = 0.6f),
+                                color = counterColor,
                                 modifier = Modifier.padding(end = 12.dp),
                             )
                         },
@@ -350,6 +360,7 @@ fun BatchUrlImportPage(
                         onClick = {
                             clipboardManager.getText()?.let {
                                 urlText = findURLsFromString(it.toString()).joinToString("\n")
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(40.dp),
@@ -405,7 +416,7 @@ fun BatchUrlImportPage(
                         shape = RoundedCornerShape(20.dp),
                         color = if (isSelected) chipSelectedBg else surface,
                         border = BorderStroke(
-                            1.5.dp,
+                            1.dp,
                             if (isSelected) chipSelectedBorder else chipUnselectedBorder,
                         ),
                     ) {
@@ -571,7 +582,7 @@ fun BatchUrlImportPage(
                         Spacer(Modifier.weight(1f))
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(44.dp)
                                 .clip(CircleShape)
                                 .background(chipSelectedBg, CircleShape)
                                 .clickable(
@@ -604,7 +615,7 @@ fun BatchUrlImportPage(
                         )
                         Spacer(Modifier.height(8.dp))
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             val chips = listOf(
@@ -617,7 +628,7 @@ fun BatchUrlImportPage(
                             )
                             chips.forEach { chip ->
                                 val sel = preferences.videoResolution == chip.value
-                                Box(modifier = Modifier.weight(1f)) {
+                                Box(modifier = Modifier.width(48.dp)) {
                                     CompactChip(
                                         selected = sel,
                                         title = chip.label,
@@ -678,7 +689,7 @@ fun BatchUrlImportPage(
                         )
                         Spacer(Modifier.height(8.dp))
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             val chips = listOf(
@@ -689,7 +700,7 @@ fun BatchUrlImportPage(
                             )
                             chips.forEach { chip ->
                                 val sel = preferences.audioQuality == chip.value
-                                Box(modifier = Modifier.weight(1f)) {
+                                Box(modifier = Modifier.width(56.dp)) {
                                     CompactChip(
                                         selected = sel,
                                         title = chip.label,
@@ -819,20 +830,20 @@ fun BatchUrlImportPage(
                         border = BorderStroke(1.dp, border.copy(alpha = 0.3f)),
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 imageVector = icn,
                                 contentDescription = null,
-                                modifier = Modifier.size(10.dp),
+                                modifier = Modifier.size(9.dp),
                                 tint = clr,
                             )
-                            Spacer(Modifier.width(3.dp))
+                            Spacer(Modifier.width(2.dp))
                             Text(
                                 text = lbl,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                 color = textSecondary,
                             )
                         }
