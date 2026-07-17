@@ -69,13 +69,14 @@ import com.junkfood.seal.ui.page.settings.security.SecuritySettingsPage
 import com.junkfood.seal.ui.page.settings.troubleshooting.TroubleShootingPage
 import com.junkfood.seal.ui.page.videolist.VideoListPage
 import com.junkfood.seal.ui.page.hidden.HiddenContentPage
+import com.junkfood.seal.ui.page.tools.MoreToolsPage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "HomeEntry"
 
 private val TopDestinations =
-    listOf(Route.HOME, Route.TASK_LIST, Route.SETTINGS_PAGE, Route.DOWNLOADS)
+    listOf(Route.HOME, Route.TASK_LIST, Route.SETTINGS_PAGE, Route.DOWNLOADS, Route.MORE_TOOLS)
 
 @Composable
 fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
@@ -164,6 +165,11 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                     TaskListPage(
                         onNavigateBack = onNavigateBack,
                         onNavigateToDetail = { navController.navigate(Route.TASK_LOG id it) },
+                    )
+                }
+                animatedComposable(Route.MORE_TOOLS) {
+                    MoreToolsPage(
+                        onNavigateBack = onNavigateBack
                     )
                 }
                 slideInVerticallyComposable(

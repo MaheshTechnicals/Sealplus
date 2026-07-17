@@ -23,12 +23,14 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Info
@@ -381,6 +383,17 @@ fun NavigationDrawerSheetContent(
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
                 )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.more_tools)) },
+                    icon = { Icon(Icons.Outlined.Build, null, tint = ThemedIconColors.primary) },
+                    onClick = {
+                        scope
+                            .launch { onDismissRequest() }
+                            .invokeOnCompletion { onNavigateToRoute(Route.MORE_TOOLS) }
+                    },
+                    selected = false,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
             }
         }
 
@@ -524,6 +537,20 @@ fun NavigationRailContent(
             modifier = Modifier,
             selected = currentTopDestination == Route.TASK_LIST,
             onClick = { onNavigateToRoute(Route.TASK_LIST) },
+        )
+
+        NavigationRailItemVariant(
+            icon = {
+                Icon(
+                    if (currentTopDestination == Route.MORE_TOOLS) Icons.Filled.Build
+                    else Icons.Outlined.Build,
+                    stringResource(R.string.more_tools),
+                    tint = ThemedIconColors.primary,
+                )
+            },
+            modifier = Modifier,
+            selected = currentTopDestination == Route.MORE_TOOLS,
+            onClick = { onNavigateToRoute(Route.MORE_TOOLS) },
         )
 
         NavigationRailItemVariant(

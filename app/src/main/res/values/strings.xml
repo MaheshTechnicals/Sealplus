@@ -658,5 +658,18 @@
     <string name="hidden_content_desc">View and manage your hidden media files</string>
     <string name="no_hidden_content">No hidden content</string>
     <string name="hidden_content_requires_app_lock">Enable App Lock first to use Hidden Content. Go to Settings > SealPlus Extras > App Lock</string>
+
+    <!-- More Tools strings -->
+    <string name="more_tools">More Tools</string>
+    <string name="more_tools_desc">Additional utilities for advanced downloads</string>
+    <string name="batch_url_import">Batch URL Import</string>
+    <string name="batch_url_import_desc">Download multiple YouTube URLs at once. Supports video and audio types.</string>
+    <string name="video_info_download">Video Info Download</string>
+    <string name="video_info_download_desc">Download all video metadata in JSON format from a YouTube URL.</string>
+    <string name="comment_download">Comment Download</string>
+    <string name="comment_download_desc">Download all comments from a YouTube video.</string>
+    <string name="thumbnail_download">Thumbnail Download</string>
+    <string name="thumbnail_download_desc">Download YouTube video thumbnails with format conversion options.</string>
+    <string name="coming_soon_placeholder">Coming Soon</string>
 </resources>
 

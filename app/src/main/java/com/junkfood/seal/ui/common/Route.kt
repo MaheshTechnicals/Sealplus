@@ -38,6 +38,7 @@ object Route {
     const val CRYPTO_DONATION = "crypto_donation"
     const val HIDDEN_CONTENT = "hidden_content"
     const val SPONSORS = "sponsors"
+    const val MORE_TOOLS = "more_tools"
 
     const val TASK_HASHCODE = "task_hashcode"
     const val TEMPLATE_ID = "template_id"
