@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
+import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.theme.GradientBrushes
@@ -110,7 +111,9 @@ fun MoreToolsPage(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
     val isGradientDark = LocalGradientDarkMode.current
+    val useGradientColors = isGradientDark && isDarkTheme
 
     Scaffold(
         modifier = Modifier
@@ -124,7 +127,7 @@ fun MoreToolsPage(
                 navigationIcon = { BackButton(onNavigateBack) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(
-                    scrolledContainerColor = if (isGradientDark) {
+                    scrolledContainerColor = if (useGradientColors) {
                         GradientDarkColors.Background
                     } else {
                         MaterialTheme.colorScheme.surface
@@ -132,7 +135,7 @@ fun MoreToolsPage(
                 ),
             )
         },
-        containerColor = if (isGradientDark) {
+        containerColor = if (useGradientColors) {
             GradientDarkColors.Background
         } else {
             MaterialTheme.colorScheme.background
@@ -151,7 +154,7 @@ fun MoreToolsPage(
             modifier = Modifier.fillMaxSize(),
         ) {
             item(span = StaggeredGridItemSpan.FullLine) {
-                SectionHeader(isGradientDark = isGradientDark)
+                SectionHeader(useGradientColors = useGradientColors)
             }
 
             tools.forEachIndexed { index, tool ->
@@ -159,7 +162,7 @@ fun MoreToolsPage(
                     ToolCard(
                         tool = tool,
                         index = index,
-                        isGradientDark = isGradientDark,
+                        useGradientColors = useGradientColors,
                         onClick = {
                             when (tool.id) {
                                 1 -> onNavigateToBatchUrlImport?.invoke()
@@ -178,7 +181,7 @@ fun MoreToolsPage(
 }
 
 @Composable
-private fun SectionHeader(isGradientDark: Boolean) {
+private fun SectionHeader(useGradientColors: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,7 +196,7 @@ private fun SectionHeader(isGradientDark: Boolean) {
                     .size(36.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .then(
-                        if (isGradientDark) {
+                        if (useGradientColors) {
                             Modifier.background(GradientBrushes.Primary)
                         } else {
                             Modifier.background(MaterialTheme.colorScheme.primaryContainer)
@@ -204,7 +207,7 @@ private fun SectionHeader(isGradientDark: Boolean) {
                 Icon(
                     imageVector = Icons.Outlined.Build,
                     contentDescription = null,
-                    tint = if (isGradientDark) {
+                    tint = if (useGradientColors) {
                         GradientDarkColors.OnPrimary
                     } else {
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -215,7 +218,7 @@ private fun SectionHeader(isGradientDark: Boolean) {
             Text(
                 text = stringResource(R.string.more_tools_desc),
                 style = MaterialTheme.typography.titleMedium,
-                color = if (isGradientDark) {
+                color = if (useGradientColors) {
                     GradientDarkColors.OnSurface.copy(alpha = 0.75f)
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -229,7 +232,7 @@ private fun SectionHeader(isGradientDark: Boolean) {
 private fun ToolCard(
     tool: ToolItem,
     index: Int,
-    isGradientDark: Boolean,
+    useGradientColors: Boolean,
     onClick: () -> Unit = {},
 ) {
     var visible by remember { mutableStateOf(false) }
@@ -274,7 +277,7 @@ private fun ToolCard(
             .aspectRatio(0.85f)
             .clip(RoundedCornerShape(20.dp))
             .then(
-                if (isGradientDark) {
+                if (useGradientColors) {
                     Modifier.border(
                         width = 1.dp,
                         color = GradientDarkColors.GlassWhiteBorder,
@@ -283,7 +286,7 @@ private fun ToolCard(
                 } else Modifier
             )
             .background(
-                if (isGradientDark) {
+                if (useGradientColors) {
                     GradientDarkColors.GlassSurface.copy(alpha = 0.05f)
                 } else {
                     MaterialTheme.colorScheme.surfaceContainer
@@ -307,7 +310,7 @@ private fun ToolCard(
                         .size(48.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(
-                            if (isGradientDark) {
+                            if (useGradientColors) {
                                 GradientBrushes.Vibrant
                             } else {
                                 Brush.linearGradient(
@@ -336,7 +339,7 @@ private fun ToolCard(
                         fontWeight = FontWeight.SemiBold,
                         lineHeight = 20.sp,
                     ),
-                    color = if (isGradientDark) {
+                    color = if (useGradientColors) {
                         GradientDarkColors.OnSurface
                     } else {
                         MaterialTheme.colorScheme.onSurface
@@ -351,7 +354,7 @@ private fun ToolCard(
                     style = MaterialTheme.typography.bodySmall.copy(
                         lineHeight = 16.sp,
                     ),
-                    color = if (isGradientDark) {
+                    color = if (useGradientColors) {
                         GradientDarkColors.OnSurface.copy(alpha = 0.6f)
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
@@ -370,7 +373,7 @@ private fun ToolCard(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .background(
-                                if (isGradientDark) {
+                                if (useGradientColors) {
                                     GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.2f)
                                 } else {
                                     MaterialTheme.colorScheme.secondaryContainer
@@ -384,7 +387,7 @@ private fun ToolCard(
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Medium,
                             ),
-                            color = if (isGradientDark) {
+                            color = if (useGradientColors) {
                                 GradientDarkColors.GradientPrimaryEnd
                             } else {
                                 MaterialTheme.colorScheme.onSecondaryContainer

@@ -661,15 +661,15 @@
 
     <!-- More Tools strings -->
     <string name="more_tools">More Tools</string>
-    <string name="more_tools_desc">Additional utilities for advanced downloads</string>
+    <string name="more_tools_desc">Powerful tools to enhance your download experience and streamline media management</string>
     <string name="batch_url_import">Batch URL Import</string>
-    <string name="batch_url_import_desc">Download multiple YouTube URLs at once. Supports video and audio types.</string>
+    <string name="batch_url_import_desc">Import and download multiple videos simultaneously. Supports various formats and quality options for efficient batch processing.</string>
     <string name="video_info_download">Video Info Download</string>
-    <string name="video_info_download_desc">Download all video metadata in JSON format from a YouTube URL.</string>
+    <string name="video_info_download_desc">Retrieve comprehensive video metadata including title, description, statistics, and format details in structured JSON format.</string>
     <string name="comment_download">Comment Download</string>
-    <string name="comment_download_desc">Download all comments from a YouTube video.</string>
+    <string name="comment_download_desc">Extract and download all comments from any video, including replies, timestamps, and author information for offline analysis.</string>
     <string name="thumbnail_download">Thumbnail Download</string>
-    <string name="thumbnail_download_desc">Download YouTube video thumbnails with format conversion options.</string>
+    <string name="thumbnail_download_desc">Download high-quality video thumbnails in multiple resolutions with support for various image format conversions and custom sizing.</string>
     <string name="coming_soon_placeholder">Coming Soon</string>
 </resources>
 
