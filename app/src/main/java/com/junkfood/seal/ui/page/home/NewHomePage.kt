@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -394,6 +395,12 @@ fun NewHomePage(
     val recentFiveDownloadsFiltered = remember(recentFiveDownloads, activeTaskUrls, localHiddenIds) {
         recentFiveDownloads.filter { it.videoUrl !in activeTaskUrls && it.id !in localHiddenIds }
     }
+
+    // Hoisted state for the Spotify-style swipeable download-details sheet: holds the index
+    // (within recentFiveDownloadsFiltered) of the card whose details are being viewed, or null
+    // when the sheet is closed. Kept as an index (not the item itself) so left/right swipes
+    // inside the sheet can move to adjacent list entries.
+    var detailsDialogIndex by remember { mutableStateOf<Int?>(null) }
     
     // Handle back press to show exit confirmation
     BackHandler {
@@ -804,7 +811,6 @@ fun NewHomePage(
                     items = recentFiveDownloadsFiltered,
                     key = { it.id }
                 ) { downloadInfo ->
-                    var showRecentDetailsDialog by remember { mutableStateOf(false) }
                     var showRecentDeleteDialog by remember { mutableStateOf(false) }
                     
                     RecentDownloadCard(
@@ -829,7 +835,8 @@ fun NewHomePage(
                         },
                         onShowDetails = {
                             view.slightHapticFeedback()
-                            showRecentDetailsDialog = true
+                            val idx = recentFiveDownloadsFiltered.indexOfFirst { it.id == downloadInfo.id }
+                            detailsDialogIndex = if (idx >= 0) idx else 0
                         },
                         onDelete = {
                             view.slightHapticFeedback()
@@ -845,13 +852,6 @@ fun NewHomePage(
                         }
                     )
                     
-                    if (showRecentDetailsDialog) {
-                        RecentDownloadDetailsDialog(
-                            downloadInfo = downloadInfo,
-                            onDismiss = { showRecentDetailsDialog = false }
-                        )
-                    }
-
                     if (showRecentDeleteDialog) {
                         SealDialog(
                             onDismissRequest = { showRecentDeleteDialog = false },
@@ -896,6 +896,25 @@ fun NewHomePage(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+    }
+
+    // Spotify-style swipeable details sheet for recent downloads. A single sheet instance is
+    // shared across all cards; detailsDialogIndex tracks which item (by position in
+    // recentFiveDownloadsFiltered) is currently shown, so left/right swipes just move the index.
+    detailsDialogIndex?.let { index ->
+        // The underlying list is a live Flow and can shrink while the sheet is open (e.g. the
+        // user deletes/hides the item they're viewing). Clamp to the last valid index, or close
+        // the sheet entirely if nothing is left to show.
+        if (recentFiveDownloadsFiltered.isEmpty()) {
+            detailsDialogIndex = null
+        } else {
+            val safeIndex = index.coerceIn(0, recentFiveDownloadsFiltered.lastIndex)
+            RecentDownloadDetailsDialog(
+                downloadInfoList = recentFiveDownloadsFiltered,
+                initialIndex = safeIndex,
+                onDismiss = { detailsDialogIndex = null }
+            )
         }
     }
     
@@ -1966,31 +1985,86 @@ fun DownloadDetailsDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Spotify-style swipeable download-details sheet. Wraps a [HorizontalPager] over
+ * [downloadInfoList] so the user can swipe left/right to move between the details of
+ * adjacent recent-download cards without closing and reopening the sheet. When the list
+ * has only one item, the pager still mounts but swiping is disabled (no-op, no crash).
+ */
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RecentDownloadDetailsDialog(
-    downloadInfo: DownloadedVideoInfo,
+    downloadInfoList: List<DownloadedVideoInfo>,
+    initialIndex: Int,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
-    var showFilePathDialog by remember { mutableStateOf(false) }
-    
+    val safeInitialIndex = initialIndex.coerceIn(0, (downloadInfoList.size - 1).coerceAtLeast(0))
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(
+        initialPage = safeInitialIndex
+    ) { downloadInfoList.size }
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+
     BackHandler {
         onDismiss()
     }
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Page indicator dots — only shown when there's more than one item to swipe between.
+            if (downloadInfoList.size > 1) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    repeat(downloadInfoList.size) { dotIndex ->
+                        val isSelected = dotIndex == pagerState.currentPage
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 3.dp)
+                                .size(if (isSelected) 8.dp else 6.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                )
+                        )
+                    }
+                }
+            }
+
+            androidx.compose.foundation.pager.HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = (configuration.screenHeightDp * 0.85f).dp),
+                // Disable swipe gestures entirely when there's nothing to swipe to — keeps a
+                // single-item list on its one and only details page with no dead gesture area.
+                userScrollEnabled = downloadInfoList.size > 1,
+            ) { page ->
+                RecentDownloadDetailsContent(downloadInfo = downloadInfoList[page])
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentDownloadDetailsContent(downloadInfo: DownloadedVideoInfo) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var showFilePathDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
             // Header with gradient background
             Box(
                 modifier = Modifier
@@ -2235,9 +2309,8 @@ fun RecentDownloadDetailsDialog(
             }
             
             Spacer(modifier = Modifier.height(16.dp))
-        }
     }
-    
+
     // File Path Dialog
     if (showFilePathDialog) {
         AlertDialog(
