@@ -2073,30 +2073,43 @@ fun RecentDownloadDetailsDialog(
                 }
             }
 
+            // IMPORTANT: use a FIXED height here (not heightIn(max=...)). Each page's intrinsic
+            // content height differs (some items have extra detail rows, longer URLs, etc.).
+            // With only a max-height constraint, HorizontalPager re-measures its own height to
+            // match whichever page is being settled on during a drag, and that continuous
+            // height renegotiation while the inner verticalScroll is also tracking its own
+            // bounds is what produced the up/down flicker when scrolling a page to its end.
+            // Giving every page the exact same fixed height removes that feedback loop entirely.
+            val pagerHeight = (configuration.screenHeightDp * 0.85f).dp
             androidx.compose.foundation.pager.HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = (configuration.screenHeightDp * 0.85f).dp),
+                    .height(pagerHeight),
                 // Disable swipe gestures entirely when there's nothing to swipe to — keeps a
                 // single-item list on its one and only details page with no dead gesture area.
                 userScrollEnabled = downloadInfoList.size > 1,
             ) { page ->
-                RecentDownloadDetailsContent(downloadInfo = downloadInfoList[page])
+                RecentDownloadDetailsContent(
+                    downloadInfo = downloadInfoList[page],
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun RecentDownloadDetailsContent(downloadInfo: DownloadedVideoInfo) {
+private fun RecentDownloadDetailsContent(
+    downloadInfo: DownloadedVideoInfo,
+    modifier: Modifier = Modifier,
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     var showFilePathDialog by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .verticalScroll(rememberScrollState())
             .padding(bottom = 32.dp)
     ) {

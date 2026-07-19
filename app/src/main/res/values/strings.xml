@@ -662,6 +662,7 @@
     <!-- More Tools strings -->
     <string name="more_tools">More Tools</string>
     <string name="more_tools_desc">Powerful tools to enhance your download experience and streamline media management</string>
+    <string name="open">Open</string>
     <string name="batch_url_import">Batch URL Import</string>
     <string name="batch_url_import_desc">Import and download multiple videos simultaneously. Supports various formats and quality options for efficient batch processing.</string>
     <string name="batch_url_import_short_desc">Download multiple links at once</string>

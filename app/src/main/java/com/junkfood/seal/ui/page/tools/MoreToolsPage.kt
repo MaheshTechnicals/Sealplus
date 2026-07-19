@@ -1,8 +1,10 @@
 package com.junkfood.seal.ui.page.tools
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -24,13 +26,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Image
@@ -38,9 +41,11 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.PlaylistAdd
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -59,6 +64,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -73,7 +79,6 @@ import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.ui.theme.GradientBrushes
 import com.junkfood.seal.ui.theme.GradientDarkColors
-import androidx.compose.ui.platform.LocalContext
 import com.junkfood.seal.util.makeToast
 
 private data class ToolItem(
@@ -86,6 +91,9 @@ private data class ToolItem(
     val icon: ImageVector,
     val isComingSoon: Boolean = true,
 )
+
+/** Each tool cycles through one of these theme-derived gradient pairs for its icon badge. */
+private enum class AccentStyle { PRIMARY, SECONDARY, TERTIARY }
 
 private val tools = listOf(
     ToolItem(
@@ -134,18 +142,23 @@ fun MoreToolsPage(
     val useGradientColors = isGradientDark && isDarkTheme
     var infoDialogTool by remember { mutableStateOf<ToolItem?>(null) }
 
+    val backgroundColor = if (useGradientColors) {
+        GradientDarkColors.Background
+    } else {
+        MaterialTheme.colorScheme.background
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.more_tools))
-                },
+                title = { Text(text = stringResource(id = R.string.more_tools)) },
                 navigationIcon = { BackButton(onNavigateBack) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = backgroundColor,
                     scrolledContainerColor = if (useGradientColors) {
                         GradientDarkColors.Background
                     } else {
@@ -154,26 +167,24 @@ fun MoreToolsPage(
                 ),
             )
         },
-        containerColor = if (useGradientColors) {
-            GradientDarkColors.Background
-        } else {
-            MaterialTheme.colorScheme.background
-        },
+        containerColor = backgroundColor,
     ) { paddingValues ->
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
+        // Adaptive column count: scales from a single column on narrow phones up to several
+        // columns on tablets/foldables/landscape, instead of a hardcoded fixed count.
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 176.dp),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
-                top = paddingValues.calculateTopPadding() + 8.dp,
-                bottom = paddingValues.calculateBottomPadding() + 80.dp,
+                top = paddingValues.calculateTopPadding() + 4.dp,
+                bottom = paddingValues.calculateBottomPadding() + 24.dp,
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalItemSpacing = 12.dp,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            item(span = StaggeredGridItemSpan.FullLine) {
-                SectionHeader(useGradientColors = useGradientColors)
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HeroBanner(useGradientColors = useGradientColors)
             }
 
             tools.forEachIndexed { index, tool ->
@@ -181,6 +192,7 @@ fun MoreToolsPage(
                     ToolCard(
                         tool = tool,
                         index = index,
+                        accentStyle = AccentStyle.entries[index % AccentStyle.entries.size],
                         useGradientColors = useGradientColors,
                         onClick = {
                             when (tool.id) {
@@ -214,52 +226,115 @@ fun MoreToolsPage(
     }
 }
 
+/**
+ * Compact hero banner introducing the page. Uses the same gradient language as the rest of
+ * the app (GradientBrushes in Gradient Dark mode, theme container colors otherwise) so it
+ * feels native rather than bolted-on.
+ */
 @Composable
-private fun SectionHeader(useGradientColors: Boolean) {
-    Column(
+private fun HeroBanner(useGradientColors: Boolean) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        label = "hero_alpha",
+    )
+
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .graphicsLayer(alpha = alpha)
+            .clip(RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        color = Color.Transparent,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .then(
-                        if (useGradientColors) {
-                            Modifier.background(GradientBrushes.Primary)
-                        } else {
-                            Modifier.background(MaterialTheme.colorScheme.primaryContainer)
-                        }
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Build,
-                    contentDescription = null,
-                    tint = if (useGradientColors) {
-                        GradientDarkColors.OnPrimary
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    if (useGradientColors) {
+                        GradientBrushes.Primary
                     } else {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    },
-                    modifier = Modifier.size(20.dp),
+                        Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.tertiaryContainer,
+                            ),
+                        )
+                    }
                 )
+                .padding(horizontal = 20.dp, vertical = 22.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (useGradientColors) Color.White.copy(alpha = 0.16f)
+                            else Color.White.copy(alpha = 0.25f)
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.AutoAwesome,
+                        contentDescription = null,
+                        tint = if (useGradientColors) {
+                            GradientDarkColors.OnPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        },
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.more_tools),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = if (useGradientColors) {
+                            GradientDarkColors.OnPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        },
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.more_tools_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (useGradientColors) {
+                            GradientDarkColors.OnPrimary.copy(alpha = 0.85f)
+                        } else {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        },
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
-            Text(
-                text = stringResource(R.string.more_tools_desc),
-                style = MaterialTheme.typography.titleMedium,
-                color = if (useGradientColors) {
-                    GradientDarkColors.OnSurface.copy(alpha = 0.75f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
         }
     }
+}
+
+/** Resolves a theme-consistent gradient brush + tint for a given accent slot. */
+@Composable
+private fun accentBrush(style: AccentStyle, useGradientColors: Boolean): Brush {
+    if (useGradientColors) {
+        return when (style) {
+            AccentStyle.PRIMARY -> GradientBrushes.Primary
+            AccentStyle.SECONDARY -> GradientBrushes.Secondary
+            AccentStyle.TERTIARY -> GradientBrushes.Accent
+        }
+    }
+    val colors = MaterialTheme.colorScheme
+    val pair = when (style) {
+        AccentStyle.PRIMARY -> colors.primary to colors.tertiary
+        AccentStyle.SECONDARY -> colors.secondary to colors.primary
+        AccentStyle.TERTIARY -> colors.tertiary to colors.secondary
+    }
+    return Brush.linearGradient(colors = listOf(pair.first, pair.second))
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -267,6 +342,7 @@ private fun SectionHeader(useGradientColors: Boolean) {
 private fun ToolCard(
     tool: ToolItem,
     index: Int,
+    accentStyle: AccentStyle,
     useGradientColors: Boolean,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
@@ -277,34 +353,52 @@ private fun ToolCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val haptic = LocalHapticFeedback.current
 
+    val entranceSpec = tween<Float>(
+        durationMillis = 380,
+        delayMillis = index * 60,
+        easing = FastOutSlowInEasing,
+    )
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(
-            durationMillis = 400,
-            delayMillis = index * 100,
-            easing = FastOutSlowInEasing,
-        ),
+        animationSpec = entranceSpec,
         label = "card_alpha",
     )
-
     val offsetY by animateDpAsState(
-        targetValue = if (visible) 0.dp else 24.dp,
+        targetValue = if (visible) 0.dp else 20.dp,
         animationSpec = tween(
-            durationMillis = 400,
-            delayMillis = index * 100,
+            durationMillis = 380,
+            delayMillis = index * 60,
             easing = FastOutSlowInEasing,
         ),
         label = "card_offset",
     )
-
+    // Spring-based press feedback reads as noticeably smoother/snappier than a linear tween.
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
         label = "card_scale",
     )
 
-    LaunchedEffect(Unit) {
-        visible = true
+    LaunchedEffect(Unit) { visible = true }
+
+    val borderColor = if (useGradientColors) {
+        GradientDarkColors.GlassWhiteBorder
+    } else {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+    }
+    val surfaceColor = if (useGradientColors) {
+        GradientDarkColors.GlassSurface.copy(alpha = 0.06f)
+    } else {
+        MaterialTheme.colorScheme.surfaceContainer
+    }
+    val titleColor = if (useGradientColors) GradientDarkColors.OnSurface else MaterialTheme.colorScheme.onSurface
+    val subtleColor = if (useGradientColors) {
+        GradientDarkColors.OnSurface.copy(alpha = 0.6f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Box(
@@ -313,24 +407,10 @@ private fun ToolCard(
             .offset(y = offsetY)
             .graphicsLayer(alpha = alpha)
             .fillMaxWidth()
-            .heightIn(min = 208.dp)
+            .heightIn(min = 172.dp)
             .clip(RoundedCornerShape(20.dp))
-            .then(
-                if (useGradientColors) {
-                    Modifier.border(
-                        width = 1.dp,
-                        color = GradientDarkColors.GlassWhiteBorder,
-                        shape = RoundedCornerShape(20.dp),
-                    )
-                } else Modifier
-            )
-            .background(
-                if (useGradientColors) {
-                    GradientDarkColors.GlassSurface.copy(alpha = 0.05f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainer
-                }
-            )
+            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(20.dp))
+            .background(surfaceColor)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -350,71 +430,45 @@ private fun ToolCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(44.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(
-                            if (useGradientColors) {
-                                GradientBrushes.Vibrant
-                            } else {
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary,
-                                        MaterialTheme.colorScheme.tertiary,
-                                    ),
-                                )
-                            }
-                        ),
+                        .background(accentBrush(accentStyle, useGradientColors)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = tool.icon,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(22.dp),
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onInfoClick,
-                        ),
-                    contentAlignment = Alignment.Center,
+                IconButton(
+                    onClick = onInfoClick,
+                    modifier = Modifier.size(28.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
                         contentDescription = stringResource(tool.titleRes),
-                        tint = if (useGradientColors) {
-                            GradientDarkColors.OnSurface.copy(alpha = 0.5f)
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                        modifier = Modifier.size(18.dp),
+                        tint = subtleColor,
+                        modifier = Modifier.size(17.dp),
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = stringResource(tool.titleRes),
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.SemiBold,
-                    lineHeight = 20.sp,
+                    lineHeight = 19.sp,
                 ),
-                color = if (useGradientColors) {
-                    GradientDarkColors.OnSurface
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
+                color = titleColor,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -423,50 +477,57 @@ private fun ToolCard(
 
             Text(
                 text = stringResource(tool.shortDescRes),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    lineHeight = 16.sp,
-                ),
-                color = if (useGradientColors) {
-                    GradientDarkColors.OnSurface.copy(alpha = 0.6f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 16.sp),
+                color = subtleColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
 
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
+
             if (tool.isComingSoon) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(
-                                if (useGradientColors) {
-                                    GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.2f)
-                                } else {
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                }
-                            )
-                            .padding(horizontal = 8.dp, vertical = 3.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.coming_soon_placeholder),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Medium,
-                            ),
-                            color = if (useGradientColors) {
-                                GradientDarkColors.GradientPrimaryEnd
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            if (useGradientColors) {
+                                GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.2f)
                             } else {
-                                MaterialTheme.colorScheme.onSecondaryContainer
-                            },
+                                MaterialTheme.colorScheme.secondaryContainer
+                            }
                         )
-                    }
+                        .padding(horizontal = 9.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.coming_soon_placeholder),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        color = if (useGradientColors) {
+                            GradientDarkColors.GradientPrimaryEnd
+                        } else {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        },
+                    )
+                }
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.open),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp),
+                    )
                 }
             }
         }
