@@ -47,11 +47,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.CreateNewFolder
-import androidx.compose.material.icons.outlined.Downloading
 import androidx.compose.material.icons.outlined.DriveFileRenameOutline
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.OpenInNew
@@ -94,8 +91,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.AsyncImageImpl
@@ -104,6 +99,7 @@ import com.junkfood.seal.util.FileUtil
 import com.junkfood.seal.util.ThumbnailFormat
 import com.junkfood.seal.util.ThumbnailQuality
 import com.junkfood.seal.util.makeToast
+import com.junkfood.seal.util.toFileSizeText
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -117,21 +113,25 @@ fun ThumbnailDownloadPage(
     val haptic = LocalHapticFeedback.current
     val palette = rememberToolPalette()
     val scope = rememberCoroutineScope()
+    val pageScrollState = rememberScrollState()
 
     val state by viewModel.viewStateFlow.collectAsStateWithLifecycle()
 
-    val saveAsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("image/*"),
-    ) { uri ->
-        if (uri != null) viewModel.downloadThumbnail(targetUri = uri)
-    }
-
-    // Success toast + haptic tick the moment a download completes — the card animation
-    // below provides the persistent visual confirmation.
+    // Success toast + haptic tick the moment a download completes, then smoothly scroll the
+    // page down to the success card — it renders below the fold (after the format/quality/
+    // filename sections) so without this the user would have to manually swipe up to even
+    // see that the download finished.
     LaunchedEffect(state.downloadSuccess) {
         if (state.downloadSuccess) {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             context.makeToast(context.getString(R.string.thumbnail_downloaded))
+            // Let the success card's own enter animation start first so the scroll and the
+            // expand/scale-in animation read as one smooth motion instead of a jump-cut.
+            kotlinx.coroutines.delay(120L)
+            pageScrollState.animateScrollTo(
+                value = pageScrollState.maxValue,
+                animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing),
+            )
         }
     }
 
@@ -171,7 +171,7 @@ fun ThumbnailDownloadPage(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .imePadding()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(pageScrollState)
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(Modifier.height(8.dp))
@@ -242,6 +242,7 @@ fun ThumbnailDownloadPage(
                         format = state.format,
                         quality = state.quality,
                         fileName = state.fileName.ifBlank { state.title.orEmpty() },
+                        fileSizeBytes = state.fileSizeBytes,
                     )
 
                     Spacer(Modifier.height(16.dp))
@@ -249,11 +250,6 @@ fun ThumbnailDownloadPage(
                         palette = palette,
                         isDownloading = state.isDownloading,
                         onDownloadHere = { viewModel.downloadThumbnail() },
-                        onChooseLocation = {
-                            val ext = state.format.extension
-                            val suggested = "${state.fileName.ifBlank { state.title ?: "thumbnail" }}.$ext"
-                            saveAsLauncher.launch(suggested)
-                        },
                     )
 
                     AnimatedVisibility(
@@ -820,6 +816,7 @@ private fun DownloadSummaryCard(
     format: ThumbnailFormat,
     quality: ThumbnailQuality,
     fileName: String,
+    fileSizeBytes: Long?,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth().animateContentSize(),
@@ -837,6 +834,12 @@ private fun DownloadSummaryCard(
             SummaryRow(palette, stringResource(R.string.file_name), "${fileName.ifBlank { "thumbnail" }}.${format.extension}")
             SummaryRow(palette, stringResource(R.string.output_format), format.label)
             SummaryRow(palette, stringResource(R.string.output_quality), quality.label)
+            SummaryRow(
+                palette,
+                stringResource(R.string.file_size),
+                if (fileSizeBytes != null) fileSizeBytes.toFileSizeText()
+                else stringResource(R.string.calculating_size),
+            )
         }
     }
 }
@@ -864,38 +867,15 @@ private fun DownloadActionRow(
     palette: ToolPalette,
     isDownloading: Boolean,
     onDownloadHere: () -> Unit,
-    onChooseLocation: () -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Button(
-            onClick = onChooseLocation,
-            enabled = !isDownloading,
-            modifier = Modifier.weight(1f).height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = palette.surfaceVariant,
-                disabledContainerColor = palette.surfaceVariant,
-            ),
-        ) {
-            Icon(
-                Icons.Outlined.FolderOpen,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = palette.textPrimary,
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                stringResource(R.string.choose_location),
-                color = palette.textPrimary,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+    Column {
+        // "Choose Location" was removed — thumbnails always save under the app's own
+        // Downloads/SealPlus/Thumbnails folder (same convention as every other tool in the
+        // app), so a destination picker was redundant friction rather than a real choice.
         Button(
             onClick = onDownloadHere,
             enabled = !isDownloading,
-            modifier = Modifier.weight(1.3f).height(48.dp),
+            modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
@@ -940,15 +920,15 @@ private fun DownloadActionRow(
                 }
             }
         }
-    }
-    AnimatedVisibility(visible = isDownloading) {
-        Column {
-            Spacer(Modifier.height(10.dp))
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)),
-                color = palette.primary,
-                trackColor = palette.surfaceVariant,
-            )
+        AnimatedVisibility(visible = isDownloading) {
+            Column {
+                Spacer(Modifier.height(10.dp))
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)),
+                    color = palette.primary,
+                    trackColor = palette.surfaceVariant,
+                )
+            }
         }
     }
 }

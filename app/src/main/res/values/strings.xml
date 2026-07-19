@@ -736,6 +736,7 @@
     <string name="quality_high_desc">Minimal compression, visually lossless</string>
     <string name="quality_medium_desc">Balanced size and quality</string>
     <string name="quality_compressed_desc">Smallest file size</string>
+    <string name="calculating_size">Calculating…</string>
 
     <!-- Comment Downloader tool strings -->
     <string name="comment_download_subtitle">Fetch and save YouTube video comments</string>

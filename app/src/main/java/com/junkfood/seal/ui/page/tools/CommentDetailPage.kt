@@ -347,43 +347,47 @@ private fun ExportSection(
             color = palette.textPrimary,
         )
         Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Stacked vertically (one full-width button per row) instead of 3-across — at 3-across
+        // each button was too narrow for its label ("Export as TXT"/"CSV"/"JSON") to fit
+        // without clipping, so it always rendered as a truncated "Export as…". Full width
+        // gives every label room to show completely.
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedButton(
                 onClick = onExportTxt,
-                modifier = Modifier.weight(1f).height(46.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, palette.border.copy(alpha = 0.5f)),
             ) {
                 Text(
                     stringResource(R.string.export_as_txt),
                     color = palette.textPrimary,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                 )
             }
             OutlinedButton(
                 onClick = onExportCsv,
-                modifier = Modifier.weight(1f).height(46.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, palette.border.copy(alpha = 0.5f)),
             ) {
                 Text(
                     stringResource(R.string.export_as_csv),
                     color = palette.textPrimary,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                 )
             }
             Button(
                 onClick = onExportJson,
-                modifier = Modifier.weight(1f).height(46.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = palette.primary),
             ) {
                 Text(
                     stringResource(R.string.export_as_json),
                     color = Color.White,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                 )
             }

@@ -41,6 +41,12 @@ class ThumbnailDownloadViewModel : ViewModel() {
     private val previewCache = LinkedHashMap<String, PreviewData>()
     private val maxCacheSize = 20
 
+    // Raw (pre-conversion) thumbnail bytes for the current preview, kept around so the
+    // download-summary file-size estimate can be recomputed instantly whenever the user
+    // changes format/quality, without re-downloading from YouTube each time.
+    private var rawThumbnailBytes: ByteArray? = null
+    private var sizeEstimateJob: Job? = null
+
     data class PreviewData(
         val title: String,
         val channelName: String,
@@ -62,6 +68,9 @@ class ThumbnailDownloadViewModel : ViewModel() {
         val isDownloading: Boolean = false,
         val downloadSuccess: Boolean = false,
         val savedFilePath: String? = null,
+        /** Size in bytes of the raw (pre-conversion) thumbnail once fetched — shown in the
+         *  download summary so the user knows roughly what they're about to save. */
+        val fileSizeBytes: Long? = null,
     ) {
         val hasPreview: Boolean get() = thumbnailUrl != null
     }
@@ -148,6 +157,7 @@ class ThumbnailDownloadViewModel : ViewModel() {
                             errorMessage = null,
                         )
                     }
+                    refreshFileSizeEstimate(bestThumbnailUrl)
                 }
                 .onFailure { th ->
                     mutableViewStateFlow.update {
@@ -162,6 +172,8 @@ class ThumbnailDownloadViewModel : ViewModel() {
     }
 
     private fun clearPreview() {
+        sizeEstimateJob?.cancel()
+        rawThumbnailBytes = null
         mutableViewStateFlow.update {
             it.copy(
                 videoId = null,
@@ -170,16 +182,49 @@ class ThumbnailDownloadViewModel : ViewModel() {
                 thumbnailUrl = null,
                 downloadSuccess = false,
                 savedFilePath = null,
+                fileSizeBytes = null,
             )
         }
     }
 
     fun updateFormat(format: ThumbnailFormat) {
         mutableViewStateFlow.update { it.copy(format = format, downloadSuccess = false) }
+        recomputeSizeEstimate()
     }
 
     fun updateQuality(quality: ThumbnailQuality) {
         mutableViewStateFlow.update { it.copy(quality = quality, downloadSuccess = false) }
+        recomputeSizeEstimate()
+    }
+
+    /** Downloads the raw thumbnail once so the summary can show an initial file-size estimate. */
+    private fun refreshFileSizeEstimate(thumbnailUrl: String) {
+        sizeEstimateJob?.cancel()
+        sizeEstimateJob = viewModelScope.launch(Dispatchers.IO) {
+            ThumbnailUtil.downloadThumbnailBytes(thumbnailUrl).onSuccess { bytes ->
+                rawThumbnailBytes = bytes
+                applySizeEstimateFromCache()
+            }
+        }
+    }
+
+    /** Re-encodes the already-downloaded raw bytes at the current format/quality to refresh
+     *  the estimate — cheap since thumbnails are small images, and avoids a network round trip
+     *  every time the user taps a different format/quality chip. */
+    private fun recomputeSizeEstimate() {
+        val raw = rawThumbnailBytes ?: return
+        sizeEstimateJob?.cancel()
+        sizeEstimateJob = viewModelScope.launch(Dispatchers.Default) {
+            applySizeEstimateFromCache(raw)
+        }
+    }
+
+    private suspend fun applySizeEstimateFromCache(raw: ByteArray? = rawThumbnailBytes) {
+        val bytes = raw ?: return
+        val state = mutableViewStateFlow.value
+        ThumbnailUtil.encodeThumbnail(bytes, state.format, state.quality).onSuccess { encoded ->
+            mutableViewStateFlow.update { it.copy(fileSizeBytes = encoded.size.toLong()) }
+        }
     }
 
     fun updateFileName(name: String) {
@@ -193,6 +238,8 @@ class ThumbnailDownloadViewModel : ViewModel() {
     fun clearAll() {
         debounceJob?.cancel()
         fetchJob?.cancel()
+        sizeEstimateJob?.cancel()
+        rawThumbnailBytes = null
         mutableViewStateFlow.value = ViewState()
     }
 
@@ -211,7 +258,11 @@ class ThumbnailDownloadViewModel : ViewModel() {
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            ThumbnailUtil.downloadThumbnailBytes(thumbnailUrl)
+            // Reuse the raw bytes already fetched for the file-size estimate when available,
+            // instead of re-downloading the same thumbnail from YouTube a second time.
+            val rawBytesResult = rawThumbnailBytes?.let { Result.success(it) }
+                ?: ThumbnailUtil.downloadThumbnailBytes(thumbnailUrl)
+            rawBytesResult
                 .mapCatching { rawBytes ->
                     ThumbnailUtil.encodeThumbnail(rawBytes, state.format, state.quality).getOrThrow()
                 }

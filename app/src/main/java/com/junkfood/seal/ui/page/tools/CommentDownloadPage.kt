@@ -96,6 +96,9 @@ import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.util.makeToast
 import org.koin.androidx.compose.koinViewModel
 
+/** How many comments to show inline in the fetch-result preview before saving. */
+private const val COMMENT_PREVIEW_LIMIT = 10
+
 @Composable
 fun CommentDownloadPage(
     onNavigateBack: () -> Unit,
@@ -717,16 +720,13 @@ private fun CommentResultCard(
                     color = palette.textSecondary,
                 )
             } else {
-                Column(
-                    modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    comments.take(50).forEach { comment ->
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    comments.take(COMMENT_PREVIEW_LIMIT).forEach { comment ->
                         CommentRow(palette = palette, comment = comment)
                     }
-                    if (comments.size > 50) {
+                    if (comments.size > COMMENT_PREVIEW_LIMIT) {
                         Text(
-                            text = "+ ${comments.size - 50} more comments (view full list after saving)",
+                            text = "+ ${comments.size - COMMENT_PREVIEW_LIMIT} more comments (view full list after saving)",
                             style = MaterialTheme.typography.labelSmall,
                             color = palette.textSecondary,
                             modifier = Modifier.padding(top = 4.dp),
