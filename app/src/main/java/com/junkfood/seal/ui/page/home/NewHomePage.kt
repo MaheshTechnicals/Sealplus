@@ -396,6 +396,41 @@ fun NewHomePage(
         recentFiveDownloads.filter { it.videoUrl !in activeTaskUrls && it.id !in localHiddenIds }
     }
 
+    // Prune Completed tasks from the in-memory taskStateMap as soon as their DB row is confirmed
+    // present. taskStateMap lives inside the process-scoped DownloaderV2 singleton, so a
+    // Completed task otherwise lingers there FOREVER (it's only ever removed via the Active
+    // Downloads card's own delete button). If left unpruned and the user later deletes/hides
+    // that same item from History or Recent Downloads, the DB row disappears but the stale
+    // Completed task does not — so it silently satisfies the "not yet synced to DB" condition
+    // in activeDownloads below and gets wrongly resurrected as a ghost card. This only became
+    // visible after a fresh process start because enqueueFromBackup() never restores Completed
+    // tasks, masking the leak on cold boot. Pruning here, right when we know the DB has taken
+    // over as source of truth, closes that gap.
+    // Checked against the FULL visible download list (not just the last-5 window used for the
+    // Recent Downloads cards) so a task that ages out of the top 5 still gets pruned instead of
+    // resurfacing indefinitely.
+    val allVisibleIdentifiers = remember(recentDownloads) {
+        recentDownloads.flatMap { download ->
+            listOf(
+                download.videoUrl,
+                download.videoPath,
+                "${download.videoUrl}|${download.videoPath}"
+            )
+        }.toSet()
+    }
+    LaunchedEffect(allVisibleIdentifiers) {
+        taskStateMap.entries
+            .filter { (task, state) ->
+                val downloadState = state.downloadState
+                downloadState is Task.DownloadState.Completed &&
+                    (allVisibleIdentifiers.contains(task.url) ||
+                        allVisibleIdentifiers.contains(downloadState.filePath) ||
+                        allVisibleIdentifiers.contains("${task.url}|${downloadState.filePath}"))
+            }
+            .map { it.key }
+            .forEach { task -> downloader.remove(task) }
+    }
+
     // Hoisted state for the Spotify-style swipeable download-details sheet: holds the index
     // (within recentFiveDownloadsFiltered) of the card whose details are being viewed, or null
     // when the sheet is closed. Kept as an index (not the item itself) so left/right swipes
