@@ -4,9 +4,11 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -25,12 +27,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.PlaylistAdd
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -53,7 +57,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +69,8 @@ import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.junkfood.seal.ui.component.BackButton
+import com.junkfood.seal.ui.component.ConfirmButton
+import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.ui.theme.GradientBrushes
 import com.junkfood.seal.ui.theme.GradientDarkColors
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +79,9 @@ import com.junkfood.seal.util.makeToast
 private data class ToolItem(
     val id: Int,
     val titleRes: Int,
+    /** One-line summary shown directly on the card. Keep this short so it never wraps/clips. */
+    val shortDescRes: Int,
+    /** Full description shown in the info dialog (tap the (i) icon or long-press the card). */
     val descRes: Int,
     val icon: ImageVector,
     val isComingSoon: Boolean = true,
@@ -80,6 +91,7 @@ private val tools = listOf(
     ToolItem(
         id = 1,
         titleRes = R.string.batch_url_import,
+        shortDescRes = R.string.batch_url_import_short_desc,
         descRes = R.string.batch_url_import_desc,
         icon = Icons.Outlined.PlaylistAdd,
         isComingSoon = false,
@@ -87,6 +99,7 @@ private val tools = listOf(
     ToolItem(
         id = 2,
         titleRes = R.string.video_info_download,
+        shortDescRes = R.string.video_info_download_short_desc,
         descRes = R.string.video_info_download_desc,
         icon = Icons.Outlined.Description,
         isComingSoon = false,
@@ -94,12 +107,14 @@ private val tools = listOf(
     ToolItem(
         id = 3,
         titleRes = R.string.comment_download,
+        shortDescRes = R.string.comment_download_short_desc,
         descRes = R.string.comment_download_desc,
         icon = Icons.Outlined.Chat,
     ),
     ToolItem(
         id = 4,
         titleRes = R.string.thumbnail_download,
+        shortDescRes = R.string.thumbnail_download_short_desc,
         descRes = R.string.thumbnail_download_desc,
         icon = Icons.Outlined.Image,
     ),
@@ -117,6 +132,7 @@ fun MoreToolsPage(
     val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
     val isGradientDark = LocalGradientDarkMode.current
     val useGradientColors = isGradientDark && isDarkTheme
+    var infoDialogTool by remember { mutableStateOf<ToolItem?>(null) }
 
     Scaffold(
         modifier = Modifier
@@ -177,10 +193,24 @@ fun MoreToolsPage(
                                 }
                             }
                         },
+                        onLongClick = { infoDialogTool = tool },
+                        onInfoClick = { infoDialogTool = tool },
                     )
                 }
             }
         }
+    }
+
+    infoDialogTool?.let { tool ->
+        SealDialog(
+            onDismissRequest = { infoDialogTool = null },
+            icon = { Icon(tool.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+            title = { Text(stringResource(tool.titleRes)) },
+            text = { Text(stringResource(tool.descRes)) },
+            confirmButton = {
+                ConfirmButton(text = stringResource(R.string.got_it)) { infoDialogTool = null }
+            },
+        )
     }
 }
 
@@ -232,16 +262,20 @@ private fun SectionHeader(useGradientColors: Boolean) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ToolCard(
     tool: ToolItem,
     index: Int,
     useGradientColors: Boolean,
     onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
+    onInfoClick: () -> Unit = {},
 ) {
     var visible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val haptic = LocalHapticFeedback.current
 
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
@@ -297,10 +331,14 @@ private fun ToolCard(
                     MaterialTheme.colorScheme.surfaceContainer
                 }
             )
-            .clickable(
+            .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                },
             ),
     ) {
         Column(
@@ -309,30 +347,59 @@ private fun ToolCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(
-                        if (useGradientColors) {
-                            GradientBrushes.Vibrant
-                        } else {
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary,
-                                ),
-                            )
-                        }
-                    ),
-                contentAlignment = Alignment.Center,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = tool.icon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp),
-                )
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (useGradientColors) {
+                                GradientBrushes.Vibrant
+                            } else {
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.tertiary,
+                                    ),
+                                )
+                            }
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = tool.icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onInfoClick,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = stringResource(tool.titleRes),
+                        tint = if (useGradientColors) {
+                            GradientDarkColors.OnSurface.copy(alpha = 0.5f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -355,7 +422,7 @@ private fun ToolCard(
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = stringResource(tool.descRes),
+                text = stringResource(tool.shortDescRes),
                 style = MaterialTheme.typography.bodySmall.copy(
                     lineHeight = 16.sp,
                 ),
@@ -364,7 +431,7 @@ private fun ToolCard(
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 },
-                maxLines = 4,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
 

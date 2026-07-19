@@ -664,16 +664,22 @@
     <string name="more_tools_desc">Powerful tools to enhance your download experience and streamline media management</string>
     <string name="batch_url_import">Batch URL Import</string>
     <string name="batch_url_import_desc">Import and download multiple videos simultaneously. Supports various formats and quality options for efficient batch processing.</string>
+    <string name="batch_url_import_short_desc">Download multiple links at once</string>
     <string name="video_info_download">Video Info Download</string>
     <string name="video_info_download_desc">Retrieve comprehensive video metadata including title, description, statistics, and format details in structured JSON format.</string>
+    <string name="video_info_download_short_desc">Fetch title, tags &amp; description</string>
+    <string name="video_info_download_subtitle">Fetch and save video metadata</string>
     <string name="comment_download">Comment Download</string>
     <string name="comment_download_desc">Extract and download all comments from any video, including replies, timestamps, and author information for offline analysis.</string>
+    <string name="comment_download_short_desc">Download all video comments</string>
     <string name="thumbnail_download">Thumbnail Download</string>
 
     <!-- Video Info Download tool strings -->
-    <string name="video_info_url_hint">Paste a video URL to fetch its metadata</string>
+    <string name="video_info_url_hint">Paste a YouTube video URL to fetch its metadata</string>
     <string name="fetch_info">Fetch Info</string>
     <string name="video_info_saved">Saved to your info cards</string>
+    <string name="invalid_youtube_url">Please enter a valid YouTube video URL</string>
+    <string name="youtube_url_required">This tool only supports YouTube video links</string>
     <string name="save_info">Save Info</string>
     <string name="saved_video_info">Saved Video Info</string>
     <string name="no_saved_video_info">No saved video info yet</string>
@@ -693,11 +699,16 @@
     <string name="export_failed">Export failed</string>
     <string name="delete_saved_info">Delete this card?</string>
     <string name="delete_saved_info_msg">This will remove the saved video info. This action can\'t be undone.</string>
+    <string name="delete_selected_info">Delete selected cards?</string>
+    <string name="delete_selected_info_msg">Remove %1$d saved video info card(s)? This action can\'t be undone.</string>
+    <string name="exit_selection">Exit selection</string>
+    <string name="delete_selected">Delete selected</string>
     <string name="views">Views</string>
     <string name="likes">Likes</string>
     <string name="description">Description</string>
     <string name="tags">Tags</string>
     <string name="thumbnail_download_desc">Download high-quality video thumbnails in multiple resolutions with support for various image format conversions and custom sizing.</string>
+    <string name="thumbnail_download_short_desc">Save thumbnails in multiple sizes</string>
     <string name="coming_soon_placeholder">Coming Soon</string>
 </resources>
 

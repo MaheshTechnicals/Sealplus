@@ -2,6 +2,8 @@ package com.junkfood.seal.ui.page.tools
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.junkfood.seal.App
+import com.junkfood.seal.R
 import com.junkfood.seal.database.objects.SavedVideoInfo
 import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.DownloadUtil
@@ -13,6 +15,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/**
+ * Matches YouTube video links only (watch/shorts/embed/live/v paths on youtube.com,
+ * music.youtube.com, m.youtube.com, or the youtu.be short domain). This tool is scoped to
+ * YouTube, so anything else (other sites, playlist-only or channel-only links, etc.) is
+ * rejected with a clear message instead of being sent to yt-dlp.
+ */
+private val YOUTUBE_VIDEO_URL_REGEX = Regex(
+    "^(https?://)?(www\\.|m\\.|music\\.)?(youtube\\.com/(watch\\?.*v=|shorts/|embed/|v/|live/)[\\w-]{6,}|youtu\\.be/[\\w-]{6,})",
+    RegexOption.IGNORE_CASE,
+)
+
+fun isYoutubeVideoUrl(url: String): Boolean = YOUTUBE_VIDEO_URL_REGEX.containsMatchIn(url.trim())
 
 /**
  * Backs the "Video Info Download" tool page: fetches yt-dlp metadata for a URL, lets the
@@ -45,14 +60,25 @@ class VideoInfoDownloadViewModel : ViewModel() {
             mutableViewStateFlow.update { it.copy(errorMessage = "Please enter a video URL") }
             return
         }
+        if (!isYoutubeVideoUrl(url)) {
+            mutableViewStateFlow.update {
+                it.copy(
+                    errorMessage = App.context.getString(R.string.invalid_youtube_url),
+                    result = null,
+                )
+            }
+            return
+        }
         mutableViewStateFlow.update {
             it.copy(isLoading = true, errorMessage = null, result = null, isSaved = false)
         }
         viewModelScope.launch(Dispatchers.IO) {
             DownloadUtil.fetchVideoInfoFromUrl(url = url)
                 .onSuccess { info ->
+                    // Auto-save immediately on a successful fetch — no extra tap required.
+                    DatabaseUtil.insertSavedVideoInfo(info.toSavedVideoInfo())
                     mutableViewStateFlow.update {
-                        it.copy(isLoading = false, result = info, errorMessage = null)
+                        it.copy(isLoading = false, result = info, errorMessage = null, isSaved = true)
                     }
                 }
                 .onFailure { th ->
@@ -66,16 +92,14 @@ class VideoInfoDownloadViewModel : ViewModel() {
         }
     }
 
-    fun saveCurrentResult() {
-        val info = viewStateFlow.value.result ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            DatabaseUtil.insertSavedVideoInfo(info.toSavedVideoInfo())
-            mutableViewStateFlow.update { it.copy(isSaved = true) }
-        }
-    }
-
     fun deleteSavedInfo(id: Int) {
         viewModelScope.launch(Dispatchers.IO) { DatabaseUtil.deleteSavedVideoInfoById(id) }
+    }
+
+    fun deleteSavedInfoList(ids: Set<Int>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            ids.forEach { id -> DatabaseUtil.deleteSavedVideoInfoById(id) }
+        }
     }
 
     fun clearResult() {

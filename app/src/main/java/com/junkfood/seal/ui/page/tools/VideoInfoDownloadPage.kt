@@ -7,8 +7,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,11 +38,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkAdded
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Person
@@ -67,6 +72,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -110,6 +116,17 @@ fun VideoInfoDownloadPage(
     val savedInfoList by viewModel.savedInfoListFlow.collectAsStateWithLifecycle()
 
     var pendingDeleteId by remember { mutableStateOf<Int?>(null) }
+    var showBulkDeleteDialog by remember { mutableStateOf(false) }
+    var isSelectionMode by remember { mutableStateOf(false) }
+    val selectedIds = remember { mutableStateListOf<Int>() }
+
+    // Selection mode only makes sense while there are cards to pick from.
+    androidx.compose.runtime.LaunchedEffect(savedInfoList.isEmpty()) {
+        if (savedInfoList.isEmpty()) {
+            isSelectionMode = false
+            selectedIds.clear()
+        }
+    }
 
     Scaffold(
         containerColor = palette.background,
@@ -130,7 +147,7 @@ fun VideoInfoDownloadPage(
                             color = palette.textPrimary,
                         )
                         Text(
-                            text = stringResource(R.string.video_info_download_desc),
+                            text = stringResource(R.string.video_info_download_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = palette.textSecondary,
                             maxLines = 1,
@@ -190,10 +207,6 @@ fun VideoInfoDownloadPage(
                             tagCount = info.tags?.size ?: 0,
                             hasDescription = !info.description.isNullOrBlank(),
                             isSaved = viewState.isSaved,
-                            onSave = {
-                                viewModel.saveCurrentResult()
-                                context.makeToast(context.getString(R.string.video_info_saved))
-                            },
                             onDismiss = { viewModel.clearResult() },
                         )
                     }
@@ -202,7 +215,10 @@ fun VideoInfoDownloadPage(
 
             Spacer(Modifier.height(20.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Icon(
                     Icons.Outlined.Bookmark,
                     contentDescription = null,
@@ -230,6 +246,38 @@ fun VideoInfoDownloadPage(
                         )
                     }
                 }
+
+                Spacer(Modifier.weight(1f))
+
+                if (isSelectionMode) {
+                    if (selectedIds.isNotEmpty()) {
+                        IconButton(
+                            onClick = { showBulkDeleteDialog = true },
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = stringResource(R.string.delete_selected),
+                                tint = palette.error,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                        color = palette.primary,
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = {
+                                    isSelectionMode = false
+                                    selectedIds.clear()
+                                },
+                            )
+                            .padding(horizontal = 6.dp, vertical = 4.dp),
+                    )
+                }
             }
 
             Spacer(Modifier.height(10.dp))
@@ -251,7 +299,21 @@ fun VideoInfoDownloadPage(
                         SavedInfoCard(
                             palette = palette,
                             info = info,
-                            onClick = { onNavigateToDetail(info.id) },
+                            isSelectionMode = isSelectionMode,
+                            isSelected = selectedIds.contains(info.id),
+                            onClick = {
+                                if (isSelectionMode) {
+                                    if (selectedIds.contains(info.id)) selectedIds.remove(info.id)
+                                    else selectedIds.add(info.id)
+                                } else {
+                                    onNavigateToDetail(info.id)
+                                }
+                            },
+                            onLongClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (!isSelectionMode) isSelectionMode = true
+                                if (!selectedIds.contains(info.id)) selectedIds.add(info.id)
+                            },
                             onDeleteRequest = { pendingDeleteId = info.id },
                         )
                     }
@@ -275,6 +337,26 @@ fun VideoInfoDownloadPage(
                 }
             },
             dismissButton = { DismissButton { pendingDeleteId = null } },
+        )
+    }
+
+    if (showBulkDeleteDialog) {
+        SealDialog(
+            onDismissRequest = { showBulkDeleteDialog = false },
+            icon = { Icon(Icons.Outlined.Delete, null, tint = palette.error) },
+            title = { Text(stringResource(R.string.delete_selected_info)) },
+            text = {
+                Text(stringResource(R.string.delete_selected_info_msg).format(selectedIds.size))
+            },
+            confirmButton = {
+                ConfirmButton {
+                    viewModel.deleteSavedInfoList(selectedIds.toSet())
+                    selectedIds.clear()
+                    isSelectionMode = false
+                    showBulkDeleteDialog = false
+                }
+            },
+            dismissButton = { DismissButton { showBulkDeleteDialog = false } },
         )
     }
 }
@@ -447,7 +529,6 @@ private fun ResultPreviewCard(
     tagCount: Int,
     hasDescription: Boolean,
     isSaved: Boolean,
-    onSave: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     Surface(
@@ -556,42 +637,29 @@ private fun ResultPreviewCard(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = onSave,
-                enabled = !isSaved,
-                modifier = Modifier.fillMaxWidth().height(44.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                ),
-                contentPadding = PaddingValues(0.dp),
-            ) {
-                Box(
+            if (isSaved) {
+                Spacer(Modifier.height(12.dp))
+                Row(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .then(
-                            if (isSaved) Modifier.background(palette.success.copy(alpha = 0.15f))
-                            else Modifier.background(ToolGradientBrush)
-                        ),
-                    contentAlignment = Alignment.Center,
+                        .background(palette.success.copy(alpha = 0.12f))
+                        .padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (isSaved) Icons.Outlined.BookmarkAdded else Icons.Outlined.Bookmark,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = if (isSaved) palette.success else Color.White,
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = if (isSaved) "Saved" else stringResource(R.string.save_info),
-                            color = if (isSaved) palette.success else Color.White,
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Outlined.BookmarkAdded,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = palette.success,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.video_info_saved),
+                        color = palette.success,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    )
                 }
             }
         }
@@ -663,11 +731,15 @@ private fun EmptySavedInfoState(palette: ToolPalette) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SavedInfoCard(
     palette: ToolPalette,
     info: SavedVideoInfo,
+    isSelectionMode: Boolean,
+    isSelected: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -675,10 +747,17 @@ private fun SavedInfoCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable(interactionSource = interactionSource, onClick = onClick),
+            .combinedClickable(
+                interactionSource = interactionSource,
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
         shape = RoundedCornerShape(16.dp),
         color = palette.surface,
-        border = BorderStroke(1.dp, palette.border.copy(alpha = 0.4f)),
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) palette.primary else palette.border.copy(alpha = 0.4f),
+        ),
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
@@ -702,21 +781,35 @@ private fun SavedInfoCard(
                         )
                     }
                 }
-                IconButton(
-                    onClick = onDeleteRequest,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(4.dp)
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.45f)),
-                ) {
+                if (isSelectionMode) {
                     Icon(
-                        Icons.Filled.Close,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = Color.White,
-                        modifier = Modifier.size(14.dp),
+                        imageVector = if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
+                        contentDescription = null,
+                        tint = if (isSelected) palette.primary else Color.White,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(6.dp)
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(if (isSelected) Color.White else Color.Black.copy(alpha = 0.45f)),
                     )
+                } else {
+                    IconButton(
+                        onClick = onDeleteRequest,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.45f)),
+                    ) {
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
                 }
             }
             Column(modifier = Modifier.padding(10.dp)) {
