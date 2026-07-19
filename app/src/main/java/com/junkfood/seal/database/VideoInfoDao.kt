@@ -10,6 +10,7 @@ import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.database.objects.CookieProfile
 import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
+import com.junkfood.seal.database.objects.SavedVideoInfo
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -101,4 +102,13 @@ interface VideoInfoDao {
     @Insert suspend fun insertShortcut(optionShortcut: OptionShortcut): Long
 
     @Transaction @Insert suspend fun insertAllShortcuts(shortcuts: List<OptionShortcut>)
+
+    @Insert suspend fun insertSavedVideoInfo(info: SavedVideoInfo): Long
+
+    @Query("SELECT * FROM SavedVideoInfo ORDER BY savedAtMillis DESC")
+    fun getSavedVideoInfoFlow(): Flow<List<SavedVideoInfo>>
+
+    @Query("SELECT * FROM SavedVideoInfo WHERE id = :id") suspend fun getSavedVideoInfoById(id: Int): SavedVideoInfo?
+
+    @Query("DELETE FROM SavedVideoInfo WHERE id = :id") suspend fun deleteSavedVideoInfoById(id: Int)
 }

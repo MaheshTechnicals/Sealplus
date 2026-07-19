@@ -15,6 +15,7 @@ import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.database.objects.CookieProfile
 import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
+import com.junkfood.seal.database.objects.SavedVideoInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,11 +48,35 @@ private val MIGRATION_7_8 = object : Migration(7, 8) {
     }
 }
 
+private val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `SavedVideoInfo` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `title` TEXT NOT NULL,
+                `description` TEXT NOT NULL DEFAULT '',
+                `tagsJson` TEXT NOT NULL DEFAULT '[]',
+                `videoUrl` TEXT NOT NULL DEFAULT '',
+                `thumbnailUrl` TEXT NOT NULL DEFAULT '',
+                `uploader` TEXT NOT NULL DEFAULT '',
+                `uploadDate` TEXT NOT NULL DEFAULT '',
+                `durationString` TEXT NOT NULL DEFAULT '',
+                `viewCount` INTEGER NOT NULL DEFAULT -1,
+                `likeCount` INTEGER NOT NULL DEFAULT -1,
+                `extractor` TEXT NOT NULL DEFAULT '',
+                `savedAtMillis` INTEGER NOT NULL DEFAULT 0
+            )
+            """.trimIndent()
+        )
+    }
+}
+
 object DatabaseUtil {
     private const val DATABASE_NAME = "app_database"
     private val db =
         Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
-            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
             .fallbackToDestructiveMigration()
             .build()
     private val dao = db.videoInfoDao()
@@ -244,6 +269,17 @@ object DatabaseUtil {
     suspend fun deleteTemplateById(id: Int) = dao.deleteTemplateById(id)
 
     suspend fun deleteTemplates(templates: List<CommandTemplate>) = dao.deleteTemplates(templates)
+
+    fun getSavedVideoInfoFlow() = dao.getSavedVideoInfoFlow()
+
+    suspend fun insertSavedVideoInfo(info: SavedVideoInfo): Long =
+        withContext(Dispatchers.IO) { dao.insertSavedVideoInfo(info) }
+
+    suspend fun getSavedVideoInfoById(id: Int): SavedVideoInfo? =
+        withContext(Dispatchers.IO) { dao.getSavedVideoInfoById(id) }
+
+    suspend fun deleteSavedVideoInfoById(id: Int) =
+        withContext(Dispatchers.IO) { dao.deleteSavedVideoInfoById(id) }
 
     private const val TAG = "DatabaseUtil"
 }

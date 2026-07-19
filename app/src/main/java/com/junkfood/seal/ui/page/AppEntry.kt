@@ -71,6 +71,8 @@ import com.junkfood.seal.ui.page.videolist.VideoListPage
 import com.junkfood.seal.ui.page.hidden.HiddenContentPage
 import com.junkfood.seal.ui.page.tools.BatchUrlImportPage
 import com.junkfood.seal.ui.page.tools.MoreToolsPage
+import com.junkfood.seal.ui.page.tools.VideoInfoDetailPage
+import com.junkfood.seal.ui.page.tools.VideoInfoDownloadPage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -176,11 +178,35 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                                 launchSingleTop = true
                             }
                         },
+                        onNavigateToVideoInfoDownload = {
+                            navController.navigate(Route.VIDEO_INFO_DOWNLOAD) {
+                                launchSingleTop = true
+                            }
+                        },
                     )
                 }
                 animatedComposable(Route.BATCH_URL_IMPORT) {
                     BatchUrlImportPage(
                         onNavigateBack = onNavigateBack,
+                    )
+                }
+                animatedComposable(Route.VIDEO_INFO_DOWNLOAD) {
+                    VideoInfoDownloadPage(
+                        onNavigateBack = onNavigateBack,
+                        onNavigateToDetail = {
+                            navController.navigate(Route.VIDEO_INFO_DETAIL id it) {
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
+                slideInVerticallyComposable(
+                    Route.VIDEO_INFO_DETAIL arg Route.VIDEO_INFO_ID,
+                    arguments = listOf(navArgument(Route.VIDEO_INFO_ID) { type = NavType.IntType }),
+                ) {
+                    VideoInfoDetailPage(
+                        onNavigateBack = onNavigateBack,
+                        videoInfoId = it.arguments?.getInt(Route.VIDEO_INFO_ID) ?: -1,
                     )
                 }
                 slideInVerticallyComposable(

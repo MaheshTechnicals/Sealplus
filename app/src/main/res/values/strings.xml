@@ -669,6 +669,34 @@
     <string name="comment_download">Comment Download</string>
     <string name="comment_download_desc">Extract and download all comments from any video, including replies, timestamps, and author information for offline analysis.</string>
     <string name="thumbnail_download">Thumbnail Download</string>
+
+    <!-- Video Info Download tool strings -->
+    <string name="video_info_url_hint">Paste a video URL to fetch its metadata</string>
+    <string name="fetch_info">Fetch Info</string>
+    <string name="video_info_saved">Saved to your info cards</string>
+    <string name="save_info">Save Info</string>
+    <string name="saved_video_info">Saved Video Info</string>
+    <string name="no_saved_video_info">No saved video info yet</string>
+    <string name="no_saved_video_info_desc">Fetch a video\'s info above and save it to see it here</string>
+    <string name="video_info_detail">Video Info Detail</string>
+    <string name="copy_title">Copy title</string>
+    <string name="copy_description">Copy description</string>
+    <string name="copy_tags">Copy tags</string>
+    <string name="title_copied">Title copied to clipboard</string>
+    <string name="description_copied">Description copied to clipboard</string>
+    <string name="tags_copied">Tags copied to clipboard</string>
+    <string name="no_description_available">No description available</string>
+    <string name="no_tags_available">No tags available</string>
+    <string name="export_as_txt">Export as TXT</string>
+    <string name="export_as_json">Export as JSON</string>
+    <string name="exported_successfully">Exported successfully</string>
+    <string name="export_failed">Export failed</string>
+    <string name="delete_saved_info">Delete this card?</string>
+    <string name="delete_saved_info_msg">This will remove the saved video info. This action can\'t be undone.</string>
+    <string name="views">Views</string>
+    <string name="likes">Likes</string>
+    <string name="description">Description</string>
+    <string name="tags">Tags</string>
     <string name="thumbnail_download_desc">Download high-quality video thumbnails in multiple resolutions with support for various image format conversions and custom sizing.</string>
     <string name="coming_soon_placeholder">Coming Soon</string>
 </resources>

@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
@@ -88,6 +89,7 @@ private val tools = listOf(
         titleRes = R.string.video_info_download,
         descRes = R.string.video_info_download_desc,
         icon = Icons.Outlined.Description,
+        isComingSoon = false,
     ),
     ToolItem(
         id = 3,
@@ -108,6 +110,7 @@ private val tools = listOf(
 fun MoreToolsPage(
     onNavigateBack: () -> Unit,
     onNavigateToBatchUrlImport: (() -> Unit)? = null,
+    onNavigateToVideoInfoDownload: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -166,6 +169,7 @@ fun MoreToolsPage(
                         onClick = {
                             when (tool.id) {
                                 1 -> onNavigateToBatchUrlImport?.invoke()
+                                2 -> onNavigateToVideoInfoDownload?.invoke()
                                 else -> {
                                     context.makeToast(
                                         "${context.getString(tool.titleRes)} — ${context.getString(R.string.feature_unavailable)}"
@@ -274,7 +278,8 @@ private fun ToolCard(
             .scale(scale)
             .offset(y = offsetY)
             .graphicsLayer(alpha = alpha)
-            .aspectRatio(0.85f)
+            .fillMaxWidth()
+            .heightIn(min = 208.dp)
             .clip(RoundedCornerShape(20.dp))
             .then(
                 if (useGradientColors) {
@@ -300,70 +305,71 @@ private fun ToolCard(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Column {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(
-                            if (useGradientColors) {
-                                GradientBrushes.Vibrant
-                            } else {
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary,
-                                        MaterialTheme.colorScheme.tertiary,
-                                    ),
-                                )
-                            }
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = tool.icon,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text(
-                    text = stringResource(tool.titleRes),
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        lineHeight = 20.sp,
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        if (useGradientColors) {
+                            GradientBrushes.Vibrant
+                        } else {
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary,
+                                ),
+                            )
+                        }
                     ),
-                    color = if (useGradientColors) {
-                        GradientDarkColors.OnSurface
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    maxLines = 2,
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = stringResource(tool.descRes),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        lineHeight = 16.sp,
-                    ),
-                    color = if (useGradientColors) {
-                        GradientDarkColors.OnSurface.copy(alpha = 0.6f)
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    maxLines = 3,
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = tool.icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp),
                 )
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = stringResource(tool.titleRes),
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 20.sp,
+                ),
+                color = if (useGradientColors) {
+                    GradientDarkColors.OnSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = stringResource(tool.descRes),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    lineHeight = 16.sp,
+                ),
+                color = if (useGradientColors) {
+                    GradientDarkColors.OnSurface.copy(alpha = 0.6f)
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
+            )
+
             if (tool.isComingSoon) {
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
