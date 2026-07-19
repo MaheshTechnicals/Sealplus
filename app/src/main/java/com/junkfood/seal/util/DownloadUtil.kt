@@ -160,19 +160,39 @@ object DownloadUtil {
             if (trimmed.isEmpty() || trimmed.startsWith('#')) return@forEach
             val parts = trimmed.split('\t')
             if (parts.size < 7) return@forEach
-            val domain            = parts[0]
-            val includeSubdomains = parts[1].uppercase() == "TRUE"
-            val path              = parts[2]
-            val secure            = parts[3].uppercase() == "TRUE"
-            val expiry            = parts[4].toLongOrNull() ?: 0L
-            val name              = parts[5]
+            val rawDomain          = parts[0]
+            val includeSubdomains  = parts[1].uppercase() == "TRUE"
+            val path               = parts[2]
+            val secure             = parts[3].uppercase() == "TRUE"
+            val expiry             = parts[4].toLongOrNull() ?: 0L
+            val name               = parts[5]
             // Value may itself contain tabs — re-join the remainder
-            val value             = parts.drop(6).joinToString("\t")
+            val value              = parts.drop(6).joinToString("\t")
             if (name.isEmpty()) return@forEach
             if (expiry > 0L && expiry < now) return@forEach // skip expired
+
+            // IMPORTANT: yt-dlp's cookie loader (YoutubeDLCookieJar, a subclass of Python's
+            // http.cookiejar.MozillaCookieJar) enforces `assert domain_specified == initial_dot`
+            // for every single line in the file — i.e. the "include subdomains" flag (this
+            // field) and whether `domain` starts with a dot MUST agree. A host-only cookie
+            // (includeSubdomains = FALSE) legitimately has no leading dot in a real cookies.txt
+            // export. The previous code unconditionally force-added a leading dot to every
+            // domain regardless of this flag, which broke that invariant for any pasted file
+            // containing host-only cookies. Because yt-dlp parses the WHOLE file in one pass,
+            // that single inconsistent line raised a LoadError and rejected the entire cookies
+            // file with "does not look like a Netscape format cookies file" — silently breaking
+            // cookie-based auth for every profile, not just the pasted one.
+            // Fix: derive the dot presence FROM includeSubdomains so the two always agree,
+            // instead of assuming the source domain string's dot state is correct.
+            val domain = if (includeSubdomains) {
+                if (rawDomain.startsWith('.')) rawDomain else ".$rawDomain"
+            } else {
+                rawDomain.removePrefix(".")
+            }
+
             cookies.add(
                 Cookie(
-                    domain            = if (domain.startsWith('.')) domain else ".$domain",
+                    domain            = domain,
                     name              = name,
                     value             = value,
                     includeSubdomains = includeSubdomains,
