@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.os.PowerManager
 import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshotFlow
@@ -131,6 +132,33 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     private var networkPauseJob: Job? = null
     @Volatile private var networkDegradedAtMs: Long = 0L
 
+    // Held only while at least one task is Running/FetchingInfo. Without this, Doze mode can
+    // suspend the CPU mid-download even while the foreground service notification is showing —
+    // the yt-dlp process gets frozen (not killed) and the download stalls or eventually errors
+    // out. Reopening the app wakes the CPU again, which is why "resume" appears to fix it: the
+    // real fix is holding the CPU awake for the download's duration in the first place.
+    private val wakeLock: PowerManager.WakeLock by lazy {
+        val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+        powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SealPlus::DownloadWakeLock")
+            .apply { setReferenceCounted(false) }
+    }
+
+    private fun acquireDownloadWakeLock() {
+        runCatching {
+            if (!wakeLock.isHeld) {
+                // Safety timeout (2h) in case a task gets stuck in Running without transitioning
+                // out — prevents an indefinitely-held wake lock from draining the battery.
+                wakeLock.acquire(2 * 60 * 60 * 1000L)
+            }
+        }
+    }
+
+    private fun releaseDownloadWakeLock() {
+        runCatching {
+            if (wakeLock.isHeld) wakeLock.release()
+        }
+    }
+
     companion object {
         private const val MAX_AUTO_RETRIES = 3
         private const val RETRY_DELAY_MS = 5_000L
@@ -187,7 +215,15 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 .onEach { doYourWork() }
                 .map { it.values.count { cls -> cls == Running::class || cls == FetchingInfo::class } }
                 .distinctUntilChanged()
-                .collect { if (it > 0) App.startService() else App.stopService() }
+                .collect { activeCount ->
+                    if (activeCount > 0) {
+                        App.startService()
+                        acquireDownloadWakeLock()
+                    } else {
+                        App.stopService()
+                        releaseDownloadWakeLock()
+                    }
+                }
         }
 
         scope.launch(Dispatchers.IO) {
@@ -298,6 +334,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         runCatching {
             App.connectivityManager.unregisterNetworkCallback(networkCallback)
         }
+        releaseDownloadWakeLock()
     }
 
     private var Task.state: Task.State

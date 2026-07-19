@@ -64,11 +64,17 @@ import com.junkfood.seal.util.SHOW_SPONSOR_MSG
 @Composable
 fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
     val context = LocalContext.current
-    val batteryDialogDismissed = remember { BATTERY_DIALOG_DISMISSED.getBoolean() }
+    // NOTE: intentionally independent of BATTERY_DIALOG_DISMISSED — that flag only controls the
+    // one-time modal popup shown on the home screen. This hint card is a low-friction, dismissible
+    // reminder that should stay visible in Settings for as long as battery optimization is
+    // actually still restricting the app, even if the user dismissed the home popup once (by
+    // accident or otherwise). Without this, a user who dismissed the popup had no way to be
+    // reminded again short of remembering to disable it manually — a real gap given how often
+    // downloads silently fail while battery optimization is left on.
     var showBatteryHint by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                !batteryDialogDismissed && !BatteryUtil.isIgnoringBatteryOptimizations(context)
+                !BatteryUtil.isIgnoringBatteryOptimizations(context)
             } else {
                 false
             }
@@ -84,7 +90,7 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                showBatteryHint = !batteryDialogDismissed && !BatteryUtil.isIgnoringBatteryOptimizations(context)
+                showBatteryHint = !BatteryUtil.isIgnoringBatteryOptimizations(context)
             }
         }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()

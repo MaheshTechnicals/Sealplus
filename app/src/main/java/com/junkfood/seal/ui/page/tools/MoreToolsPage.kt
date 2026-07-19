@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
+import com.junkfood.seal.ui.common.ThemedIconColors
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.SealDialog
@@ -301,6 +302,10 @@ private fun HeroBanner(useGradientColors: Boolean) {
                         },
                     )
                     Spacer(modifier = Modifier.height(2.dp))
+                    // No maxLines/ellipsis here on purpose — the previous 2-line cap clipped
+                    // the tail of the description on narrower phones and in longer-translation
+                    // locales. The hero banner's height isn't fixed, so letting the text wrap
+                    // to as many lines as it needs shows the full sentence on every screen size.
                     Text(
                         text = stringResource(R.string.more_tools_desc),
                         style = MaterialTheme.typography.bodySmall,
@@ -309,8 +314,6 @@ private fun HeroBanner(useGradientColors: Boolean) {
                         } else {
                             MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         },
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -318,23 +321,17 @@ private fun HeroBanner(useGradientColors: Boolean) {
     }
 }
 
-/** Resolves a theme-consistent gradient brush + tint for a given accent slot. */
+/**
+ * Resolves the same colorful, theme-aware tint used for icons in the navigation drawer
+ * ([ThemedIconColors]) for a given accent slot, so a tool's icon color reads as consistent
+ * with the rest of the app (primary/secondary/tertiary role colors) instead of a bespoke
+ * gradient invented just for this page.
+ */
 @Composable
-private fun accentBrush(style: AccentStyle, useGradientColors: Boolean): Brush {
-    if (useGradientColors) {
-        return when (style) {
-            AccentStyle.PRIMARY -> GradientBrushes.Primary
-            AccentStyle.SECONDARY -> GradientBrushes.Secondary
-            AccentStyle.TERTIARY -> GradientBrushes.Accent
-        }
-    }
-    val colors = MaterialTheme.colorScheme
-    val pair = when (style) {
-        AccentStyle.PRIMARY -> colors.primary to colors.tertiary
-        AccentStyle.SECONDARY -> colors.secondary to colors.primary
-        AccentStyle.TERTIARY -> colors.tertiary to colors.secondary
-    }
-    return Brush.linearGradient(colors = listOf(pair.first, pair.second))
+private fun accentColor(style: AccentStyle): Color = when (style) {
+    AccentStyle.PRIMARY -> ThemedIconColors.primary
+    AccentStyle.SECONDARY -> ThemedIconColors.secondary
+    AccentStyle.TERTIARY -> ThemedIconColors.tertiary
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -432,17 +429,22 @@ private fun ToolCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
+                val iconColor = accentColor(accentStyle)
                 Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(accentBrush(accentStyle, useGradientColors)),
+                        // Soft tinted container behind a full-strength colored icon — the same
+                        // colorful primary/secondary/tertiary language used for icons in the
+                        // navigation drawer, applied consistently here instead of the page's
+                        // own one-off gradient badges.
+                        .background(iconColor.copy(alpha = if (useGradientColors) 0.18f else 0.12f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = tool.icon,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = iconColor,
                         modifier = Modifier.size(22.dp),
                     )
                 }

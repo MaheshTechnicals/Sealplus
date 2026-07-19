@@ -163,6 +163,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.text.TextStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -2040,6 +2044,37 @@ fun RecentDownloadDetailsDialog(
     ) { downloadInfoList.size }
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
 
+    // BUG FIX — continuous up/down flicker after releasing a swipe-up gesture:
+    //
+    // The sheet's own drag-to-expand/dismiss gesture and each page's inner verticalScroll
+    // both live on the same vertical axis. Once a swipe-up reaches the top/bottom of the
+    // scrollable content, any velocity/delta the inner scroll can't consume is normally
+    // handed UP to the ModalBottomSheet's drag handler (that's how nested scroll works by
+    // default: children consume first, parents get the "pre" pass and any leftovers).
+    // Because the sheet height is a fixed 85% of the screen, its resting/expanded anchor sits
+    // very close to the content's natural bounds on most devices — so that tiny leftover
+    // delta/velocity is just enough to nudge the sheet, which nudges the scroll state back,
+    // which nudges the sheet again... an unstable feedback loop that never settles. That is
+    // the repeating up/down flicker: it does not stop on its own once triggered by a
+    // swipe-and-release.
+    //
+    // Fix: swallow all scroll deltas AND fling velocity in a NestedScrollConnection placed
+    // between the pager/content and the ModalBottomSheet, so nothing above this point ever
+    // sees "leftover" scroll to react to. The sheet still drags normally from its own drag
+    // handle / empty areas — this only isolates the content's internal scrolling.
+    val swallowNestedScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset = available
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
+                available
+        }
+    }
+
     BackHandler {
         onDismiss()
     }
@@ -2048,7 +2083,11 @@ fun RecentDownloadDetailsDialog(
         onDismissRequest = onDismiss,
         sheetState = sheetState
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .nestedScroll(swallowNestedScroll),
+        ) {
             // Page indicator dots — only shown when there's more than one item to swipe between.
             if (downloadInfoList.size > 1) {
                 Row(

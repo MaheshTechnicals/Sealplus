@@ -117,6 +117,8 @@
     </string>
     <string name="battery_settings_desc_huawei">"On your device, also go to App Info > Battery usage > Manage manually, and enable all background, auto-launch, and secondary launch options."
     </string>
+    <string name="battery_settings_desc_samsung">"On your device, also go to Settings > Battery and device care > Background usage limits, remove this app from \"Sleeping apps\"/\"Deep sleeping apps\", and set its Battery usage to \"Unrestricted\"."
+    </string>
     <string name="concurrent_download">Multi-threaded download</string>
     <string name="concurrent_download_desc">Download more parts of M3U8/MPD videos in parallel</string>
     <string name="concurrent_download_num">%d thread(s) would be used to download DASH/HLS native video concurrently.</string>

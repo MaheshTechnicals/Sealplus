@@ -275,6 +275,10 @@ object BatteryUtil {
             Manufacturer.XIAOMI -> R.string.battery_settings_desc_xiaomi
             Manufacturer.VIVO -> R.string.battery_settings_desc_vivo
             Manufacturer.HUAWEI -> R.string.battery_settings_desc_huawei
+            // Samsung's One UI has its own "Put unused apps to sleep" / "Deep sleeping apps"
+            // system that is separate from stock Android battery optimization — disabling the
+            // latter alone is not enough on One UI, same class of problem as the other OEMs.
+            Manufacturer.SAMSUNG -> R.string.battery_settings_desc_samsung
             else -> R.string.battery_settings_desc
         }
     }
