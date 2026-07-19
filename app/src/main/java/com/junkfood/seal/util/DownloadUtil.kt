@@ -376,6 +376,42 @@ object DownloadUtil {
         }
     }
 
+    /**
+     * Fetches a YouTube video's comments via yt-dlp's `--write-comments` + `--dump-single-json`
+     * combo (skip-download so nothing is actually downloaded). [maxComments] is passed through
+     * yt-dlp's YouTube extractor-args `max_comments` — without a cap, yt-dlp will happily try to
+     * page through every single comment on a viral video, which can take minutes and use a lot
+     * of data, so the Comment Downloader tool always sets a sane cap.
+     */
+    @CheckResult
+    fun fetchCommentsFromUrl(
+        url: String,
+        maxComments: Int = 500,
+        sortByTop: Boolean = true,
+    ): Result<VideoInfo> {
+        val request = YoutubeDLRequest(url).apply {
+            addOption("--skip-download")
+            addOption("--write-comments")
+            addOption("--dump-single-json")
+            addOption("--no-playlist")
+            addOption(
+                "--extractor-args",
+                "youtube:max_comments=$maxComments,all,all,all" +
+                    (if (sortByTop) ";comment_sort=top" else ""),
+            )
+            if (COOKIES.getBoolean()) {
+                val userAgentString =
+                    USER_AGENT_STRING.run { if (USER_AGENT.getBoolean()) getString() else "" }
+                enableCookies(userAgentString)
+            }
+            // Comment pagination alone can take a while on heavily-commented videos —
+            // more generous timeouts than the info-only fetch above so it isn't cut short.
+            addOption("-R", "3")
+            addOption("--socket-timeout", "20")
+        }
+        return getVideoInfo(request)
+    }
+
     @Serializable
     data class DownloadPreferences(
         val extractAudio: Boolean,

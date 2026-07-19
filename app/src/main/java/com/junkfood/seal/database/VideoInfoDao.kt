@@ -10,6 +10,7 @@ import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.database.objects.CookieProfile
 import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
+import com.junkfood.seal.database.objects.SavedCommentSet
 import com.junkfood.seal.database.objects.SavedVideoInfo
 import kotlinx.coroutines.flow.Flow
 
@@ -111,4 +112,14 @@ interface VideoInfoDao {
     @Query("SELECT * FROM SavedVideoInfo WHERE id = :id") suspend fun getSavedVideoInfoById(id: Int): SavedVideoInfo?
 
     @Query("DELETE FROM SavedVideoInfo WHERE id = :id") suspend fun deleteSavedVideoInfoById(id: Int)
+
+    @Insert suspend fun insertSavedCommentSet(commentSet: SavedCommentSet): Long
+
+    @Query("SELECT * FROM SavedCommentSet ORDER BY savedAtMillis DESC")
+    fun getSavedCommentSetFlow(): Flow<List<SavedCommentSet>>
+
+    @Query("SELECT * FROM SavedCommentSet WHERE id = :id")
+    suspend fun getSavedCommentSetById(id: Int): SavedCommentSet?
+
+    @Query("DELETE FROM SavedCommentSet WHERE id = :id") suspend fun deleteSavedCommentSetById(id: Int)
 }

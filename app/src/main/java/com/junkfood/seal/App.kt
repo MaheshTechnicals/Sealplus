@@ -27,6 +27,7 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.settings.directory.Directory
 import com.junkfood.seal.ui.page.settings.network.CookiesViewModel
 import com.junkfood.seal.ui.page.hidden.HiddenContentViewModel
+import com.junkfood.seal.ui.page.tools.CommentDownloadViewModel
 import com.junkfood.seal.ui.page.tools.ThumbnailDownloadViewModel
 import com.junkfood.seal.ui.page.tools.VideoInfoDownloadViewModel
 import com.junkfood.seal.ui.page.videolist.VideoListViewModel
@@ -119,6 +120,7 @@ class App : Application(), SingletonImageLoader.Factory {
                     viewModel { HiddenContentViewModel() }
                     viewModel { VideoInfoDownloadViewModel() }
                     viewModel { ThumbnailDownloadViewModel() }
+                    viewModel { CommentDownloadViewModel() }
                 }
             )
         }

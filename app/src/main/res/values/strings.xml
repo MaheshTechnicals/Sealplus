@@ -736,5 +736,31 @@
     <string name="quality_high_desc">Minimal compression, visually lossless</string>
     <string name="quality_medium_desc">Balanced size and quality</string>
     <string name="quality_compressed_desc">Smallest file size</string>
+
+    <!-- Comment Downloader tool strings -->
+    <string name="comment_download_subtitle">Fetch and save YouTube video comments</string>
+    <string name="comments_fetch_failed">Could not fetch comments for this video</string>
+    <string name="no_comments_found">No comments found (comments may be disabled for this video)</string>
+    <string name="fetching_comments">Fetching comments…</string>
+    <string name="fetch_comments">Fetch Comments</string>
+    <string name="comment_count_label">Comments</string>
+    <string name="reply_count_label">Replies</string>
+    <string name="sort_by_top">Top</string>
+    <string name="sort_by_newest">Newest</string>
+    <string name="show_replies_only">Replies only</string>
+    <string name="fetch_limit">Number of comments</string>
+    <string name="saved_comment_sets">Saved Comment Sets</string>
+    <string name="no_saved_comments">No saved comments yet</string>
+    <string name="no_saved_comments_desc">Fetch a video\'s comments above to see them here</string>
+    <string name="comment_set_saved">Comments saved to your list</string>
+    <string name="delete_saved_comments">Delete this card?</string>
+    <string name="delete_saved_comments_msg">This will remove the saved comments. This action can\'t be undone.</string>
+    <string name="delete_selected_comments">Delete selected cards?</string>
+    <string name="delete_selected_comments_msg">Remove %1$d saved comment card(s)? This action can\'t be undone.</string>
+    <string name="comment_detail">Comments</string>
+    <string name="export_as_csv">Export as CSV</string>
+    <string name="creator_badge">Creator</string>
+    <string name="pinned_badge">Pinned</string>
+    <string name="no_comments_available">No comments to show</string>
 </resources>
 

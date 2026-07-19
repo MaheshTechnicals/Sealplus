@@ -71,7 +71,30 @@ data class VideoInfo(
     @SerialName("requested_formats") val requestedFormats: List<Format>? = null,
     val filename: String? = null,
     @SerialName("_type") val type: String? = null,
+    // Only present when yt-dlp was run with --write-comments (see
+    // DownloadUtil.fetchCommentsFromUrl). Each entry is a single comment or reply; replies
+    // are distinguished by `parent` being a comment id instead of the literal string "root".
+    val comments: List<Comment>? = null,
 ) : YoutubeDLInfo
+
+@Serializable
+data class Comment(
+    val id: String = "",
+    val text: String = "",
+    val author: String = "",
+    @SerialName("author_id") val authorId: String? = null,
+    @SerialName("author_thumbnail") val authorThumbnail: String? = null,
+    @SerialName("author_is_uploader") val authorIsUploader: Boolean = false,
+    @SerialName("author_is_verified") val authorIsVerified: Boolean = false,
+    /** "root" for a top-level comment, otherwise the id of the comment it replies to. */
+    val parent: String = "root",
+    @SerialName("like_count") val likeCount: Int? = null,
+    val timestamp: Long? = null,
+    @SerialName("is_favorited") val isFavorited: Boolean? = null,
+    @SerialName("is_pinned") val isPinned: Boolean? = null,
+) {
+    val isReply: Boolean get() = parent != "root"
+}
 
 @Serializable
 data class Format(

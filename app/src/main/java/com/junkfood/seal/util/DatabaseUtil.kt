@@ -15,6 +15,7 @@ import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.database.objects.CookieProfile
 import com.junkfood.seal.database.objects.DownloadedVideoInfo
 import com.junkfood.seal.database.objects.OptionShortcut
+import com.junkfood.seal.database.objects.SavedCommentSet
 import com.junkfood.seal.database.objects.SavedVideoInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,11 +73,30 @@ private val MIGRATION_8_9 = object : Migration(8, 9) {
     }
 }
 
+private val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `SavedCommentSet` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `videoTitle` TEXT NOT NULL,
+                `uploader` TEXT NOT NULL DEFAULT '',
+                `videoUrl` TEXT NOT NULL DEFAULT '',
+                `thumbnailUrl` TEXT NOT NULL DEFAULT '',
+                `commentsJson` TEXT NOT NULL DEFAULT '[]',
+                `commentCount` INTEGER NOT NULL DEFAULT 0,
+                `savedAtMillis` INTEGER NOT NULL DEFAULT 0
+            )
+            """.trimIndent()
+        )
+    }
+}
+
 object DatabaseUtil {
     private const val DATABASE_NAME = "app_database"
     private val db =
         Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
-            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
             .fallbackToDestructiveMigration()
             .build()
     private val dao = db.videoInfoDao()
@@ -280,6 +300,17 @@ object DatabaseUtil {
 
     suspend fun deleteSavedVideoInfoById(id: Int) =
         withContext(Dispatchers.IO) { dao.deleteSavedVideoInfoById(id) }
+
+    fun getSavedCommentSetFlow() = dao.getSavedCommentSetFlow()
+
+    suspend fun insertSavedCommentSet(commentSet: SavedCommentSet): Long =
+        withContext(Dispatchers.IO) { dao.insertSavedCommentSet(commentSet) }
+
+    suspend fun getSavedCommentSetById(id: Int): SavedCommentSet? =
+        withContext(Dispatchers.IO) { dao.getSavedCommentSetById(id) }
+
+    suspend fun deleteSavedCommentSetById(id: Int) =
+        withContext(Dispatchers.IO) { dao.deleteSavedCommentSetById(id) }
 
     private const val TAG = "DatabaseUtil"
 }

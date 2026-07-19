@@ -71,6 +71,8 @@ import com.junkfood.seal.ui.page.videolist.VideoListPage
 import com.junkfood.seal.ui.page.hidden.HiddenContentPage
 import com.junkfood.seal.ui.page.tools.BatchUrlImportPage
 import com.junkfood.seal.ui.page.tools.MoreToolsPage
+import com.junkfood.seal.ui.page.tools.CommentDetailPage
+import com.junkfood.seal.ui.page.tools.CommentDownloadPage
 import com.junkfood.seal.ui.page.tools.ThumbnailDownloadPage
 import com.junkfood.seal.ui.page.tools.VideoInfoDetailPage
 import com.junkfood.seal.ui.page.tools.VideoInfoDownloadPage
@@ -189,10 +191,34 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                                 launchSingleTop = true
                             }
                         },
+                        onNavigateToCommentDownload = {
+                            navController.navigate(Route.COMMENT_DOWNLOAD) {
+                                launchSingleTop = true
+                            }
+                        },
                     )
                 }
                 animatedComposable(Route.THUMBNAIL_DOWNLOAD) {
                     ThumbnailDownloadPage(onNavigateBack = onNavigateBack)
+                }
+                animatedComposable(Route.COMMENT_DOWNLOAD) {
+                    CommentDownloadPage(
+                        onNavigateBack = onNavigateBack,
+                        onNavigateToDetail = {
+                            navController.navigate(Route.COMMENT_DETAIL id it) {
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
+                slideInVerticallyComposable(
+                    Route.COMMENT_DETAIL arg Route.COMMENT_SET_ID,
+                    arguments = listOf(navArgument(Route.COMMENT_SET_ID) { type = NavType.IntType }),
+                ) {
+                    CommentDetailPage(
+                        onNavigateBack = onNavigateBack,
+                        commentSetId = it.arguments?.getInt(Route.COMMENT_SET_ID) ?: -1,
+                    )
                 }
                 animatedComposable(Route.BATCH_URL_IMPORT) {
                     BatchUrlImportPage(

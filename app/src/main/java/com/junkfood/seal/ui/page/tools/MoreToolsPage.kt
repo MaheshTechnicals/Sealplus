@@ -119,6 +119,7 @@ private val tools = listOf(
         shortDescRes = R.string.comment_download_short_desc,
         descRes = R.string.comment_download_desc,
         icon = Icons.Outlined.Chat,
+        isComingSoon = false,
     ),
     ToolItem(
         id = 4,
@@ -137,6 +138,7 @@ fun MoreToolsPage(
     onNavigateToBatchUrlImport: (() -> Unit)? = null,
     onNavigateToVideoInfoDownload: (() -> Unit)? = null,
     onNavigateToThumbnailDownload: (() -> Unit)? = null,
+    onNavigateToCommentDownload: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -201,6 +203,7 @@ fun MoreToolsPage(
                             when (tool.id) {
                                 1 -> onNavigateToBatchUrlImport?.invoke()
                                 2 -> onNavigateToVideoInfoDownload?.invoke()
+                                3 -> onNavigateToCommentDownload?.invoke()
                                 4 -> onNavigateToThumbnailDownload?.invoke()
                                 else -> {
                                     context.makeToast(
