@@ -42,6 +42,7 @@ object Route {
     const val BATCH_URL_IMPORT = "batch_url_import"
     const val VIDEO_INFO_DOWNLOAD = "video_info_download"
     const val VIDEO_INFO_DETAIL = "video_info_detail"
+    const val THUMBNAIL_DOWNLOAD = "thumbnail_download"
 
     const val TASK_HASHCODE = "task_hashcode"
     const val TEMPLATE_ID = "template_id"

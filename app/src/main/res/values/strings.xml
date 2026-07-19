@@ -713,5 +713,28 @@
     <string name="thumbnail_download_desc">Download high-quality video thumbnails in multiple resolutions with support for various image format conversions and custom sizing.</string>
     <string name="thumbnail_download_short_desc">Save thumbnails in multiple sizes</string>
     <string name="coming_soon_placeholder">Coming Soon</string>
+
+    <!-- Thumbnail Downloader tool strings -->
+    <string name="thumbnail_download_subtitle">Original highest-quality YouTube thumbnails</string>
+    <string name="thumbnail_url_hint">Paste a YouTube video URL</string>
+    <string name="fetching_thumbnail">Fetching thumbnail…</string>
+    <string name="thumbnail_fetch_failed">Could not fetch this video\'s thumbnail</string>
+    <string name="thumbnail_download_failed">Could not download the thumbnail. Please try again.</string>
+    <string name="thumbnail_downloaded">Thumbnail saved successfully</string>
+    <string name="output_format">Output Format</string>
+    <string name="output_quality">Output Quality</string>
+    <string name="original_resolution_note">Always downloaded at the original highest resolution provided by YouTube</string>
+    <string name="download_summary">Download Summary</string>
+    <string name="file_name_hint">Enter a file name</string>
+    <string name="choose_location">Choose Location</string>
+    <string name="default_location">Downloads/SealPlus/Thumbnails</string>
+    <string name="download_thumbnail">Download Thumbnail</string>
+    <string name="downloading_thumbnail">Downloading…</string>
+    <string name="view_thumbnail">View</string>
+    <string name="share_thumbnail">Share</string>
+    <string name="quality_original_desc">No compression — exact file YouTube serves</string>
+    <string name="quality_high_desc">Minimal compression, visually lossless</string>
+    <string name="quality_medium_desc">Balanced size and quality</string>
+    <string name="quality_compressed_desc">Smallest file size</string>
 </resources>
 

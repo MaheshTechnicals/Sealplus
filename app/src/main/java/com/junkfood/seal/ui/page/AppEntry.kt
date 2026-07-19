@@ -71,6 +71,7 @@ import com.junkfood.seal.ui.page.videolist.VideoListPage
 import com.junkfood.seal.ui.page.hidden.HiddenContentPage
 import com.junkfood.seal.ui.page.tools.BatchUrlImportPage
 import com.junkfood.seal.ui.page.tools.MoreToolsPage
+import com.junkfood.seal.ui.page.tools.ThumbnailDownloadPage
 import com.junkfood.seal.ui.page.tools.VideoInfoDetailPage
 import com.junkfood.seal.ui.page.tools.VideoInfoDownloadPage
 import kotlinx.coroutines.launch
@@ -183,7 +184,15 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                                 launchSingleTop = true
                             }
                         },
+                        onNavigateToThumbnailDownload = {
+                            navController.navigate(Route.THUMBNAIL_DOWNLOAD) {
+                                launchSingleTop = true
+                            }
+                        },
                     )
+                }
+                animatedComposable(Route.THUMBNAIL_DOWNLOAD) {
+                    ThumbnailDownloadPage(onNavigateBack = onNavigateBack)
                 }
                 animatedComposable(Route.BATCH_URL_IMPORT) {
                     BatchUrlImportPage(

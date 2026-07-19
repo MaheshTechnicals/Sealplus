@@ -126,6 +126,7 @@ private val tools = listOf(
         shortDescRes = R.string.thumbnail_download_short_desc,
         descRes = R.string.thumbnail_download_desc,
         icon = Icons.Outlined.Image,
+        isComingSoon = false,
     ),
 )
 
@@ -135,6 +136,7 @@ fun MoreToolsPage(
     onNavigateBack: () -> Unit,
     onNavigateToBatchUrlImport: (() -> Unit)? = null,
     onNavigateToVideoInfoDownload: (() -> Unit)? = null,
+    onNavigateToThumbnailDownload: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -199,6 +201,7 @@ fun MoreToolsPage(
                             when (tool.id) {
                                 1 -> onNavigateToBatchUrlImport?.invoke()
                                 2 -> onNavigateToVideoInfoDownload?.invoke()
+                                4 -> onNavigateToThumbnailDownload?.invoke()
                                 else -> {
                                     context.makeToast(
                                         "${context.getString(tool.titleRes)} — ${context.getString(R.string.feature_unavailable)}"
