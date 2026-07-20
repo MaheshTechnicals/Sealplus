@@ -147,8 +147,6 @@ import com.junkfood.seal.util.SPONSOR_DIALOG_FREQUENCY
 import com.junkfood.seal.util.SPONSOR_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.SPONSOR_FREQ_OFF
 import com.junkfood.seal.util.SPONSOR_FREQ_WEEKLY
-import com.junkfood.seal.util.BATTERY_DIALOG_COOLDOWN_MS
-import com.junkfood.seal.util.BATTERY_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.BatteryUtil
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.PreferenceUtil.getLong
@@ -240,31 +238,14 @@ fun NewHomePage(
     }
     
     // Check battery optimization
-    // NOTE: this is a periodic cooldown re-prompt, NOT a permanent "don't show again" flag.
-    // A one-time dismissal flag (even with regression detection layered on top) failed to
-    // re-show the dialog for users whose battery optimization was NEVER disabled in the first
-    // place (i.e. they dismissed the dialog once while already in "Optimized"/"Restricted" —
-    // there's no "disabled → restricted" transition to detect there, so it never re-armed).
-    // Since disabling battery optimization is required for reliable background downloads, this
-    // reminder should keep resurfacing on a cooldown for as long as it's actually still
-    // restricted — regardless of prior dismissals — exactly like the existing sponsor-dialog
-    // cooldown pattern below. This is pure app-level state, so it behaves identically on every
-    // OEM/Android version.
+    // NOTE: no cooldown/dismissal flag at all — this reminder should show every single time the
+    // app is opened for as long as battery optimization is still not disabled, since disabling
+    // it is required for reliable background downloads. There's nothing to remember between
+    // launches: shouldPromptBatteryDialog() always reflects the live, real-time system state.
     val isBatteryOptimizationDisabled = remember(lifecycleRefreshTrigger) {
         BatteryUtil.isIgnoringBatteryOptimizations(context)
     }
-    val shouldPromptBatteryDialog = {
-        if (isBatteryOptimizationDisabled) {
-            false
-        } else {
-            val lastShown = BATTERY_DIALOG_LAST_SHOWN.getLong()
-            val now = System.currentTimeMillis()
-            lastShown == 0L || now - lastShown >= BATTERY_DIALOG_COOLDOWN_MS
-        }
-    }
-    val dismissBatteryDialog = {
-        BATTERY_DIALOG_LAST_SHOWN.updateLong(System.currentTimeMillis())
-    }
+    val shouldPromptBatteryDialog = { !isBatteryOptimizationDisabled }
     
     // Notification permission launcher - tries system permission first
     // Notification settings launcher - opens app notification settings
@@ -536,12 +517,13 @@ fun NewHomePage(
         )
     }
     
-    // Battery Optimization Dialog
+    // Battery Optimization Dialog — no dismissal state is persisted, so this simply hides for
+    // the current screen visit. It will show again on the next app open/resume as long as
+    // battery optimization is still not disabled (see shouldPromptBatteryDialog above).
     if (showBatteryOptimizationDialog) {
         AlertDialog(
             onDismissRequest = {
                 showBatteryOptimizationDialog = false
-                dismissBatteryDialog()
             },
             icon = { 
                 Icon(
@@ -580,7 +562,6 @@ fun NewHomePage(
                 TextButton(
                     onClick = {
                         showBatteryOptimizationDialog = false
-                        dismissBatteryDialog()
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             val intent = BatteryUtil.buildBatterySettingsIntent(context)
                             batteryOptimizationLauncher.launch(intent)
@@ -597,7 +578,6 @@ fun NewHomePage(
                 TextButton(
                     onClick = {
                         showBatteryOptimizationDialog = false
-                        dismissBatteryDialog()
                     }
                 ) {
                     Text(

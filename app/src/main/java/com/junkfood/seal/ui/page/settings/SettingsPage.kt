@@ -53,10 +53,8 @@ import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferencesHintCard
 import com.junkfood.seal.util.EXTRACT_AUDIO
-import com.junkfood.seal.util.BATTERY_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.BatteryUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
-import com.junkfood.seal.util.PreferenceUtil.updateLong
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.SHOW_SPONSOR_MSG
@@ -140,10 +138,6 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                             icon = Icons.Rounded.EnergySavingsLeaf,
                             description = stringResource(R.string.battery_configuration_desc),
                         ) {
-                            // Also resets the home-screen dialog's cooldown timer so it doesn't
-                            // immediately re-prompt right after the user just acted on this
-                            // hint card from Settings.
-                            BATTERY_DIALOG_LAST_SHOWN.updateLong(System.currentTimeMillis())
                             launcher.launch(batteryIntent)
                         }
                     }
