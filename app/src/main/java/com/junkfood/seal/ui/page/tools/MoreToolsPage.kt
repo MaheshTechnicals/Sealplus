@@ -96,6 +96,9 @@ private data class ToolItem(
 /** Each tool cycles through one of these theme-derived gradient pairs for its icon badge. */
 private enum class AccentStyle { PRIMARY, SECONDARY, TERTIARY }
 
+// Display order: Batch URL Import, Thumbnail Download, Video Info Download, Comment Download.
+// IDs are stable identifiers used for click routing (see the `when (tool.id)` dispatch below) —
+// they intentionally stay unchanged here; only this list's ordering (i.e. display order) moved.
 private val tools = listOf(
     ToolItem(
         id = 1,
@@ -103,6 +106,14 @@ private val tools = listOf(
         shortDescRes = R.string.batch_url_import_short_desc,
         descRes = R.string.batch_url_import_desc,
         icon = Icons.Outlined.PlaylistAdd,
+        isComingSoon = false,
+    ),
+    ToolItem(
+        id = 4,
+        titleRes = R.string.thumbnail_download,
+        shortDescRes = R.string.thumbnail_download_short_desc,
+        descRes = R.string.thumbnail_download_desc,
+        icon = Icons.Outlined.Image,
         isComingSoon = false,
     ),
     ToolItem(
@@ -119,14 +130,6 @@ private val tools = listOf(
         shortDescRes = R.string.comment_download_short_desc,
         descRes = R.string.comment_download_desc,
         icon = Icons.Outlined.Chat,
-        isComingSoon = false,
-    ),
-    ToolItem(
-        id = 4,
-        titleRes = R.string.thumbnail_download,
-        shortDescRes = R.string.thumbnail_download_short_desc,
-        descRes = R.string.thumbnail_download_desc,
-        icon = Icons.Outlined.Image,
         isComingSoon = false,
     ),
 )

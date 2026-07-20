@@ -20,6 +20,7 @@ fun Context.makeToast(message: String) {
 
 private const val GIGA_BYTES = 1024f * 1024f * 1024f
 private const val MEGA_BYTES = 1024f * 1024f
+private const val KILO_BYTES = 1024f
 
 @Composable
 fun Number?.toFileSizeText(): String {
@@ -28,6 +29,25 @@ fun Number?.toFileSizeText(): String {
     return this.toFloat().run {
         if (this > GIGA_BYTES) stringResource(R.string.filesize_gb).format(this / GIGA_BYTES)
         else stringResource(R.string.filesize_mb).format(this / MEGA_BYTES)
+    }
+}
+
+/**
+ * Same as [toFileSizeText] but also formats small files (under 1 MB, e.g. thumbnails) in KB
+ * instead of showing a fraction like "0.08 MB". Kept as a separate function rather than
+ * changing [toFileSizeText] itself, since that one is shared across many video/audio file-size
+ * displays elsewhere in the app where sizes are practically always >= 1 MB.
+ */
+@Composable
+fun Number?.toFileSizeTextAuto(): String {
+    if (this == null) return stringResource(id = R.string.unknown)
+
+    return this.toFloat().run {
+        when {
+            this > GIGA_BYTES -> stringResource(R.string.filesize_gb).format(this / GIGA_BYTES)
+            this >= MEGA_BYTES -> stringResource(R.string.filesize_mb).format(this / MEGA_BYTES)
+            else -> stringResource(R.string.filesize_kb).format(this / KILO_BYTES)
+        }
     }
 }
 

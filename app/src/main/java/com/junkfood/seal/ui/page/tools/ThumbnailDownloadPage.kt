@@ -99,7 +99,7 @@ import com.junkfood.seal.util.FileUtil
 import com.junkfood.seal.util.ThumbnailFormat
 import com.junkfood.seal.util.ThumbnailQuality
 import com.junkfood.seal.util.makeToast
-import com.junkfood.seal.util.toFileSizeText
+import com.junkfood.seal.util.toFileSizeTextAuto
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -837,7 +837,7 @@ private fun DownloadSummaryCard(
             SummaryRow(
                 palette,
                 stringResource(R.string.file_size),
-                if (fileSizeBytes != null) fileSizeBytes.toFileSizeText()
+                if (fileSizeBytes != null) fileSizeBytes.toFileSizeTextAuto()
                 else stringResource(R.string.calculating_size),
             )
         }

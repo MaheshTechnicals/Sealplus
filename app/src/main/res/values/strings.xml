@@ -296,6 +296,7 @@
     <string name="embed_subtitles_mkv_msg">To embed soft subtitles, videos will be remuxed into mkv container. You can use VLC Media Player or other compatible apps to watch videos with soft subtitles.</string>
     <string name="filesize_mb">%.2f MB</string>
     <string name="filesize_gb">%.2f GB</string>
+    <string name="filesize_kb">%.1f KB</string>
     <string name="share">Share</string>
     <string name="stable_channel">Stable</string>
     <string name="pre_release_channel">Preview</string>

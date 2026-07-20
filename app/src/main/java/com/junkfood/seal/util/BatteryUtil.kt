@@ -14,15 +14,17 @@ object BatteryUtil {
 
     fun isIgnoringBatteryOptimizations(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
-        // On Xiaomi / Redmi / POCO devices running MIUI or HyperOS, the standard Android
-        // PowerManager.isIgnoringBatteryOptimizations() API is UNRELIABLE. MIUI/HyperOS
-        // manages its own proprietary battery restriction system (Optimized / Restricted /
-        // No restrictions) that is entirely separate from Android's battery optimization
-        // whitelist. The system API falsely returns true even when the app is in "Optimized"
-        // mode, which prevents the setup dialog from ever appearing. We therefore always
-        // report "not ignoring" for these devices so the user is always prompted to configure
-        // the MIUI/HyperOS-specific battery setting manually.
-        if (getManufacturer() == Manufacturer.XIAOMI) return false
+        // NOTE: a previous version of this function unconditionally returned `false` for every
+        // Xiaomi/Redmi/POCO device, under the assumption that MIUI/HyperOS's own "Battery saver
+        // > No restrictions" setting for the app is a separate system from Android's standard
+        // battery-optimization whitelist. That assumption was wrong: on MIUI/HyperOS, choosing
+        // "No restrictions" for the app IS the same underlying whitelist that
+        // PowerManager.isIgnoringBatteryOptimizations() reports on. Hardcoding `false` there
+        // meant the Settings battery-hint card (and the home-screen setup dialog) would never
+        // go away for any Xiaomi device even after the user correctly selected "No
+        // restrictions" — which is exactly the bug reported on POCO devices. We rely on the
+        // standard system check below (with an AppOps fallback for edge cases) for every OEM,
+        // which correctly reflects the real whitelist state everywhere, including MIUI/HyperOS.
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         if (pm.isIgnoringBatteryOptimizations(context.packageName)) return true
         return isIgnoringViaAppOps(context)
