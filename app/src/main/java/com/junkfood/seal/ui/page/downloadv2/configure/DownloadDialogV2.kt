@@ -149,7 +149,6 @@ import com.junkfood.seal.util.AUDIO_QUALITY
 import com.junkfood.seal.util.COOKIES
 import com.junkfood.seal.util.CUSTOM_COMMAND
 import com.junkfood.seal.util.DatabaseUtil
-import com.junkfood.seal.util.DOWNLOAD_DOCS
 import com.junkfood.seal.util.DownloadType
 import com.junkfood.seal.util.DownloadType.Audio
 import com.junkfood.seal.util.DownloadType.Command
@@ -166,7 +165,6 @@ import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.SUBTITLE
 import com.junkfood.seal.util.TEMPLATE_ID
-import com.junkfood.seal.util.THUMBNAIL
 import com.junkfood.seal.util.USE_CUSTOM_AUDIO_PRESET
 import com.junkfood.seal.util.VIDEO_FORMAT
 import com.junkfood.seal.util.VIDEO_QUALITY
@@ -835,34 +833,13 @@ private fun AdditionalSettings(
                     { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
                 } else null,
             )
-            FilterChip(
-                selected = createThumbnail,
-                enabled = selectedType != Command,
-                onClick = {
-                    THUMBNAIL.updateBoolean(!createThumbnail)
-                    onPreferenceUpdate()
-                },
-                label = { Text(stringResource(R.string.create_thumbnail)) },
-                modifier = Modifier.height(36.dp),
-                shape = RoundedCornerShape(50.dp),
-                leadingIcon = if (createThumbnail) {
-                    { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
-                } else null,
-            )
-            FilterChip(
-                selected = preference.downloadDocs,
-                enabled = selectedType != Command,
-                onClick = {
-                    DOWNLOAD_DOCS.updateBoolean(!preference.downloadDocs)
-                    onPreferenceUpdate()
-                },
-                label = { Text(stringResource(R.string.download_docs)) },
-                modifier = Modifier.height(36.dp),
-                shape = RoundedCornerShape(50.dp),
-                leadingIcon = if (preference.downloadDocs) {
-                    { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
-                } else null,
-            )
+            // "Create thumbnail" and "Download docs" toggles were removed from here — both are
+            // now covered by their own dedicated tools ("Thumbnail Download" and "Video Info
+            // Download" on the More Tools page), so keeping duplicate controls in the main
+            // download configure sheet was redundant. The underlying yt-dlp options
+            // (--write-thumbnail / writeDocsTextFile) and their preference keys (THUMBNAIL,
+            // DOWNLOAD_DOCS) are untouched — this only removes the toggle UI here, so a value
+            // set previously (or by another surface) still behaves the same if ever read again.
         }
 
         if (showCookiesDialog && cookiesProfiles.isNotEmpty()) {

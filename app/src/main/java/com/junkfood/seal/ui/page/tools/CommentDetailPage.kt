@@ -65,6 +65,9 @@ import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.FileUtil
 import com.junkfood.seal.util.makeToast
 
+/** Caps the number of comments rendered on this page to keep large (2-3k+) comment sets smooth. */
+private const val COMMENT_DETAIL_PREVIEW_LIMIT = 10
+
 @Composable
 fun CommentDetailPage(
     commentSetId: Int,
@@ -213,9 +216,19 @@ fun CommentDetailPage(
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    current.comments.forEach { comment ->
+                    current.comments.take(COMMENT_DETAIL_PREVIEW_LIMIT).forEach { comment ->
                         FullCommentRow(palette = palette, comment = comment)
                     }
+                }
+                val remaining = current.comments.size - COMMENT_DETAIL_PREVIEW_LIMIT
+                if (remaining > 0) {
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        text = stringResource(R.string.more_comments_export_hint, remaining),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.textSecondary,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
 

@@ -947,7 +947,7 @@ private fun DownloadSuccessCard(
         border = BorderStroke(1.dp, palette.success.copy(alpha = 0.35f)),
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.Top) {
                 Box(
                     modifier = Modifier
                         .size(32.dp)
@@ -970,12 +970,12 @@ private fun DownloadSuccessCard(
                         color = palette.success,
                     )
                     filePath?.let {
+                        // Show the full path (no truncation) even if it wraps across
+                        // multiple lines — the card is allowed to grow taller.
                         Text(
                             text = it,
                             style = MaterialTheme.typography.labelSmall,
                             color = palette.textSecondary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }

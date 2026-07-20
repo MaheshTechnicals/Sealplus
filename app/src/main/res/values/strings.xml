@@ -763,5 +763,6 @@
     <string name="creator_badge">Creator</string>
     <string name="pinned_badge">Pinned</string>
     <string name="no_comments_available">No comments to show</string>
+    <string name="more_comments_export_hint">+%1$d more comments — export to view all</string>
 </resources>
 
