@@ -265,10 +265,25 @@ fun NewHomePage(
     // app is opened for as long as battery optimization is still not disabled, since disabling
     // it is required for reliable background downloads. There's nothing to remember between
     // launches: shouldPromptBatteryDialog() always reflects the live, real-time system state.
-    val isBatteryOptimizationDisabled = remember(lifecycleRefreshTrigger) {
-        BatteryUtil.isIgnoringBatteryOptimizations(context)
+    //
+    // This is a directly settable mutableStateOf (not a remember(key) derived value) because we
+    // need to refresh it from TWO independent triggers: (1) lifecycleRefreshTrigger on every
+    // ON_RESUME, and (2) the battery settings activity-result callback below. #2 exists because
+    // on some OEM ROMs, the OS does not commit/propagate the new battery-optimization
+    // whitelist state instantly — there can be a short delay between the user picking "No
+    // restrictions" in the settings screen and PowerManager.isIgnoringBatteryOptimizations()
+    // actually reflecting it. Reading it at the exact instant ON_RESUME fires (right as the
+    // user presses back) can race that propagation and read the stale "still restricted" value,
+    // which is exactly why the dialog kept reappearing even after the user had correctly fixed
+    // the setting. Re-checking again after a short delay closes that race.
+    var isBatteryOptimizationDisabled by remember {
+        mutableStateOf(BatteryUtil.isIgnoringBatteryOptimizations(context))
     }
     val shouldPromptBatteryDialog = { !isBatteryOptimizationDisabled }
+
+    LaunchedEffect(lifecycleRefreshTrigger) {
+        isBatteryOptimizationDisabled = BatteryUtil.isIgnoringBatteryOptimizations(context)
+    }
     
     // Notification permission launcher - tries system permission first
     // Notification settings launcher - opens app notification settings
@@ -276,10 +291,20 @@ fun NewHomePage(
         ActivityResultContracts.StartActivityForResult()
     ) { /* Permission state will be checked on resume */ }
     
-    // Battery optimization launcher
+    // Battery optimization launcher. The activity-result callback fires right when the user
+    // returns from the OS battery settings screen (whether via back press or completing a
+    // system dialog) — we re-check immediately AND again after a short delay (see the NOTE
+    // above the isBatteryOptimizationDisabled declaration) to avoid racing a delayed OS-side
+    // whitelist update on some OEM ROMs.
     val batteryOptimizationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) { /* Result handled by remembering state */ }
+    ) {
+        isBatteryOptimizationDisabled = BatteryUtil.isIgnoringBatteryOptimizations(context)
+        scope.launch {
+            delay(500L)
+            isBatteryOptimizationDisabled = BatteryUtil.isIgnoringBatteryOptimizations(context)
+        }
+    }
 
     
     // Check permissions on first load
@@ -2772,8 +2797,13 @@ private fun QuickToolIcon(
             .graphicsLayer(alpha = alpha)
             .offset(y = offsetY)
             .scale(scale)
-            .size(56.dp)
-            .clip(RoundedCornerShape(18.dp))
+            // Sized to match the same icon-badge scale used for icons in the nav drawer /
+            // More Tools page (44dp container / 22dp glyph) instead of the earlier oversized
+            // 56dp/26dp, so this row reads proportionate on every screen size from small
+            // phones to tablets rather than dominating the space between the title and search
+            // bar.
+            .size(44.dp)
+            .clip(RoundedCornerShape(14.dp))
             .background(tint.copy(alpha = 0.12f))
             .combinedClickable(
                 interactionSource = interactionSource,
@@ -2792,7 +2822,7 @@ private fun QuickToolIcon(
             imageVector = tool.icon,
             contentDescription = stringResource(tool.labelRes),
             tint = tint,
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(22.dp),
         )
     }
 }
