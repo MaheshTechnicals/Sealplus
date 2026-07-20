@@ -163,7 +163,27 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                             navController.navigate(Route.DONATE) {
                                 launchSingleTop = true
                             }
-                        }
+                        },
+                        onNavigateToBatchUrlImport = {
+                            navController.navigate(Route.BATCH_URL_IMPORT) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNavigateToVideoInfoDownload = {
+                            navController.navigate(Route.VIDEO_INFO_DOWNLOAD) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNavigateToThumbnailDownload = {
+                            navController.navigate(Route.THUMBNAIL_DOWNLOAD) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNavigateToCommentDownload = {
+                            navController.navigate(Route.COMMENT_DOWNLOAD) {
+                                launchSingleTop = true
+                            }
+                        },
                     )
                 }
                 animatedComposable(Route.DOWNLOADS) { VideoListPage { onNavigateBack() } }

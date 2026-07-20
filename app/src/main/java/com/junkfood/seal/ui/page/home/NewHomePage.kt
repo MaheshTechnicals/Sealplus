@@ -11,6 +11,8 @@ import androidx.core.content.ContextCompat
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,12 +42,15 @@ import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.HighQuality
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Link
@@ -55,6 +60,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -101,6 +107,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -124,6 +132,7 @@ import com.junkfood.seal.download.Task
 import com.junkfood.seal.ui.common.HapticFeedback.slightHapticFeedback
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
+import com.junkfood.seal.ui.common.ThemedIconColors
 import com.junkfood.seal.ui.page.downloadv2.UiAction
 import com.junkfood.seal.ui.page.downloadv2.configure.Config
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialog
@@ -165,6 +174,16 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -177,6 +196,10 @@ fun NewHomePage(
     onMenuOpen: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
     onNavigateToSupport: () -> Unit = {},
+    onNavigateToBatchUrlImport: () -> Unit = {},
+    onNavigateToVideoInfoDownload: () -> Unit = {},
+    onNavigateToThumbnailDownload: () -> Unit = {},
+    onNavigateToCommentDownload: () -> Unit = {},
     dialogViewModel: DownloadDialogViewModel,
     downloader: DownloaderV2 = koinInject(),
 ) {
@@ -718,6 +741,18 @@ fun NewHomePage(
                         AnimatedGlowingPlus()
                     }
                 }
+            }
+
+            // Quick-access row for the 4 More Tools — icon-only, no labels/section header per
+            // design intent, so it reads as a native strip of shortcuts rather than a separate
+            // "section" bolted onto the home screen.
+            item {
+                QuickToolsRow(
+                    onThumbnailDownload = onNavigateToThumbnailDownload,
+                    onVideoInfoDownload = onNavigateToVideoInfoDownload,
+                    onCommentDownload = onNavigateToCommentDownload,
+                    onBatchUrlImport = onNavigateToBatchUrlImport,
+                )
             }
             
             // URL Input Field with Download Button
@@ -2609,4 +2644,155 @@ fun AnimatedGlowingPlus() {
         ),
         fontWeight = FontWeight.Bold
     )
+}
+
+/**
+ * Quick-access row for the 4 More Tools (Batch URL Import, Thumbnail Download, Video Info
+ * Download, Comment Download), placed between the "Seal+" branding and the URL input field.
+ *
+ * Icon-only by design — no labels/section header — so it reads as a native strip of shortcuts
+ * baked into the home screen rather than a bolted-on section. Colors reuse the same
+ * primary/secondary/tertiary role-color language already used for icons in the nav drawer and
+ * the More Tools page ([ThemedIconColors]), so the row feels like part of the existing UI
+ * instead of a new visual style.
+ */
+private data class QuickTool(
+    val icon: ImageVector,
+    val labelRes: Int,
+    val tint: @Composable () -> Color,
+    val onClick: () -> Unit,
+)
+
+@Composable
+private fun QuickToolsRow(
+    onThumbnailDownload: () -> Unit,
+    onVideoInfoDownload: () -> Unit,
+    onCommentDownload: () -> Unit,
+    onBatchUrlImport: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tools = remember(
+        onBatchUrlImport,
+        onThumbnailDownload,
+        onVideoInfoDownload,
+        onCommentDownload,
+    ) {
+        listOf(
+            QuickTool(
+                icon = Icons.Outlined.PlaylistAdd,
+                labelRes = R.string.batch_url_import,
+                tint = { ThemedIconColors.primary },
+                onClick = onBatchUrlImport,
+            ),
+            QuickTool(
+                icon = Icons.Outlined.Image,
+                labelRes = R.string.thumbnail_download,
+                tint = { ThemedIconColors.secondary },
+                onClick = onThumbnailDownload,
+            ),
+            QuickTool(
+                icon = Icons.Outlined.Description,
+                labelRes = R.string.video_info_download,
+                tint = { ThemedIconColors.tertiary },
+                onClick = onVideoInfoDownload,
+            ),
+            QuickTool(
+                icon = Icons.Outlined.Chat,
+                labelRes = R.string.comment_download,
+                tint = { ThemedIconColors.primary },
+                onClick = onCommentDownload,
+            ),
+        )
+    }
+
+    // Gentle entrance animation (fade + rise), matching the staggered-card language used
+    // elsewhere in the app (e.g. MoreToolsPage's ToolCard) instead of appearing abruptly.
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        tools.forEachIndexed { index, tool ->
+            QuickToolIcon(
+                tool = tool,
+                visible = visible,
+                animationDelayMs = index * 60,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun QuickToolIcon(
+    tool: QuickTool,
+    visible: Boolean,
+    animationDelayMs: Int,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val haptic = LocalHapticFeedback.current
+    val view = LocalView.current
+
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 380,
+            delayMillis = animationDelayMs,
+            easing = FastOutSlowInEasing,
+        ),
+        label = "quickTool_alpha",
+    )
+    val offsetY by animateDpAsState(
+        targetValue = if (visible) 0.dp else 12.dp,
+        animationSpec = tween(
+            durationMillis = 380,
+            delayMillis = animationDelayMs,
+            easing = FastOutSlowInEasing,
+        ),
+        label = "quickTool_offset",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "quickTool_scale",
+    )
+
+    val tint = tool.tint()
+
+    Box(
+        modifier = Modifier
+            .graphicsLayer(alpha = alpha)
+            .offset(y = offsetY)
+            .scale(scale)
+            .size(56.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(tint.copy(alpha = 0.12f))
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    view.slightHapticFeedback()
+                    tool.onClick()
+                },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = tool.icon,
+            contentDescription = stringResource(tool.labelRes),
+            tint = tint,
+            modifier = Modifier.size(26.dp),
+        )
+    }
 }
