@@ -147,13 +147,11 @@ import com.junkfood.seal.util.SPONSOR_DIALOG_FREQUENCY
 import com.junkfood.seal.util.SPONSOR_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.SPONSOR_FREQ_OFF
 import com.junkfood.seal.util.SPONSOR_FREQ_WEEKLY
-import com.junkfood.seal.util.BATTERY_DIALOG_DISMISSED
-import com.junkfood.seal.util.BATTERY_LAST_KNOWN_DISABLED
+import com.junkfood.seal.util.BATTERY_DIALOG_COOLDOWN_MS
+import com.junkfood.seal.util.BATTERY_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.BatteryUtil
-import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.PreferenceUtil.getLong
-import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateLong
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -242,31 +240,30 @@ fun NewHomePage(
     }
     
     // Check battery optimization
-    // NOTE: BATTERY_DIALOG_DISMISSED is a one-time "don't show again" flag. On its own it would
-    // stay `true` forever once set, even if the user later flips the OS setting from "No
-    // restrictions" back to "Optimized"/"Restricted" — a real regression that can happen
-    // accidentally (OS update, user exploring settings, restoring a backup, etc). We detect that
-    // regression below by comparing against the last known-good state (BATTERY_LAST_KNOWN_DISABLED)
-    // and re-arm BATTERY_DIALOG_DISMISSED so the dialog is shown again — this must work
-    // identically on every OEM/Android version since it is pure app-level state, independent of
-    // any manufacturer-specific quirk.
-    var batteryDialogDismissed by remember { mutableStateOf(BATTERY_DIALOG_DISMISSED.getBoolean()) }
+    // NOTE: this is a periodic cooldown re-prompt, NOT a permanent "don't show again" flag.
+    // A one-time dismissal flag (even with regression detection layered on top) failed to
+    // re-show the dialog for users whose battery optimization was NEVER disabled in the first
+    // place (i.e. they dismissed the dialog once while already in "Optimized"/"Restricted" —
+    // there's no "disabled → restricted" transition to detect there, so it never re-armed).
+    // Since disabling battery optimization is required for reliable background downloads, this
+    // reminder should keep resurfacing on a cooldown for as long as it's actually still
+    // restricted — regardless of prior dismissals — exactly like the existing sponsor-dialog
+    // cooldown pattern below. This is pure app-level state, so it behaves identically on every
+    // OEM/Android version.
     val isBatteryOptimizationDisabled = remember(lifecycleRefreshTrigger) {
         BatteryUtil.isIgnoringBatteryOptimizations(context)
     }
-    LaunchedEffect(isBatteryOptimizationDisabled) {
-        val wasDisabledBefore = BATTERY_LAST_KNOWN_DISABLED.getBoolean()
-        if (wasDisabledBefore && !isBatteryOptimizationDisabled) {
-            // Regression detected: battery optimization was off before, now it's back on.
-            // Re-arm the dialog so the user is prompted again.
-            BATTERY_DIALOG_DISMISSED.updateBoolean(false)
-            batteryDialogDismissed = false
+    val shouldPromptBatteryDialog = {
+        if (isBatteryOptimizationDisabled) {
+            false
+        } else {
+            val lastShown = BATTERY_DIALOG_LAST_SHOWN.getLong()
+            val now = System.currentTimeMillis()
+            lastShown == 0L || now - lastShown >= BATTERY_DIALOG_COOLDOWN_MS
         }
-        BATTERY_LAST_KNOWN_DISABLED.updateBoolean(isBatteryOptimizationDisabled)
     }
     val dismissBatteryDialog = {
-        BATTERY_DIALOG_DISMISSED.updateBoolean(true)
-        batteryDialogDismissed = true
+        BATTERY_DIALOG_LAST_SHOWN.updateLong(System.currentTimeMillis())
     }
     
     // Notification permission launcher - tries system permission first
@@ -287,7 +284,7 @@ fun NewHomePage(
             permissionsChecked = true
             if (!hasNotificationPermission) {
                 showNotificationPermissionDialog = true
-            } else if (!isBatteryOptimizationDisabled && !batteryDialogDismissed) {
+            } else if (shouldPromptBatteryDialog()) {
                 showBatteryOptimizationDialog = true
             }
         }
@@ -308,12 +305,10 @@ fun NewHomePage(
     }
     
     // Monitor permission state changes to show next dialog when user returns from settings
-    // NOTE: keyed on batteryDialogDismissed too — this is required for the regression re-arm
-    // above to reliably trigger this effect regardless of coroutine launch ordering.
-    LaunchedEffect(hasNotificationPermission, isBatteryOptimizationDisabled, batteryDialogDismissed) {
+    LaunchedEffect(hasNotificationPermission, isBatteryOptimizationDisabled) {
         if (permissionsChecked) {
             // If notification dialog was shown and is now dismissed
-            if (!showNotificationPermissionDialog && hasNotificationPermission && !isBatteryOptimizationDisabled && !batteryDialogDismissed) {
+            if (!showNotificationPermissionDialog && hasNotificationPermission && shouldPromptBatteryDialog()) {
                 // Show battery optimization dialog after notification permission is granted
                 showBatteryOptimizationDialog = true
             }
@@ -476,7 +471,7 @@ fun NewHomePage(
         AlertDialog(
             onDismissRequest = { 
                 showNotificationPermissionDialog = false
-                if (!isBatteryOptimizationDisabled && !batteryDialogDismissed) {
+                if (shouldPromptBatteryDialog()) {
                     showBatteryOptimizationDialog = true
                 }
             },
@@ -525,7 +520,7 @@ fun NewHomePage(
                 TextButton(
                     onClick = { 
                         showNotificationPermissionDialog = false
-                        if (!isBatteryOptimizationDisabled && !batteryDialogDismissed) {
+                        if (shouldPromptBatteryDialog()) {
                             showBatteryOptimizationDialog = true
                         }
                     }

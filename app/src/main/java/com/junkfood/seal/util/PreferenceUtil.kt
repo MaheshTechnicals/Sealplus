@@ -144,15 +144,20 @@ const val SPONSOR_FREQ_WEEKLY = 1
 const val SPONSOR_FREQ_MONTHLY = 2
 
 // Battery Optimization Dialog
-const val BATTERY_DIALOG_DISMISSED = "battery_dialog_dismissed"
-
-// Tracks whether the app was last known to be ignoring battery optimizations ("No
-// restrictions"/whitelisted). Used to detect a REGRESSION — i.e. the user had it correctly
-// configured before, but later switched the OS setting back to "Optimized"/"Restricted" — so
-// BATTERY_DIALOG_DISMISSED can be reset and the home-screen dialog shown again. Without this,
-// BATTERY_DIALOG_DISMISSED is a permanent one-time flag that never re-arms itself once set,
-// even if the underlying battery setting later regresses.
-const val BATTERY_LAST_KNOWN_DISABLED = "battery_last_known_disabled"
+// NOTE: this used to be a permanent "don't show again" boolean (BATTERY_DIALOG_DISMISSED) with
+// a regression-detection workaround layered on top (re-arm only if the OS setting had been
+// previously seen as "disabled" and then flipped back). That workaround only covered ONE
+// scenario — a regression FROM a working state — and never covered the much more common case
+// of a user who dismissed the dialog once while battery optimization was already
+// restricted/optimized (i.e. it was NEVER disabled), which is exactly the case this flag failed
+// on. Battery optimization is required for core app functionality (reliable background
+// downloads), so a permanent dismissal of this specific reminder is the wrong UX — this is
+// replaced with a periodic cooldown re-prompt instead (same pattern as SPONSOR_DIALOG_*
+// above): show again if it's STILL not disabled and the cooldown has elapsed, no matter what
+// happened before. This works identically for every device/OEM/Android version because it only
+// depends on the live isIgnoringBatteryOptimizations() check, not on remembered history.
+const val BATTERY_DIALOG_LAST_SHOWN = "battery_dialog_last_shown"
+const val BATTERY_DIALOG_COOLDOWN_MS = 24L * 60 * 60 * 1000 // re-prompt at most once/24h
 
 const val YT_DLP_UPDATE_CHANNEL = "yt-dlp_update_channel"
 const val YT_DLP_UPDATE_TIME = "yt-dlp_last_update"
@@ -275,8 +280,6 @@ private val BooleanPreferenceDefaults =
         FORMAT_LIST_VIEW to false,
         FORMAT_MP4_ONLY to true,
         DOWNLOAD_DOCS to false,
-        BATTERY_DIALOG_DISMISSED to false,
-        BATTERY_LAST_KNOWN_DISABLED to false,
         USER_AGENT to true,
     )
 
@@ -307,6 +310,7 @@ private val IntPreferenceDefaults =
 private val LongPreferenceDefaults = mapOf(
     YT_DLP_UPDATE_INTERVAL to DEFAULT_INTERVAL,
     SPONSOR_DIALOG_LAST_SHOWN to 0L,
+    BATTERY_DIALOG_LAST_SHOWN to 0L,
 )
 
 fun String.getStringDefault() = StringPreferenceDefaults.getOrElse(this) { "" }

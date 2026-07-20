@@ -53,9 +53,10 @@ import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferencesHintCard
 import com.junkfood.seal.util.EXTRACT_AUDIO
-import com.junkfood.seal.util.BATTERY_DIALOG_DISMISSED
+import com.junkfood.seal.util.BATTERY_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.BatteryUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
+import com.junkfood.seal.util.PreferenceUtil.updateLong
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
 import com.junkfood.seal.util.SHOW_SPONSOR_MSG
@@ -64,13 +65,11 @@ import com.junkfood.seal.util.SHOW_SPONSOR_MSG
 @Composable
 fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
     val context = LocalContext.current
-    // NOTE: intentionally independent of BATTERY_DIALOG_DISMISSED — that flag only controls the
-    // one-time modal popup shown on the home screen. This hint card is a low-friction, dismissible
-    // reminder that should stay visible in Settings for as long as battery optimization is
-    // actually still restricting the app, even if the user dismissed the home popup once (by
-    // accident or otherwise). Without this, a user who dismissed the popup had no way to be
-    // reminded again short of remembering to disable it manually — a real gap given how often
-    // downloads silently fail while battery optimization is left on.
+    // NOTE: intentionally independent of the home screen's battery dialog cooldown — this hint
+    // card is a low-friction, always-visible-when-relevant reminder that should show in
+    // Settings for as long as battery optimization is actually still restricting the app,
+    // recomputed fresh on every composition/resume (see the launcher callback below), not
+    // gated by any dismissal history.
     var showBatteryHint by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -141,7 +140,10 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                             icon = Icons.Rounded.EnergySavingsLeaf,
                             description = stringResource(R.string.battery_configuration_desc),
                         ) {
-                            BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+                            // Also resets the home-screen dialog's cooldown timer so it doesn't
+                            // immediately re-prompt right after the user just acted on this
+                            // hint card from Settings.
+                            BATTERY_DIALOG_LAST_SHOWN.updateLong(System.currentTimeMillis())
                             launcher.launch(batteryIntent)
                         }
                     }
