@@ -204,24 +204,50 @@ class App : Application(), SingletonImageLoader.Factory {
         lateinit var packageInfo: PackageInfo
 
         @Volatile var isServiceRunning = false
+        @Volatile private var boundDownloadService: DownloadService? = null
 
         private val connection =
             object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, service: IBinder) {
                     val binder = service as DownloadService.DownloadServiceBinder
+                    boundDownloadService = binder.getService()
                     isServiceRunning = true
                 }
 
                 override fun onServiceDisconnected(arg0: ComponentName) {
                     // OS killed the service unexpectedly — allow startService() to restart it.
+                    boundDownloadService = null
                     isServiceRunning = false
                 }
             }
 
+        /**
+         * Called when the app becomes visible again (e.g. MainActivity.onResume()). If a
+         * download's foreground promotion was previously blocked by the Android 12+
+         * background-start restriction (see DownloadService.attemptPromoteToForeground), the
+         * app being visible now satisfies the exemption, so we retry immediately instead of
+         * waiting for the next task-state change to trigger it.
+         */
+        fun retryForegroundPromotionIfNeeded() {
+            boundDownloadService?.retryPromoteToForegroundIfNeeded()
+        }
+
         fun startService() {
             if (isServiceRunning) return
-            Intent(context.applicationContext, DownloadService::class.java).also { intent ->
-                context.applicationContext.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+            // bindService() itself is safe on all API levels — the foreground-service-start
+            // restriction (API 31+) is handled defensively inside DownloadService.onBind()
+            // instead, so a crash there can never propagate back to this call site. This
+            // try/catch is a last-resort safety net for any other unexpected binding failure
+            // (e.g. SecurityException on some OEM ROMs), so a download task is never able to
+            // take down the whole app process over a service-binding issue.
+            runCatching {
+                Intent(context.applicationContext, DownloadService::class.java).also { intent ->
+                    context.applicationContext.bindService(
+                        intent,
+                        connection,
+                        Context.BIND_AUTO_CREATE,
+                    )
+                }
             }
         }
 

@@ -124,6 +124,12 @@ class MainActivity : AppCompatActivity() {
             // Trigger re-authentication by recreating activity
             recreate()
         }
+        // If a download's foreground-service promotion was blocked earlier while the app was
+        // backgrounded without a battery-optimization exemption (see DownloadService), the app
+        // being visible now satisfies Android's visible-app exemption — retry immediately so
+        // the download notification/foreground status catches up without waiting on the next
+        // task-state change.
+        App.retryForegroundPromotionIfNeeded()
         isAppInBackground = false
     }
 
