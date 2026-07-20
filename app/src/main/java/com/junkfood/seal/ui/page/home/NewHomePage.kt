@@ -148,6 +148,7 @@ import com.junkfood.seal.util.SPONSOR_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.SPONSOR_FREQ_OFF
 import com.junkfood.seal.util.SPONSOR_FREQ_WEEKLY
 import com.junkfood.seal.util.BATTERY_DIALOG_DISMISSED
+import com.junkfood.seal.util.BATTERY_LAST_KNOWN_DISABLED
 import com.junkfood.seal.util.BatteryUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getInt
@@ -241,9 +242,31 @@ fun NewHomePage(
     }
     
     // Check battery optimization
-    val batteryDialogDismissed = remember { BATTERY_DIALOG_DISMISSED.getBoolean() }
+    // NOTE: BATTERY_DIALOG_DISMISSED is a one-time "don't show again" flag. On its own it would
+    // stay `true` forever once set, even if the user later flips the OS setting from "No
+    // restrictions" back to "Optimized"/"Restricted" — a real regression that can happen
+    // accidentally (OS update, user exploring settings, restoring a backup, etc). We detect that
+    // regression below by comparing against the last known-good state (BATTERY_LAST_KNOWN_DISABLED)
+    // and re-arm BATTERY_DIALOG_DISMISSED so the dialog is shown again — this must work
+    // identically on every OEM/Android version since it is pure app-level state, independent of
+    // any manufacturer-specific quirk.
+    var batteryDialogDismissed by remember { mutableStateOf(BATTERY_DIALOG_DISMISSED.getBoolean()) }
     val isBatteryOptimizationDisabled = remember(lifecycleRefreshTrigger) {
         BatteryUtil.isIgnoringBatteryOptimizations(context)
+    }
+    LaunchedEffect(isBatteryOptimizationDisabled) {
+        val wasDisabledBefore = BATTERY_LAST_KNOWN_DISABLED.getBoolean()
+        if (wasDisabledBefore && !isBatteryOptimizationDisabled) {
+            // Regression detected: battery optimization was off before, now it's back on.
+            // Re-arm the dialog so the user is prompted again.
+            BATTERY_DIALOG_DISMISSED.updateBoolean(false)
+            batteryDialogDismissed = false
+        }
+        BATTERY_LAST_KNOWN_DISABLED.updateBoolean(isBatteryOptimizationDisabled)
+    }
+    val dismissBatteryDialog = {
+        BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+        batteryDialogDismissed = true
     }
     
     // Notification permission launcher - tries system permission first
@@ -285,7 +308,9 @@ fun NewHomePage(
     }
     
     // Monitor permission state changes to show next dialog when user returns from settings
-    LaunchedEffect(hasNotificationPermission, isBatteryOptimizationDisabled) {
+    // NOTE: keyed on batteryDialogDismissed too — this is required for the regression re-arm
+    // above to reliably trigger this effect regardless of coroutine launch ordering.
+    LaunchedEffect(hasNotificationPermission, isBatteryOptimizationDisabled, batteryDialogDismissed) {
         if (permissionsChecked) {
             // If notification dialog was shown and is now dismissed
             if (!showNotificationPermissionDialog && hasNotificationPermission && !isBatteryOptimizationDisabled && !batteryDialogDismissed) {
@@ -521,7 +546,7 @@ fun NewHomePage(
         AlertDialog(
             onDismissRequest = {
                 showBatteryOptimizationDialog = false
-                BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+                dismissBatteryDialog()
             },
             icon = { 
                 Icon(
@@ -560,7 +585,7 @@ fun NewHomePage(
                 TextButton(
                     onClick = {
                         showBatteryOptimizationDialog = false
-                        BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+                        dismissBatteryDialog()
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             val intent = BatteryUtil.buildBatterySettingsIntent(context)
                             batteryOptimizationLauncher.launch(intent)
@@ -577,7 +602,7 @@ fun NewHomePage(
                 TextButton(
                     onClick = {
                         showBatteryOptimizationDialog = false
-                        BATTERY_DIALOG_DISMISSED.updateBoolean(true)
+                        dismissBatteryDialog()
                     }
                 ) {
                     Text(

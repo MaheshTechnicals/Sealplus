@@ -146,6 +146,14 @@ const val SPONSOR_FREQ_MONTHLY = 2
 // Battery Optimization Dialog
 const val BATTERY_DIALOG_DISMISSED = "battery_dialog_dismissed"
 
+// Tracks whether the app was last known to be ignoring battery optimizations ("No
+// restrictions"/whitelisted). Used to detect a REGRESSION — i.e. the user had it correctly
+// configured before, but later switched the OS setting back to "Optimized"/"Restricted" — so
+// BATTERY_DIALOG_DISMISSED can be reset and the home-screen dialog shown again. Without this,
+// BATTERY_DIALOG_DISMISSED is a permanent one-time flag that never re-arms itself once set,
+// even if the underlying battery setting later regresses.
+const val BATTERY_LAST_KNOWN_DISABLED = "battery_last_known_disabled"
+
 const val YT_DLP_UPDATE_CHANNEL = "yt-dlp_update_channel"
 const val YT_DLP_UPDATE_TIME = "yt-dlp_last_update"
 const val YT_DLP_UPDATE_INTERVAL = "yt-dlp_update_interval"
@@ -268,6 +276,7 @@ private val BooleanPreferenceDefaults =
         FORMAT_MP4_ONLY to true,
         DOWNLOAD_DOCS to false,
         BATTERY_DIALOG_DISMISSED to false,
+        BATTERY_LAST_KNOWN_DISABLED to false,
         USER_AGENT to true,
     )
 
