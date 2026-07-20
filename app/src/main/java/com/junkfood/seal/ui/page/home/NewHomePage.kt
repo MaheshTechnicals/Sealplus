@@ -295,6 +295,27 @@ fun NewHomePage(
             }
         }
     }
+
+    // Re-prompt on every app resume, even when isBatteryOptimizationDisabled's VALUE hasn't
+    // changed. NOTE: the effect above only fires when hasNotificationPermission or
+    // isBatteryOptimizationDisabled actually CHANGE VALUE — if battery optimization was already
+    // restricted before this resume and is STILL restricted after it (the common case: the user
+    // dismissed the dialog without touching the setting), the boolean is identical and that
+    // effect does not re-run. That silently broke the requirement that this dialog show every
+    // single time the app is opened/resumed for as long as the setting is wrong — it only
+    // actually resurfaced after a full process restart (which resets permissionsChecked), not on
+    // a simple background→foreground resume. Keying directly on lifecycleRefreshTrigger (which
+    // increments on every ON_RESUME, regardless of whether the derived booleans changed) closes
+    // that gap.
+    LaunchedEffect(lifecycleRefreshTrigger) {
+        if (permissionsChecked &&
+            !showNotificationPermissionDialog &&
+            hasNotificationPermission &&
+            shouldPromptBatteryDialog()
+        ) {
+            showBatteryOptimizationDialog = true
+        }
+    }
     
     // Always-on collection: LaunchedEffect is tied to the composition lifetime (not Android
     // lifecycle), so Room emissions are NEVER missed — not when on the back stack, not when

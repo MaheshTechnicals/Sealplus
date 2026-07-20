@@ -1,7 +1,6 @@
 package com.junkfood.seal.util
 
 import android.annotation.SuppressLint
-import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -14,44 +13,27 @@ object BatteryUtil {
 
     fun isIgnoringBatteryOptimizations(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
-        // NOTE: a previous version of this function unconditionally returned `false` for every
-        // Xiaomi/Redmi/POCO device, under the assumption that MIUI/HyperOS's own "Battery saver
-        // > No restrictions" setting for the app is a separate system from Android's standard
-        // battery-optimization whitelist. That assumption was wrong: on MIUI/HyperOS, choosing
-        // "No restrictions" for the app IS the same underlying whitelist that
-        // PowerManager.isIgnoringBatteryOptimizations() reports on. Hardcoding `false` there
-        // meant the Settings battery-hint card (and the home-screen setup dialog) would never
-        // go away for any Xiaomi device even after the user correctly selected "No
-        // restrictions" — which is exactly the bug reported on POCO devices. We rely on the
-        // standard system check below (with an AppOps fallback for edge cases) for every OEM,
-        // which correctly reflects the real whitelist state everywhere, including MIUI/HyperOS.
+        // The ONLY correct, Google-documented way to check the Doze/App-Standby battery
+        // optimization whitelist is PowerManager.isIgnoringBatteryOptimizations() — see
+        // https://developer.android.com/training/monitoring-device-state/doze-standby
+        // ("An app can check whether it is currently on the exemption list by calling
+        // isIgnoringBatteryOptimizations()"). Do not add any other fallback here: a previous
+        // version of this function also checked the "android:run_any_in_background" AppOps op
+        // as a fallback, assuming a MODE_ALLOWED result meant the app was exempt from battery
+        // optimizations. That assumption was wrong — RUN_ANY_IN_BACKGROUND is a *different*,
+        // unrelated app-op (background data/network execution), and it defaults to
+        // MODE_ALLOWED for most apps regardless of whether battery optimization/Battery Saver
+        // is actually restricting the app. That meant this function could incorrectly report
+        // "true" (already ignoring optimizations) even while the device was still in Battery
+        // Saver mode with the app NOT whitelisted — which silently suppressed the
+        // "please disable battery optimization" dialog for exactly the users who needed to see
+        // it. There is also no similarly reliable per-OEM "battery saver mode" API to check
+        // instead — OEM battery-saver toggles (MIUI/HyperOS "Battery saver" per-app setting,
+        // One UI "Sleeping apps", etc.) are proprietary and unqueryable, which is exactly why
+        // BatteryUtil.buildBatterySettingsIntent() below routes the user to each OEM's own
+        // settings screen to fix it manually instead of trying to detect it programmatically.
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        if (pm.isIgnoringBatteryOptimizations(context.packageName)) return true
-        return isIgnoringViaAppOps(context)
-    }
-
-    private fun isIgnoringViaAppOps(context: Context): Boolean {
-        try {
-            val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-            val opStr = "android:run_any_in_background"
-            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                appOps.unsafeCheckOpNoThrow(
-                    opStr,
-                    android.os.Process.myUid(),
-                    context.packageName
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                appOps.checkOpNoThrow(
-                    opStr,
-                    android.os.Process.myUid(),
-                    context.packageName
-                )
-            }
-            return mode == AppOpsManager.MODE_ALLOWED
-        } catch (_: Exception) {
-            return false
-        }
+        return pm.isIgnoringBatteryOptimizations(context.packageName)
     }
 
     fun getManufacturer(): Manufacturer {
