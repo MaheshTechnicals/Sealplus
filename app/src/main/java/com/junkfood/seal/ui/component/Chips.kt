@@ -157,6 +157,7 @@ fun VideoFilterChip(
     onClick: () -> Unit,
     label: String,
     leadingIcon: ImageVector? = null,
+    colors: SelectableChipColors = FilterChipDefaults.filterChipColors(),
 ) {
     FilterChip(
         modifier = modifier.padding(horizontal = 4.dp),
@@ -165,6 +166,7 @@ fun VideoFilterChip(
         onClick = onClick,
         label = { Text(text = label) },
         leadingIcon = { leadingIcon?.let { Icon(imageVector = it, contentDescription = null) } },
+        colors = colors,
     )
 }
 

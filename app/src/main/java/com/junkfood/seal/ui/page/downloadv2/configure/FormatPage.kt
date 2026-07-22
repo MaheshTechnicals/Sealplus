@@ -3,11 +3,18 @@ package com.junkfood.seal.ui.page.downloadv2.configure
 import android.content.Intent
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -27,6 +35,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.outlined.Close
@@ -39,17 +48,22 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.RangeSliderState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -62,6 +76,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +85,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -83,6 +100,7 @@ import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.ui.component.FormatItem
 import com.junkfood.seal.ui.component.FormatSubtitle
 import com.junkfood.seal.ui.component.FormatVideoPreview
+import com.junkfood.seal.ui.component.GradientCircularProgressIndicator
 import com.junkfood.seal.ui.component.PreferenceInfo
 import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.ui.component.SealSearchBar
@@ -745,7 +763,10 @@ private fun FormatPageImpl(
                 title = {
                     Text(
                         text = stringResource(R.string.format_selection),
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        ),
                     )
                 },
                 scrollBehavior = scrollBehavior,
@@ -754,6 +775,10 @@ private fun FormatPageImpl(
                         Icon(Icons.Outlined.Close, stringResource(R.string.close))
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
             )
         },
         floatingActionButton = {
@@ -765,8 +790,15 @@ private fun FormatPageImpl(
             val isNetworkAvailable = FormatValidator.isNetworkAvailable()
             val canDownload = isFormatSelected && isNetworkAvailable && !isValidatingFormats
 
-            if (isFormatSelected) {
-                ExtendedFloatingActionButton(
+            AnimatedVisibility(
+                visible = isFormatSelected,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut(),
+            ) {
+                GradientExtendedFab(
+                    modifier = Modifier.padding(12.dp),
+                    expanded = isFabExpanded,
+                    enabled = canDownload,
                     onClick = {
                         if (canDownload) {
                             onDownloadPressed(
@@ -783,22 +815,18 @@ private fun FormatPageImpl(
                             )
                         }
                     },
-                    modifier = Modifier.padding(12.dp),
                     icon = {
                         if (isValidatingFormats) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
-                            )
+                            GradientCircularProgressIndicator(size = 22.dp, strokeWidth = 2.dp)
                         } else {
                             Icon(
                                 imageVector = Icons.Outlined.FileDownload,
                                 contentDescription = null,
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(22.dp),
                             )
                         }
                     },
-                    text = { 
+                    text = {
                         Text(
                             if (!isNetworkAvailable) "No Network"
                             else if (isValidatingFormats) "Validating..."
@@ -807,10 +835,6 @@ private fun FormatPageImpl(
                             else stringResource(R.string.start_download)
                         )
                     },
-                    expanded = isFabExpanded,
-                    containerColor = if (!canDownload) 
-                        MaterialTheme.colorScheme.surfaceVariant 
-                        else MaterialTheme.colorScheme.primaryContainer,
                 )
             }
         },
@@ -859,6 +883,11 @@ private fun FormatPageImpl(
                             FORMAT_MP4_ONLY.updateBoolean(mp4Only)
                         },
                         label = stringResource(R.string.mp4_only),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
                     )
                 }
             }
@@ -872,9 +901,9 @@ private fun FormatPageImpl(
                             .padding(vertical = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            GradientCircularProgressIndicator(size = 48.dp, strokeWidth = 4.dp)
+                        }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Validating formats...",
@@ -888,9 +917,19 @@ private fun FormatPageImpl(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 var shouldUpdateClipDuration by remember { mutableStateOf(false) }
 
-                Column {
-                    AnimatedVisibility(visible = isClippingVideo) {
-                        Column {
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    AnimatedVisibility(
+                        visible = isClippingVideo,
+                        enter = fadeIn() + androidx.compose.animation.expandVertically(),
+                        exit = fadeOut() + androidx.compose.animation.shrinkVertically(),
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                            shape = MaterialTheme.shapes.large,
+                        ) {
                             val state =
                                 remember(isClippingVideo, showVideoClipDialog) {
                                     RangeSliderState(
@@ -906,19 +945,25 @@ private fun FormatPageImpl(
                             }
 
                             VideoSelectionSlider(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                                 state = state,
                                 onDiscard = { isClippingVideo = false },
                                 onDurationClick = { showVideoClipDialog = true },
                             )
-                            androidx.compose.material3.HorizontalDivider()
                         }
                     }
 
-                    AnimatedVisibility(visible = isSplittingVideo) {
-                        Column {
+                    AnimatedVisibility(
+                        visible = isSplittingVideo,
+                        enter = fadeIn() + androidx.compose.animation.expandVertically(),
+                        exit = fadeOut() + androidx.compose.animation.shrinkVertically(),
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                            shape = MaterialTheme.shapes.large,
+                        ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
@@ -928,7 +973,6 @@ private fun FormatPageImpl(
                                             videoInfo.chapters?.size ?: 0,
                                         ),
                                     style = MaterialTheme.typography.labelMedium,
-                                    modifier = Modifier.padding(horizontal = 12.dp),
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
                                 TextButtonWithIcon(
@@ -938,7 +982,6 @@ private fun FormatPageImpl(
                                     contentColor = MaterialTheme.colorScheme.error,
                                 )
                             }
-                            androidx.compose.material3.HorizontalDivider()
                         }
                     }
                 }
@@ -1058,21 +1101,32 @@ private fun FormatPageImpl(
                 
                 if (filteredCount > 0) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        PreferenceInfo(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            text = "$filteredCount format(s) filtered out (DRM-protected, unsupported codec, or invalid URL)",
-                            applyPaddings = false,
-                        )
+                        Surface(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            shape = MaterialTheme.shapes.large,
+                        ) {
+                            PreferenceInfo(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "$filteredCount format(s) filtered out (DRM-protected, unsupported codec, or invalid URL)",
+                                applyPaddings = true,
+                            )
+                        }
                     }
                 }
                 
                 // Show warning if all formats were filtered out
                 if (totalValidatedFormats == 0 && totalRawFormats > 0) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
+                        Surface(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp).fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                            shape = MaterialTheme.shapes.large,
+                        ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 24.dp),
+                                .padding(horizontal = 16.dp, vertical = 24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
@@ -1087,6 +1141,7 @@ private fun FormatPageImpl(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
+                        }
                         }
                     }
                 }
@@ -1511,6 +1566,83 @@ private fun SubtitleSelectionDialogPreview() {
             autoCaptions = captionsMap,
             selectedSubtitles = listOf(),
         )
+    }
+}
+
+/**
+ * Extended FAB rendered with a gradient fill (primary -> tertiary) to match the gradient
+ * action button used in the "configure before download" sheet. Falls back to a flat muted
+ * container when [enabled] is false (e.g. no network, or nothing selected yet).
+ */
+@Composable
+private fun GradientExtendedFab(
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+    text: @Composable () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    val scale by
+        androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (pressed && enabled) 0.96f else 1f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+            label = "fabScale",
+        )
+
+    val brush =
+        if (enabled) {
+            Brush.linearGradient(
+                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+            )
+        } else {
+            Brush.linearGradient(
+                colors =
+                    listOf(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        MaterialTheme.colorScheme.surfaceVariant,
+                    )
+            )
+        }
+    val contentColor =
+        if (enabled) MaterialTheme.colorScheme.onPrimary
+        else MaterialTheme.colorScheme.onSurfaceVariant
+
+    Surface(
+        modifier =
+            modifier
+                .height(56.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                },
+        onClick = onClick,
+        shape = RoundedCornerShape(28.dp),
+        color = androidx.compose.ui.graphics.Color.Transparent,
+        interactionSource = interactionSource,
+        shadowElevation = if (enabled) 4.dp else 0.dp,
+    ) {
+        Box(
+            modifier = Modifier.background(brush).padding(horizontal = if (expanded) 20.dp else 16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CompositionLocalProvider(LocalContentColor provides contentColor) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    icon()
+                    AnimatedVisibility(visible = expanded) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Spacer(modifier = Modifier.width(10.dp))
+                            ProvideTextStyle(MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)) {
+                                text()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

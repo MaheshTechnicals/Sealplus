@@ -1,15 +1,30 @@
 package com.junkfood.seal.ui.component
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +39,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Image
@@ -50,11 +66,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.theme.SealTheme
@@ -114,102 +132,118 @@ fun FormatVideoPreview(
     onClippingToggled: () -> Unit = {},
     onSplittingToggled: () -> Unit = {},
 ) {
-    Box(modifier = Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = false)) {
-        Row(modifier = modifier.fillMaxWidth()) {
-            Box(modifier = Modifier) {
-                MediaImage(
-                    modifier = Modifier,
-                    imageModel = thumbnailUrl,
-                    isAudio = false,
-                    contentDescription = stringResource(id = R.string.thumbnail),
-                )
-                Surface(
-                    modifier = Modifier.padding(2.dp).align(Alignment.BottomEnd),
-                    color = Color.Black.copy(alpha = 0.68f),
-                    shape = MaterialTheme.shapes.extraSmall,
-                ) {
-                    val durationText = duration.toDurationText()
-                    Text(
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        text = durationText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
+    Surface(
+        modifier = Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = false),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier) {
+                    MediaImage(
+                        modifier = Modifier.clip(MaterialTheme.shapes.medium),
+                        imageModel = thumbnailUrl,
+                        isAudio = false,
+                        contentDescription = stringResource(id = R.string.thumbnail),
                     )
+                    Surface(
+                        modifier = Modifier.padding(4.dp).align(Alignment.BottomEnd),
+                        color = Color.Black.copy(alpha = 0.68f),
+                        shape = MaterialTheme.shapes.extraSmall,
+                    ) {
+                        val durationText = duration.toDurationText()
+                        Text(
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            text = durationText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White,
+                        )
+                    }
                 }
-            }
 
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Top) {
-                Text(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (author != "playlist" && author != "null")
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(end = 32.dp),
+                    verticalArrangement = Arrangement.Top,
+                ) {
                     Text(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(top = 4.dp),
-                        text = author,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-            }
-        }
-        var expanded by remember { mutableStateOf(false) }
-        Box(modifier = Modifier.align(Alignment.BottomEnd)) {
-            IconButton(onClick = { expanded = true }, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    imageVector = Icons.Outlined.MoreVert,
-                    stringResource(id = R.string.show_more_actions),
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.secondary,
-                )
-            }
-
-            DropdownMenu(
-                modifier = Modifier.align(Alignment.BottomEnd),
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                scrollState = rememberScrollState(),
-            ) {
-                DropdownMenuItem(
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, null, tint = MaterialTheme.colorScheme.primary) },
-                    text = { Text(text = stringResource(id = R.string.rename)) },
-                    onClick = {
-                        onRename()
-                        expanded = false
-                    },
-                )
-                DropdownMenuItem(
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Image, null, tint = MaterialTheme.colorScheme.primary) },
-                    text = { Text(text = stringResource(id = R.string.thumbnail)) },
-                    onClick = {
-                        onOpenThumbnail()
-                        expanded = false
-                    },
-                )
-                if (isClippingAvailable && !isClippingVideo && !isSplittingVideo) {
-                    DropdownMenuItem(
-                        leadingIcon = { Icon(Icons.Outlined.ContentCut, null, tint = MaterialTheme.colorScheme.primary) },
-                        text = { Text(text = stringResource(id = R.string.clip_video)) },
-                        onClick = {
-                            onClippingToggled()
-                            expanded = false
-                        },
-                    )
+                    if (author != "playlist" && author != "null")
+                        Text(
+                            modifier = Modifier.padding(horizontal = 12.dp).padding(top = 4.dp),
+                            text = author,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                 }
-                if (isSplitByChapterAvailable && !isClippingVideo && !isSplittingVideo) {
+            }
+            var expanded by remember { mutableStateOf(false) }
+            Box(modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)) {
+                Surface(
+                    onClick = { expanded = true },
+                    modifier = Modifier.size(32.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.MoreVert,
+                            contentDescription = stringResource(id = R.string.show_more_actions),
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                DropdownMenu(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    scrollState = rememberScrollState(),
+                ) {
                     DropdownMenuItem(
-                        leadingIcon = { Icon(Icons.Outlined.VerticalSplit, null, tint = MaterialTheme.colorScheme.primary) },
-                        text = { Text(text = stringResource(id = R.string.split_video)) },
+                        leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, null, tint = MaterialTheme.colorScheme.primary) },
+                        text = { Text(text = stringResource(id = R.string.rename)) },
                         onClick = {
-                            onSplittingToggled()
+                            onRename()
                             expanded = false
                         },
                     )
+                    DropdownMenuItem(
+                        leadingIcon = { Icon(imageVector = Icons.Outlined.Image, null, tint = MaterialTheme.colorScheme.primary) },
+                        text = { Text(text = stringResource(id = R.string.thumbnail)) },
+                        onClick = {
+                            onOpenThumbnail()
+                            expanded = false
+                        },
+                    )
+                    if (isClippingAvailable && !isClippingVideo && !isSplittingVideo) {
+                        DropdownMenuItem(
+                            leadingIcon = { Icon(Icons.Outlined.ContentCut, null, tint = MaterialTheme.colorScheme.primary) },
+                            text = { Text(text = stringResource(id = R.string.clip_video)) },
+                            onClick = {
+                                onClippingToggled()
+                                expanded = false
+                            },
+                        )
+                    }
+                    if (isSplitByChapterAvailable && !isClippingVideo && !isSplittingVideo) {
+                        DropdownMenuItem(
+                            leadingIcon = { Icon(Icons.Outlined.VerticalSplit, null, tint = MaterialTheme.colorScheme.primary) },
+                            text = { Text(text = stringResource(id = R.string.split_video)) },
+                            onClick = {
+                                onSplittingToggled()
+                                expanded = false
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -423,6 +457,45 @@ fun FormatItem(
             label = "",
         )
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    val scale by
+        animateFloatAsState(
+            targetValue = if (pressed) 0.96f else 1f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+            label = "formatItemScale",
+        )
+
+    val cardShapeRadius by
+        animateDpAsState(
+            targetValue = if (selected) 20.dp else 16.dp,
+            animationSpec = spring(stiffness = Spring.StiffnessMedium, visibilityThreshold = Dp.VisibilityThreshold),
+            label = "formatItemCorner",
+        )
+    val cardShape = RoundedCornerShape(cardShapeRadius)
+
+    val checkBadge: @Composable BoxScope.() -> Unit = {
+        AnimatedVisibility(
+            visible = selected,
+            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+            enter = scaleIn(initialScale = 0.5f) + fadeIn(),
+            exit = scaleOut(targetScale = 0.5f) + fadeOut(),
+        ) {
+            Box(
+                modifier = Modifier.size(20.dp).background(outlineColor, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(13.dp),
+                    tint = selectedTextColor,
+                )
+            }
+        }
+    }
+
     val mediaIcons: @Composable () -> Unit = {
         Row(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -455,11 +528,16 @@ fun FormatItem(
 
     if (listView) {
         // New premium card layout: centered, full-width, 3-section vertical design
-        Column(
+        Box(
             modifier = modifier
                 .fillMaxWidth()
-                .clip(MaterialTheme.shapes.large)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(cardShape)
                 .combinedClickable(
+                    interactionSource = interactionSource,
                     onClick = { onClick() },
                     onLongClick = onLongClick,
                     onLongClickLabel = stringResource(R.string.copy_link),
@@ -467,80 +545,89 @@ fun FormatItem(
                 .border(
                     width = if (selected) 2.dp else 1.dp,
                     color = animatedOutlineColor,
-                    shape = MaterialTheme.shapes.large,
+                    shape = cardShape,
                 )
                 .background(animatedContainerColor)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Top Section: Resolution / title — large, bold, perfectly centered
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = animatedTitleColor,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            // Middle Section: Format icon(s) + format text — horizontally centered
-            val middleText = listViewFormatExt.ifBlank { secondLineText }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                mediaIcons()
-                if (middleText.isNotBlank()) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = middleText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = animatedSecondLineColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+                // Top Section: Resolution / title — large, bold, perfectly centered
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = animatedTitleColor,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth(),
+                )
 
-            // Bottom Section: file size (left) | bitrate + codec (right)
-            val bottomLeft = listViewFileSizeText.ifBlank { firstLineText }
-            val bottomRight = listViewBitrateCodecText
-            if (bottomLeft.isNotBlank() || bottomRight.isNotBlank()) {
+                // Middle Section: Format icon(s) + format text — horizontally centered
+                val middleText = listViewFormatExt.ifBlank { secondLineText }
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = bottomLeft,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = animatedSecondLineColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    if (bottomRight.isNotBlank()) {
+                    mediaIcons()
+                    if (middleText.isNotBlank()) {
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = bottomRight,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = middleText,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = animatedSecondLineColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
+
+                // Bottom Section: file size (left) | bitrate + codec (right)
+                val bottomLeft = listViewFileSizeText.ifBlank { firstLineText }
+                val bottomRight = listViewBitrateCodecText
+                if (bottomLeft.isNotBlank() || bottomRight.isNotBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = bottomLeft,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = animatedSecondLineColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (bottomRight.isNotBlank()) {
+                            Text(
+                                text = bottomRight,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = animatedSecondLineColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
             }
+            checkBadge()
         }
     } else {
         // Original grid card layout
         Box(
             modifier =
                 modifier
-                    .clip(MaterialTheme.shapes.large)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
+                    .clip(cardShape)
                     .combinedClickable(
+                        interactionSource = interactionSource,
                         onClick = { onClick() },
                         onLongClick = onLongClick,
                         onLongClickLabel = stringResource(R.string.copy_link),
@@ -548,7 +635,7 @@ fun FormatItem(
                     .border(
                         width = if (selected) 2.dp else 1.dp,
                         color = animatedOutlineColor,
-                        shape = MaterialTheme.shapes.large,
+                        shape = cardShape,
                     )
                     .background(animatedContainerColor)
         ) {
@@ -605,6 +692,7 @@ fun FormatItem(
                     )
                 }
             }
+            checkBadge()
         }
     }
 }
@@ -746,11 +834,17 @@ fun FormatSubtitle(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
             )
         }
-        Text(
-            text = text,
-            color = color,
-            style = MaterialTheme.typography.titleMedium,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(4.dp).background(color = color, shape = CircleShape)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                color = color,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            )
+        }
     }
 }
 
