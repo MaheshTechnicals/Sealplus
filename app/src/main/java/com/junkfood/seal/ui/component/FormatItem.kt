@@ -826,6 +826,7 @@ fun FormatSubtitle(
     text: String,
     color: Color = MaterialTheme.colorScheme.primary,
     showDivider: Boolean = false,
+    count: Int? = null,
 ) {
     Column(modifier = modifier) {
         if (showDivider) {
@@ -844,6 +845,20 @@ fun FormatSubtitle(
                 color = color,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             )
+            if (count != null) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Surface(
+                    color = color.copy(alpha = 0.12f),
+                    shape = CircleShape,
+                ) {
+                    Text(
+                        text = count.toString(),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = color,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    )
+                }
+            }
         }
     }
 }

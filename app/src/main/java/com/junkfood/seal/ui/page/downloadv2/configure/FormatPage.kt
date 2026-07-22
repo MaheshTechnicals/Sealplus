@@ -37,11 +37,13 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -129,6 +131,7 @@ import com.junkfood.seal.util.SubtitleFormat
 import com.junkfood.seal.util.VIDEO_CLIP
 import com.junkfood.seal.util.VideoClip
 import com.junkfood.seal.util.VideoInfo
+import com.junkfood.seal.util.toFileSizeText
 import com.junkfood.seal.util.toHttpsUrl
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -557,7 +560,7 @@ private fun FormatPageImpl(
 
     val duration = videoInfo.duration ?: 0.0
 
-    val isListView = FORMAT_LIST_VIEW.getBoolean()
+    var isListView by remember { mutableStateOf(FORMAT_LIST_VIEW.getBoolean()) }
 
     var videoOnlyItemLimit by remember { mutableIntStateOf(6) }
     var audioOnlyItemLimit by remember { mutableIntStateOf(6) }
@@ -868,7 +871,7 @@ private fun FormatPageImpl(
                 }
             }
 
-            // MP4-only & Docs filter toggle
+            // MP4-only filter + grid/list layout toggle
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Row(
                     modifier =
@@ -888,6 +891,54 @@ private fun FormatPageImpl(
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                             selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
                         ),
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    LayoutToggleButton(
+                        isListView = isListView,
+                        onToggle = {
+                            isListView = !isListView
+                            FORMAT_LIST_VIEW.updateBoolean(isListView)
+                        },
+                    )
+                }
+            }
+
+            // Live summary of the current selection — updates instantly as the user taps
+            // through formats, so it's always clear what will actually be downloaded.
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                val hasAnySelection =
+                    isSuggestedFormatSelected ||
+                        selectedVideoAudioFormat != NOT_SELECTED ||
+                        selectedVideoOnlyFormat != NOT_SELECTED ||
+                        selectedAudioOnlyFormats.isNotEmpty()
+                val isMerging = selectedVideoOnlyFormat != NOT_SELECTED && selectedAudioOnlyFormats.isNotEmpty()
+
+                AnimatedVisibility(
+                    visible = hasAnySelection,
+                    enter = fadeIn() + androidx.compose.animation.expandVertically(),
+                    exit = fadeOut() + androidx.compose.animation.shrinkVertically(),
+                ) {
+                    val resolutionText =
+                        remember(formatList) {
+                            formatList.firstNotNullOfOrNull { extractResolution(it) }
+                                ?.let { (w, h) -> "${w}\u00d7${h}" }
+                        }
+                    val totalSize =
+                        remember(formatList, duration) {
+                            formatList.sumOf { f ->
+                                f.fileSize ?: f.fileSizeApprox ?: (f.tbr?.times(duration * 125) ?: 0.0)
+                            }
+                        }
+                    val totalSizeText = totalSize.toFileSizeText()
+                    val extText = remember(formatList) { formatList.firstOrNull()?.ext?.uppercase() }
+
+                    SelectionSummaryCard(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        resolutionOrLabel = resolutionText ?: if (audioOnly) stringResource(R.string.audio) else stringResource(R.string.video),
+                        formatExt = extText,
+                        sizeText = totalSizeText,
+                        isMerging = isMerging,
+                        audioTrackCount = selectedAudioOnlyFormats.size,
                     )
                 }
             }
@@ -1158,6 +1209,7 @@ private fun FormatPageImpl(
                             text = stringResource(R.string.video),
                             modifier = Modifier.weight(1f).padding(vertical = 8.dp),
                             showDivider = true,
+                            count = allVideoFormats.size,
                         )
                         ClickableTextAction(
                             visible = videoAudioItemLimit < allVideoFormats.size,
@@ -1202,6 +1254,7 @@ private fun FormatPageImpl(
                             color = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.weight(1f).padding(vertical = 8.dp),
                             showDivider = true,
+                            count = audioOnlyFormats.size,
                         )
 
                         ClickableTextAction(
@@ -1261,6 +1314,7 @@ private fun FormatPageImpl(
                                 color = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.weight(1f).padding(vertical = 8.dp),
                                 showDivider = true,
+                                count = videoOnlyFormats.size,
                             )
 
                             ClickableTextAction(
@@ -1566,6 +1620,123 @@ private fun SubtitleSelectionDialogPreview() {
             autoCaptions = captionsMap,
             selectedSubtitles = listOf(),
         )
+    }
+}
+
+/**
+ * Compact segmented control to switch between the grid and list layouts for format cards,
+ * mirroring the same toggle available in Settings but surfaced directly on this page so users
+ * don't need to leave the flow to change it.
+ */
+@Composable
+private fun LayoutToggleButton(
+    modifier: Modifier = Modifier,
+    isListView: Boolean,
+    onToggle: () -> Unit,
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = CircleShape,
+    ) {
+        Row(modifier = Modifier.padding(3.dp)) {
+            listOf(false, true).forEach { listViewOption ->
+                val selected = isListView == listViewOption
+                val bg by
+                    androidx.compose.animation.animateColorAsState(
+                        if (selected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
+                        label = "layoutToggleBg",
+                    )
+                val tint by
+                    androidx.compose.animation.animateColorAsState(
+                        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        label = "layoutToggleTint",
+                    )
+                Box(
+                    modifier =
+                        Modifier.size(30.dp)
+                            .clip(CircleShape)
+                            .background(bg)
+                            .clickable(enabled = !selected, onClick = onToggle),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector =
+                            if (listViewOption) Icons.AutoMirrored.Outlined.ViewList
+                            else Icons.Outlined.GridView,
+                        contentDescription =
+                            stringResource(
+                                if (listViewOption) R.string.format_list_view_title
+                                else R.string.format_selection_layout
+                            ),
+                        tint = tint,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A compact "receipt" style summary of exactly what will be downloaded, computed from the
+ * live [formatList] the user has built up via their taps. This closes the gap between
+ * "which cards are highlighted" and "what will actually happen when I press download" —
+ * especially useful once a video-only + separate-audio merge is in play.
+ */
+@Composable
+private fun SelectionSummaryCard(
+    modifier: Modifier = Modifier,
+    resolutionOrLabel: String,
+    formatExt: String?,
+    sizeText: String,
+    isMerging: Boolean,
+    audioTrackCount: Int,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+        shape = MaterialTheme.shapes.large,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier =
+                    Modifier.size(36.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.FileDownload,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = resolutionOrLabel,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                val details =
+                    buildList {
+                            formatExt?.takeIf { it.isNotBlank() }?.let { add(it) }
+                            add(sizeText)
+                            if (isMerging) add("merged" + if (audioTrackCount > 1) " ×$audioTrackCount" else "")
+                        }
+                        .joinToString(separator = " · ")
+                Text(
+                    text = details,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
