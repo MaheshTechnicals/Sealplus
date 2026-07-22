@@ -112,11 +112,24 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.junkfood.seal.App
 import com.junkfood.seal.R
 import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.ui.common.HapticFeedback.longPressHapticFeedback
+import com.junkfood.seal.ui.common.HapticFeedback.slightHapticFeedback
 import com.junkfood.seal.ui.common.motion.materialSharedAxisX
 import com.junkfood.seal.ui.component.ButtonChip
 import com.junkfood.seal.ui.component.DrawerSheetSubtitle
@@ -180,6 +193,16 @@ private fun DownloadType.label(): String =
             Playlist -> R.string.playlist
         }
     )
+
+private val DownloadType.icon: ImageVector
+    @Composable
+    get() =
+        when (this) {
+            Video -> Icons.Outlined.VideoFile
+            Audio -> Icons.Outlined.MusicNote
+            Playlist -> Icons.AutoMirrored.Outlined.PlaylistPlay
+            Command -> Icons.Outlined.Code
+        }
 
 val PreferencesMock = DownloadUtil.DownloadPreferences.EMPTY
 
@@ -573,14 +596,10 @@ private fun ConfigurePage(
         Header(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             title = stringResource(R.string.settings_before_download),
+            icon = Icons.Outlined.SettingsSuggest,
         )
         Spacer(Modifier.height(4.dp))
-        Text(
-            text = stringResource(id = R.string.download_type),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
-        )
+        SectionLabel(text = stringResource(id = R.string.download_type))
         DownloadTypeSelectionGroup(
             typeEntries = config.typeEntries,
             selectedType = selectedType,
@@ -591,12 +610,7 @@ private fun ConfigurePage(
         )
         Spacer(Modifier.height(4.dp))
         if (selectedType != Command) {
-            Text(
-                text = stringResource(id = R.string.format_selection),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
-            )
+            SectionLabel(text = stringResource(id = R.string.format_selection))
             Preset(
                 modifier = Modifier,
                 preference = preferences,
@@ -627,12 +641,7 @@ private fun ConfigurePage(
                     onDismissRequest = { showTemplateEditorDialog = false },
                 )
             }
-            Text(
-                text = stringResource(id = R.string.template_selection),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
-            )
+            SectionLabel(text = stringResource(id = R.string.template_selection))
             Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 ButtonChip(
                     icon = Icons.Outlined.Code,
@@ -726,8 +735,9 @@ fun ConfigurePagePlaylistVariant(
             Header(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 title = stringResource(R.string.settings_before_download),
+                icon = Icons.Outlined.SettingsSuggest,
             )
-            DrawerSheetSubtitle(text = stringResource(id = R.string.download_type))
+            SectionLabel(text = stringResource(id = R.string.download_type))
             DownloadTypeSelectionGroup(
                 typeEntries = listOf(Video, Audio),
                 selectedType = selectedType,
@@ -736,10 +746,7 @@ fun ConfigurePagePlaylistVariant(
                     EXTRACT_AUDIO.updateBoolean(it == Audio)
                 },
             )
-            DrawerSheetSubtitle(
-                text = stringResource(id = R.string.format_selection),
-                modifier = Modifier,
-            )
+            SectionLabel(text = stringResource(id = R.string.format_selection))
             Preset(
                 modifier = Modifier,
                 preference = preferences,
@@ -799,6 +806,13 @@ private fun AdditionalSettings(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            val selectedChipColors =
+                FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                )
+
             if (cookiesProfiles.isNotEmpty()) {
                 FilterChip(
                     selected = preference.cookies,
@@ -813,6 +827,8 @@ private fun AdditionalSettings(
                     label = { Text(stringResource(id = R.string.cookies)) },
                     modifier = Modifier.height(36.dp),
                     shape = RoundedCornerShape(50.dp),
+                    colors = selectedChipColors,
+                    border = null,
                     leadingIcon = if (preference.cookies) {
                         { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
                     } else null,
@@ -829,6 +845,8 @@ private fun AdditionalSettings(
                 label = { Text(stringResource(id = R.string.download_subtitles)) },
                 modifier = Modifier.height(36.dp),
                 shape = RoundedCornerShape(50.dp),
+                colors = selectedChipColors,
+                border = null,
                 leadingIcon = if (downloadSubtitle) {
                     { Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
                 } else null,
@@ -865,30 +883,62 @@ fun ExpandableTitle(
     onClick: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
-    val rotation by animateFloatAsState(
-        if (expanded) 180f else 0f,
-        label = "",
-    )
+    val view = LocalView.current
+    val rotation by
+        animateFloatAsState(
+            if (expanded) 180f else 0f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+            label = "",
+        )
+    val containerColor by
+        animateColorAsState(
+            if (expanded) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+            else MaterialTheme.colorScheme.surfaceContainerLow,
+            label = "",
+        )
+    val borderColor by
+        animateColorAsState(
+            if (expanded) MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
+            else Color.Transparent,
+            label = "",
+        )
+    val corner by
+        animateDpAsState(
+            if (expanded) 18.dp else 14.dp,
+            animationSpec = spring(stiffness = Spring.StiffnessMedium, visibilityThreshold = Dp.VisibilityThreshold),
+            label = "",
+        )
+
     Column {
         Surface(
             modifier = modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick),
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                .clickable(onClick = {
+                    view.slightHapticFeedback()
+                    onClick()
+                }),
+            shape = RoundedCornerShape(corner),
+            color = containerColor,
+            border = BorderStroke(1.dp, borderColor),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 18.dp)
                     .height(52.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                Icon(
+                    imageVector = Icons.Outlined.Tune,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.secondary,
+                )
                 Text(
                     text = stringResource(R.string.additional_settings),
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).padding(start = 10.dp),
                 )
                 Icon(
                     imageVector = Icons.Outlined.ExpandMore,
@@ -902,11 +952,11 @@ fun ExpandableTitle(
         }
         AnimatedVisibility(
             visible = expanded,
-            enter = fadeIn() + expandVertically(),
-            exit = shrinkVertically() + fadeOut(),
+            enter = fadeIn(tween(220)) + expandVertically(spring(stiffness = Spring.StiffnessMediumLow)),
+            exit = shrinkVertically(spring(stiffness = Spring.StiffnessMedium)) + fadeOut(tween(150)),
         ) {
             Column {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(10.dp))
                 content()
             }
         }
@@ -924,9 +974,18 @@ private fun SingleChoiceItem(
     enabled: Boolean = true,
     onClick: () -> Unit = {},
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    val scale by
+        animateFloatAsState(
+            targetValue = if (pressed) 0.98f else 1f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+            label = "choiceItemScale",
+        )
     val corner by
         animateDpAsState(
-            if (selected) 24.dp else 16.dp,
+            if (selected) 22.dp else 18.dp,
             animationSpec =
                 spring(
                     stiffness = Spring.StiffnessMedium,
@@ -936,8 +995,26 @@ private fun SingleChoiceItem(
         )
     val color by
         animateColorAsState(
-            if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+            if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
             else MaterialTheme.colorScheme.surfaceContainerHigh,
+            label = "",
+        )
+    val borderColor by
+        animateColorAsState(
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            else Color.Transparent,
+            label = "",
+        )
+    val iconContainerColor by
+        animateColorAsState(
+            if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+            label = "",
+        )
+    val iconTintColor by
+        animateColorAsState(
+            if (selected) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
             label = "",
         )
 
@@ -946,29 +1023,31 @@ private fun SingleChoiceItem(
         onClick = onClick,
         color = color,
         shape = RoundedCornerShape(corner),
+        border = BorderStroke(1.dp, borderColor),
+        interactionSource = interactionSource,
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .alpha(if (enabled) 1f else 0.38f),
         enabled = enabled,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                        shape = CircleShape
-                    ),
+                    .size(42.dp)
+                    .background(color = iconContainerColor, shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                icon?.invoke()
+                CompositionLocalProvider(LocalContentColor provides iconTintColor) { icon?.invoke() }
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -983,39 +1062,124 @@ private fun SingleChoiceItem(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (selected) {
-                Icon(
-                    imageVector = Icons.Outlined.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            } else {
-                action?.invoke()
+            AnimatedContent(
+                targetState = selected,
+                label = "choiceItemTrailing",
+                transitionSpec = {
+                    (scaleIn(initialScale = 0.6f) + fadeIn()) togetherWith
+                        (scaleOut(targetScale = 0.6f) + fadeOut())
+                },
+            ) { isSelected ->
+                if (isSelected) {
+                    Box(
+                        modifier =
+                            Modifier.size(24.dp)
+                                .background(MaterialTheme.colorScheme.primary, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                } else {
+                    Row { action?.invoke() }
+                }
             }
         }
     }
 }
 
 @Composable
-internal fun Header(modifier: Modifier = Modifier, title: String) {
+internal fun Header(
+    modifier: Modifier = Modifier,
+    title: String,
+    icon: ImageVector? = null,
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    val entrance by
+        animateFloatAsState(
+            targetValue = if (visible) 1f else 0f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+            label = "headerEntrance",
+        )
+
     Column(modifier = modifier) {
         Box(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .padding(top = 8.dp, bottom = 16.dp)
-                .width(40.dp)
+                .padding(top = 8.dp, bottom = 12.dp)
+                .width(36.dp)
                 .height(4.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(2.dp)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                    shape = CircleShape,
                 )
         )
+        if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 12.dp)
+                    .graphicsLayer {
+                        scaleX = 0.7f + 0.3f * entrance
+                        scaleY = 0.7f + 0.3f * entrance
+                        alpha = entrance
+                    }
+                    .size(52.dp)
+                    .background(
+                        brush =
+                            Brush.linearGradient(
+                                colors =
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.tertiary,
+                                    )
+                            ),
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.size(26.dp),
+                )
+            }
+        }
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 4.dp),
+            modifier =
+                Modifier.align(Alignment.CenterHorizontally)
+                    .padding(bottom = 4.dp)
+                    .graphicsLayer { alpha = entrance },
             textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun SectionLabel(modifier: Modifier = Modifier, text: String) {
+    Row(
+        modifier = modifier.padding(top = 20.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier =
+                Modifier.size(4.dp)
+                    .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -1027,41 +1191,92 @@ private fun DownloadTypeSelectionGroup(
     selectedType: DownloadType?,
     onSelect: (DownloadType) -> Unit,
 ) {
-    if (typeEntries.size == 3) {
-        SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth().height(48.dp)) {
-            typeEntries.forEachIndexed { index, type ->
-                SingleChoiceSegmentedButton(
-                    selected = selectedType == type,
-                    onClick = { onSelect(type) },
-                    shape = SegmentedButtonDefaults.itemShape(index, typeEntries.size),
-                    colors = SegmentedButtonDefaults.colors(
-                        activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        activeContentColor = MaterialTheme.colorScheme.primary,
-                        inactiveContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
-                    icon = {
-                        if (selectedType == type) {
-                            Icon(
-                                imageVector = Icons.Outlined.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    },
-                    label = { Text(text = type.label()) },
-                )
-            }
+    val view = LocalView.current
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        typeEntries.forEach { type ->
+            DownloadTypeCard(
+                modifier = Modifier.weight(1f),
+                type = type,
+                selected = selectedType == type,
+                onClick = {
+                    view.slightHapticFeedback()
+                    onSelect(type)
+                },
+            )
         }
-    } else {
-        LazyRow(modifier = modifier) {
-            items(typeEntries) { type ->
-                SingleChoiceChip(
-                    selected = selectedType == type,
-                    label = type.label(),
-                    onClick = { onSelect(type) },
-                )
-            }
+    }
+}
+
+@Composable
+private fun DownloadTypeCard(
+    modifier: Modifier = Modifier,
+    type: DownloadType,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    val scale by
+        animateFloatAsState(
+            targetValue = if (pressed) 0.94f else 1f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+            label = "typeCardScale",
+        )
+    val containerColor by
+        animateColorAsState(
+            targetValue =
+                if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surfaceContainerHigh,
+            label = "typeCardContainer",
+        )
+    val contentColor by
+        animateColorAsState(
+            targetValue =
+                if (selected) MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            label = "typeCardContent",
+        )
+    val corner by
+        animateDpAsState(
+            targetValue = if (selected) 18.dp else 14.dp,
+            animationSpec = spring(stiffness = Spring.StiffnessMedium, visibilityThreshold = Dp.VisibilityThreshold),
+            label = "typeCardCorner",
+        )
+
+    Surface(
+        modifier =
+            modifier
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                },
+        onClick = onClick,
+        color = containerColor,
+        shape = RoundedCornerShape(corner),
+        interactionSource = interactionSource,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                imageVector = type.icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = type.label(),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -1099,8 +1314,6 @@ private fun Preset(
                 imageVector = Icons.Outlined.SettingsSuggest,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = if (selected) MaterialTheme.colorScheme.primary
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         selected = selected,
@@ -1149,8 +1362,6 @@ private fun Custom(
                 imageVector = Icons.Outlined.Tune,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = if (selected) MaterialTheme.colorScheme.primary
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         selected = selected,
@@ -1176,7 +1387,7 @@ private fun ActionButton.Icon() {
             },
         contentDescription = null,
         modifier = Modifier.size(18.dp),
-        tint = MaterialTheme.colorScheme.primary,
+        tint = LocalContentColor.current,
     )
 }
 
@@ -1231,8 +1442,9 @@ private fun ActionButtons(
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Button(
+        GradientActionButton(
             modifier = Modifier.weight(2f).height(52.dp),
+            enabled = canProceed,
             onClick = {
                 when (action) {
                     FetchInfo -> onFetchInfo()
@@ -1240,11 +1452,6 @@ private fun ActionButtons(
                     StartTask -> onTaskStart()
                 }
             },
-            shape = RoundedCornerShape(50.dp),
-            enabled = canProceed,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
         ) {
             AnimatedContent(
                 targetState = action,
@@ -1260,6 +1467,69 @@ private fun ActionButtons(
                     Spacer(modifier = Modifier.width(4.dp))
                     a.Label()
                 }
+            }
+        }
+    }
+}
+
+/**
+ * A primary call-to-action button rendered with a gradient fill (primary -> tertiary),
+ * used for the main "Proceed / Download / Start" action so it stands out against the
+ * outlined "Cancel" button. Falls back to a flat disabled look when [enabled] is false.
+ */
+@Composable
+private fun GradientActionButton(
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    val scale by
+        animateFloatAsState(
+            targetValue = if (pressed && enabled) 0.97f else 1f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+            label = "actionButtonScale",
+        )
+
+    val brush =
+        if (enabled) {
+            Brush.linearGradient(
+                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+            )
+        } else {
+            Brush.linearGradient(
+                colors =
+                    listOf(
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    )
+            )
+        }
+    val contentColor =
+        if (enabled) MaterialTheme.colorScheme.onPrimary
+        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+
+    Surface(
+        modifier =
+            modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(50.dp),
+        color = Color.Transparent,
+        interactionSource = interactionSource,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(brush),
+            contentAlignment = Alignment.Center,
+        ) {
+            CompositionLocalProvider(LocalContentColor provides contentColor) {
+                ProvideTextStyle(MaterialTheme.typography.labelLarge) { content() }
             }
         }
     }
