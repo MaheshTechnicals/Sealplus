@@ -10,6 +10,7 @@ import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.VideoInfo
+import com.junkfood.seal.util.findURLsFromString
 import com.junkfood.seal.util.makeToast
 import com.yausername.youtubedl_android.YoutubeDL
 import kotlinx.coroutines.Dispatchers
@@ -257,7 +258,27 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
     private fun showDialog(action: Action.ShowSheet) {
         val urlList = action.urlList
         if (!urlList.isNullOrEmpty()) {
-            mSheetStateFlow.update { SheetState.Configure(urlList) }
+            if (urlList.size == 1) {
+                val input = urlList.first().trim()
+                val detectedUrls = findURLsFromString(input).distinct()
+
+                if (input.isNotBlank() && detectedUrls.isEmpty()) {
+                    mSheetValueFlow.update { SheetValue.Expanded }
+                    fetchPlaylist(
+                        Action.FetchPlaylist(
+                            url = "ytsearch10:$input",
+                            preferences = DownloadUtil.DownloadPreferences.createFromPreferences(),
+                        )
+                    )
+                    return
+                }
+
+                mSheetStateFlow.update {
+                    SheetState.Configure(if (detectedUrls.isNotEmpty()) detectedUrls else urlList)
+                }
+            } else {
+                mSheetStateFlow.update { SheetState.Configure(urlList) }
+            }
         } else {
             mSheetStateFlow.update { SheetState.InputUrl }
         }
