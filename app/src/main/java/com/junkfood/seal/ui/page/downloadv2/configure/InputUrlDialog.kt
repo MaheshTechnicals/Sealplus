@@ -24,7 +24,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AddLink
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.ContentPaste
@@ -92,6 +91,7 @@ fun InputUrlPage(
     val savedLinks = remember(config) { mutableStateListOf<String>() }
     var showSearchDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var searchProvider by remember { mutableStateOf(YtdlpSearchProvider.YouTube) }
 
     LaunchedEffect(Unit) {
         clipboardManager.getText()?.let {
@@ -108,8 +108,9 @@ fun InputUrlPage(
         savedLinks = savedLinks,
         onSaveLink = { savedLinks.add(it) },
         onRemoveSavedLink = { savedLinks.remove(it) },
-        onSearchClick = { query ->
+        onSearchClick = { query, provider ->
             searchQuery = query.trim()
+            searchProvider = provider
             showSearchDialog = true
         },
         onActionPost = onActionPost,
@@ -122,6 +123,7 @@ fun InputUrlPage(
     if (showSearchDialog) {
         YtdlpSearchDialog(
             initialQuery = searchQuery,
+            initialProvider = searchProvider,
             config = config,
             preferences = preferences,
             onDismissRequest = { showSearchDialog = false },
@@ -151,13 +153,19 @@ private fun InputUrlPageImpl(
     savedLinks: List<String> = emptyList(),
     onSaveLink: (String) -> Unit = {},
     onRemoveSavedLink: (String) -> Unit = {},
-    onSearchClick: (String) -> Unit = {},
+    onSearchClick: (String, YtdlpSearchProvider) -> Unit = { _, _ -> },
     onActionPost: (Action) -> Unit,
 ) {
 
     var url by remember { mutableStateOf("") }
     var showPasteDialog by remember { mutableStateOf(false) }
     var showSavedUrlDialog by remember { mutableStateOf(false) }
+    var showSearchProviderDialog by remember { mutableStateOf(false) }
+    var selectedSearchProvider by remember { mutableStateOf(YtdlpSearchProvider.YouTube) }
+
+    val input = url.trim()
+    val detectedUrls = findURLsFromString(input).distinct()
+    val isSearchQuery = input.isNotBlank() && detectedUrls.isEmpty()
 
     Column(modifier = modifier) {
         Header(
@@ -182,21 +190,6 @@ private fun InputUrlPageImpl(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(horizontal = 32.dp),
         ) {
-            item(key = "yt-dlp search") {
-                SuggestionChip(
-                    modifier = Modifier.animateItem(),
-                    onClick = { onSearchClick(url) },
-                    label = { Text(stringResource(R.string.ytdlp_search_title)) },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = null,
-                            modifier = Modifier.size(SuggestionChipDefaults.IconSize),
-                        )
-                    },
-                )
-            }
-
             if (urlListFromClipboard.isNotEmpty()) {
                 item(key = "paste url") {
                     SuggestionChip(
@@ -287,18 +280,21 @@ private fun InputUrlPageImpl(
                 icon = Icons.Outlined.Cancel,
                 text = stringResource(R.string.cancel),
             )
-            FilledButtonWithIcon(
-                icon = Icons.AutoMirrored.Outlined.ArrowForward,
-                text = stringResource(R.string.proceed),
-            ) {
-                val input = url.trim()
-                if (input.isBlank()) return@FilledButtonWithIcon
-
-                val detectedUrls = findURLsFromString(input).distinct()
-                if (detectedUrls.isEmpty()) {
-                    onSearchClick(input)
-                } else {
-                    onActionPost(Action.ProceedWithURLs(detectedUrls))
+            if (isSearchQuery) {
+                FilledButtonWithIcon(
+                    icon = Icons.Outlined.Search,
+                    text = selectedSearchProvider.displayName,
+                    onClick = { showSearchProviderDialog = true },
+                )
+            } else {
+                FilledButtonWithIcon(
+                    icon = Icons.AutoMirrored.Outlined.ArrowForward,
+                    text = stringResource(R.string.proceed),
+                    enabled = input.isNotBlank(),
+                ) {
+                    if (detectedUrls.isNotEmpty()) {
+                        onActionPost(Action.ProceedWithURLs(detectedUrls))
+                    }
                 }
             }
         }
@@ -319,6 +315,44 @@ private fun InputUrlPageImpl(
             onDismissRequest = { showSavedUrlDialog = false },
         )
     }
+
+    if (showSearchProviderDialog) {
+        SearchProviderSelectionDialog(
+            selectedProvider = selectedSearchProvider,
+            onDismissRequest = { showSearchProviderDialog = false },
+            onSelect = { provider ->
+                selectedSearchProvider = provider
+                showSearchProviderDialog = false
+                onSearchClick(input, provider)
+            },
+        )
+    }
+}
+
+@Composable
+private fun SearchProviderSelectionDialog(
+    selectedProvider: YtdlpSearchProvider,
+    onDismissRequest: () -> Unit,
+    onSelect: (YtdlpSearchProvider) -> Unit,
+) {
+    SealDialog(
+        icon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+        title = { Text(stringResource(R.string.ytdlp_search_service)) },
+        onDismissRequest = onDismissRequest,
+        dismissButton = { OutlinedDismissButton(onClick = onDismissRequest) },
+        confirmButton = null,
+        text = {
+            LazyColumn(modifier = Modifier.heightIn(max = 600.dp)) {
+                items(YtdlpSearchProvider.entries, key = { it.name }) { provider ->
+                    DialogSingleChoiceItemVariant(
+                        text = provider.displayName,
+                        selected = provider == selectedProvider,
+                        onSelect = { onSelect(provider) },
+                    )
+                }
+            }
+        },
+    )
 }
 
 @Composable
