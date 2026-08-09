@@ -30,9 +30,6 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleGenericDebug
 
-      - name: Show APK files
-        run: find app/build/outputs/apk -type f -name "*.apk" -print
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
