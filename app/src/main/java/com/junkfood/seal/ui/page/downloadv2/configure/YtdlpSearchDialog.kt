@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +65,7 @@ private enum class YtdlpSearchProvider(
 
 @Composable
 fun YtdlpSearchDialog(
+    initialQuery: String = "",
     config: Config,
     preferences: DownloadUtil.DownloadPreferences,
     onDismissRequest: () -> Unit,
@@ -72,7 +74,7 @@ fun YtdlpSearchDialog(
     val providers = remember { YtdlpSearchProvider.entries }
     val scope = rememberCoroutineScope()
 
-    var query by rememberSaveable { mutableStateOf("") }
+    var query by rememberSaveable(initialQuery) { mutableStateOf(initialQuery) }
     var providerIndex by rememberSaveable { mutableIntStateOf(0) }
     var results by remember { mutableStateOf<List<PlaylistEntry>>(emptyList()) }
     var hasSearched by remember { mutableStateOf(false) }
@@ -110,6 +112,10 @@ fun YtdlpSearchDialog(
 
             loading = false
         }
+    }
+
+    LaunchedEffect(initialQuery) {
+        if (initialQuery.isNotBlank()) search()
     }
 
     SealDialog(
