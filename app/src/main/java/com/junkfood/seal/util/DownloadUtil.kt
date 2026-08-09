@@ -1036,10 +1036,8 @@ object DownloadUtil {
                 addOption("--parse-metadata", "%(release_year,upload_date)s:%(meta_date)s")
 
                 if (playlistUrl.isNotEmpty()) {
-                    addOption("--parse-metadata", "%(album,playlist,title)s:%(meta_album)s")
+                    addOption("--parse-metadata", "%(album,playlist)s:%(meta_album)s")
                     addOption("--parse-metadata", "%(track_number,playlist_index)d:%(meta_track)s")
-                } else {
-                    addOption("--parse-metadata", "%(album,title)s:%(meta_album)s")
                 }
             }
         }
