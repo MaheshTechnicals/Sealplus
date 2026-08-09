@@ -51,7 +51,9 @@ import com.junkfood.seal.util.DownloadType.Audio
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.PlaylistEntry
 import com.junkfood.seal.util.PlaylistResult
+import com.yausername.youtubedl_android.YoutubeDL
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -80,38 +82,60 @@ fun YtdlpSearchDialog(
     var hasSearched by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var activeSearchId by remember { mutableStateOf<String?>(null) }
+    var activeSearchJob by remember { mutableStateOf<Job?>(null) }
 
     val selectedProvider = providers[providerIndex]
+
+    fun cancelActiveSearch() {
+        activeSearchId?.let { YoutubeDL.destroyProcessById(it) }
+        activeSearchJob?.cancel()
+        activeSearchId = null
+        activeSearchJob = null
+        loading = false
+    }
+
+    fun dismiss() {
+        cancelActiveSearch()
+        onDismissRequest()
+    }
 
     fun search() {
         val trimmedQuery = query.trim()
         if (trimmedQuery.isEmpty() || loading) return
 
-        scope.launch {
-            loading = true
-            errorMessage = null
-            hasSearched = true
+        val searchUrl = "${selectedProvider.prefix}:$trimmedQuery"
+        activeSearchId = searchUrl
+        activeSearchJob =
+            scope.launch {
+                loading = true
+                errorMessage = null
+                hasSearched = true
 
-            val result =
-                withContext(Dispatchers.IO) {
-                    DownloadUtil.getPlaylistOrVideoInfo(
-                        playlistURL = "${selectedProvider.prefix}:$trimmedQuery",
-                        downloadPreferences = preferences.copy(extractAudio = false),
-                        showToast = false,
-                    )
-                }
+                val result =
+                    withContext(Dispatchers.IO) {
+                        DownloadUtil.getPlaylistOrVideoInfo(
+                            playlistURL = searchUrl,
+                            downloadPreferences = preferences.copy(extractAudio = false),
+                            showToast = false,
+                        )
+                    }
 
-            result
-                .onSuccess { info ->
-                    results = (info as? PlaylistResult)?.entries.orEmpty()
-                }
-                .onFailure {
-                    results = emptyList()
-                    errorMessage = it.message
-                }
+                result
+                    .onSuccess { info ->
+                        results = (info as? PlaylistResult)?.entries.orEmpty()
+                    }
+                    .onFailure {
+                        results = emptyList()
+                        errorMessage = it.message
+                    }
 
-            loading = false
-        }
+                if (activeSearchId == searchUrl) {
+                    activeSearchId = null
+                    activeSearchJob = null
+                    loading = false
+                }
+            }
     }
 
     LaunchedEffect(initialQuery) {
@@ -119,11 +143,11 @@ fun YtdlpSearchDialog(
     }
 
     SealDialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = ::dismiss,
         icon = { Icon(Icons.Outlined.Search, contentDescription = null) },
         title = { Text(stringResource(R.string.ytdlp_search_title)) },
         confirmButton = null,
-        dismissButton = { OutlinedDismissButton(onClick = onDismissRequest) },
+        dismissButton = { OutlinedDismissButton(onClick = ::dismiss) },
         text = {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp),
@@ -232,7 +256,7 @@ fun YtdlpSearchDialog(
                                             preferences.copy(extractAudio = config.downloadType == Audio),
                                     )
                                 )
-                                onDismissRequest()
+                                dismiss()
                             },
                         )
                     }
