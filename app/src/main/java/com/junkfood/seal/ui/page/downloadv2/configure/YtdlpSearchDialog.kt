@@ -57,17 +57,27 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private enum class YtdlpSearchProvider(
+enum class YtdlpSearchProvider(
     val prefix: String,
+    val displayName: String,
     @StringRes val labelRes: Int,
 ) {
-    YouTube(prefix = "ytsearch10", labelRes = R.string.ytdlp_search_provider_youtube),
-    SoundCloud(prefix = "scsearch10", labelRes = R.string.ytdlp_search_provider_soundcloud),
+    YouTube(
+        prefix = "ytsearch10",
+        displayName = "YouTube",
+        labelRes = R.string.ytdlp_search_provider_youtube,
+    ),
+    SoundCloud(
+        prefix = "scsearch10",
+        displayName = "SoundCloud",
+        labelRes = R.string.ytdlp_search_provider_soundcloud,
+    ),
 }
 
 @Composable
 fun YtdlpSearchDialog(
     initialQuery: String = "",
+    initialProvider: YtdlpSearchProvider = YtdlpSearchProvider.YouTube,
     config: Config,
     preferences: DownloadUtil.DownloadPreferences,
     onDismissRequest: () -> Unit,
@@ -77,7 +87,8 @@ fun YtdlpSearchDialog(
     val scope = rememberCoroutineScope()
 
     var query by rememberSaveable(initialQuery) { mutableStateOf(initialQuery) }
-    var providerIndex by rememberSaveable { mutableIntStateOf(0) }
+    var providerIndex by
+        rememberSaveable(initialProvider) { mutableIntStateOf(initialProvider.ordinal) }
     var results by remember { mutableStateOf<List<PlaylistEntry>>(emptyList()) }
     var hasSearched by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
@@ -138,7 +149,7 @@ fun YtdlpSearchDialog(
             }
     }
 
-    LaunchedEffect(initialQuery) {
+    LaunchedEffect(initialQuery, initialProvider) {
         if (initialQuery.isNotBlank()) search()
     }
 
