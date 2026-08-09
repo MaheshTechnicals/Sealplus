@@ -27,12 +27,12 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew assembleGenericDebug
+      - name: Build ARM64 debug APK
+        run: ./gradlew assembleGenericDebug -PnoSplits -PABI_FILTERS=arm64-v8a
 
-      - name: Upload APK
+      - name: Upload ARM64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SealPlus-ytdlp-search
+          name: SealPlus-ytdlp-search-arm64
           path: app/build/outputs/apk/**/*.apk
           if-no-files-found: error
