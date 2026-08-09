@@ -5,6 +5,7 @@ import com.junkfood.seal.download.Task.DownloadState.Idle
 import com.junkfood.seal.download.Task.DownloadState.ReadyWithInfo
 import com.junkfood.seal.util.DownloadUtil.DownloadPreferences
 import com.junkfood.seal.util.Format
+import com.junkfood.seal.util.PlaylistEntry
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.VideoClip
 import com.junkfood.seal.util.VideoInfo
@@ -98,24 +99,49 @@ object TaskFactory {
     ): List<TaskWithState> {
         checkNotNull(playlistResult.entries)
         val indexEntryMap = indexList.associateWith { index -> playlistResult.entries[index - 1] }
+        val isSearchResult = playlistUrl.startsWith("ytsearch") || playlistUrl.startsWith("scsearch")
 
         val taskList =
             indexEntryMap.map { (index, entry) ->
+                val searchResultUrl =
+                    if (isSearchResult) entry.resolveSearchResultUrl(playlistUrl) else null
                 val viewState =
                     Task.ViewState(
-                        url = entry.url ?: "",
+                        url = searchResultUrl ?: entry.webpageUrl ?: entry.url ?: "",
                         title = entry.title ?: "${playlistResult.title} - $index",
                         duration = entry.duration?.roundToInt() ?: 0,
                         uploader = entry.uploader ?: entry.channel ?: playlistResult.channel ?: "",
-                        thumbnailUrl = (entry.thumbnails?.lastOrNull()?.url) ?: "",
+                        thumbnailUrl = (entry.thumbnails?.lastOrNull()?.url) ?: entry.thumbnail ?: "",
                     )
-                val task = Task(url = playlistUrl, preferences = preferences, type = Task.TypeInfo.Playlist(index))
+                val task =
+                    if (searchResultUrl != null) {
+                        Task(url = searchResultUrl, preferences = preferences)
+                    } else {
+                        Task(
+                            url = playlistUrl,
+                            preferences = preferences,
+                            type = Task.TypeInfo.Playlist(index),
+                        )
+                    }
                 val state =
                     Task.State(downloadState = Idle, videoInfo = null, viewState = viewState)
                 TaskWithState(task, state)
             }
 
         return taskList
+    }
+
+    private fun PlaylistEntry.resolveSearchResultUrl(searchUrl: String): String? {
+        val candidate = (webpageUrl ?: url)?.trim().orEmpty()
+        if (candidate.startsWith("https://") || candidate.startsWith("http://")) return candidate
+
+        return when {
+            searchUrl.startsWith("ytsearch") ->
+                (id?.takeIf { it.isNotBlank() } ?: candidate.takeIf { it.isNotBlank() })?.let {
+                    "https://www.youtube.com/watch?v=$it"
+                }
+            else -> null
+        }
     }
 
     data class TaskWithState(val task: Task, val state: Task.State)
