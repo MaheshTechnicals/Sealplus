@@ -91,6 +91,7 @@ fun InputUrlPage(
     val urlList = remember { mutableStateListOf<String>() }
     val savedLinks = remember(config) { mutableStateListOf<String>() }
     var showSearchDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         clipboardManager.getText()?.let {
@@ -107,7 +108,10 @@ fun InputUrlPage(
         savedLinks = savedLinks,
         onSaveLink = { savedLinks.add(it) },
         onRemoveSavedLink = { savedLinks.remove(it) },
-        onSearchClick = { showSearchDialog = true },
+        onSearchClick = { query ->
+            searchQuery = query.trim()
+            showSearchDialog = true
+        },
         onActionPost = onActionPost,
     )
 
@@ -117,6 +121,7 @@ fun InputUrlPage(
 
     if (showSearchDialog) {
         YtdlpSearchDialog(
+            initialQuery = searchQuery,
             config = config,
             preferences = preferences,
             onDismissRequest = { showSearchDialog = false },
@@ -146,7 +151,7 @@ private fun InputUrlPageImpl(
     savedLinks: List<String> = emptyList(),
     onSaveLink: (String) -> Unit = {},
     onRemoveSavedLink: (String) -> Unit = {},
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (String) -> Unit = {},
     onActionPost: (Action) -> Unit,
 ) {
 
@@ -180,7 +185,7 @@ private fun InputUrlPageImpl(
             item(key = "yt-dlp search") {
                 SuggestionChip(
                     modifier = Modifier.animateItem(),
-                    onClick = onSearchClick,
+                    onClick = { onSearchClick(url) },
                     label = { Text(stringResource(R.string.ytdlp_search_title)) },
                     icon = {
                         Icon(
@@ -286,7 +291,15 @@ private fun InputUrlPageImpl(
                 icon = Icons.AutoMirrored.Outlined.ArrowForward,
                 text = stringResource(R.string.proceed),
             ) {
-                onActionPost(Action.ProceedWithURLs(listOf(url)))
+                val input = url.trim()
+                if (input.isBlank()) return@FilledButtonWithIcon
+
+                val detectedUrls = findURLsFromString(input).distinct()
+                if (detectedUrls.isEmpty()) {
+                    onSearchClick(input)
+                } else {
+                    onActionPost(Action.ProceedWithURLs(detectedUrls))
+                }
             }
         }
     }
