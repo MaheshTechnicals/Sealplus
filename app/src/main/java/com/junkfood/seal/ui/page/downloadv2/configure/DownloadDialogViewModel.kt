@@ -123,7 +123,6 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
     }
 
     private fun proceedWithUrls(action: Action.ProceedWithURLs) {
-        // Check network availability before proceeding
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -135,7 +134,6 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
     private fun fetchPlaylist(action: Action.FetchPlaylist) {
         val (url, preferences) = action
 
-        // Check network availability before fetching
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -170,13 +168,13 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                         mSheetStateFlow.update { SheetState.Error(action = action, throwable = th) }
                     }
             }
-        mSheetStateFlow.update { SheetState.Loading(taskKey = "FetchPlaylist_$url", job = job) }
+        // getPlaylistOrVideoInfo registers the yt-dlp process using the URL itself as the process ID.
+        mSheetStateFlow.update { SheetState.Loading(taskKey = url, job = job) }
     }
 
     private fun fetchFormat(action: Action.FetchFormats) {
         val (url, audioOnly, preferences) = action
 
-        // Check network availability before fetching
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -212,7 +210,6 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         urlList: List<String>,
         preferences: DownloadUtil.DownloadPreferences,
     ) {
-        // Check network availability based on user's network type restriction
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -228,7 +225,6 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         template: CommandTemplate,
         preferences: DownloadUtil.DownloadPreferences,
     ) {
-        // Check network availability for custom commands too
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
