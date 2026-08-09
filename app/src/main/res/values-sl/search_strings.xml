@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Išči z yt-dlp</string>
+    <string name="ytdlp_search_query">Iskalna poizvedba</string>
+    <string name="ytdlp_search_service">Iskalna storitev</string>
+    <string name="ytdlp_search_no_results">Ni najdenih rezultatov</string>
+    <string name="ytdlp_search_tap_thumbnail">Tapnite sličico za začetek prenosa</string>
+</resources>

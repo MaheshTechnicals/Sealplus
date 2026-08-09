@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Search with yt-dlp</string>
+    <string name="ytdlp_search_query">Search query</string>
+    <string name="ytdlp_search_service">Search service</string>
+    <string name="ytdlp_search_no_results">No results found</string>
+    <string name="ytdlp_search_tap_thumbnail">Tap a thumbnail to start downloading</string>
+    <string name="ytdlp_search_provider_youtube" translatable="false">YouTube (ytsearch10)</string>
+    <string name="ytdlp_search_provider_soundcloud" translatable="false">SoundCloud (scsearch10)</string>
+</resources>

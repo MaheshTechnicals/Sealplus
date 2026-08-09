@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">ស្វែងរកដោយប្រើ yt-dlp</string>
+    <string name="ytdlp_search_query">សំណួរស្វែងរក</string>
+    <string name="ytdlp_search_service">សេវាស្វែងរក</string>
+    <string name="ytdlp_search_no_results">រកមិនឃើញលទ្ធផល</string>
+    <string name="ytdlp_search_tap_thumbnail">ចុចលើរូបភាពតូច ដើម្បីចាប់ផ្តើមទាញយក</string>
+</resources>

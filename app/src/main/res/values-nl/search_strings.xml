@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Zoeken met yt-dlp</string>
+    <string name="ytdlp_search_query">Zoekopdracht</string>
+    <string name="ytdlp_search_service">Zoekservice</string>
+    <string name="ytdlp_search_no_results">Geen resultaten gevonden</string>
+    <string name="ytdlp_search_tap_thumbnail">Tik op een miniatuur om het downloaden te starten</string>
+</resources>

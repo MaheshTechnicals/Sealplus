@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Caută cu yt-dlp</string>
+    <string name="ytdlp_search_query">Interogare de căutare</string>
+    <string name="ytdlp_search_service">Serviciu de căutare</string>
+    <string name="ytdlp_search_no_results">Nu s-au găsit rezultate</string>
+    <string name="ytdlp_search_tap_thumbnail">Atinge o miniatură pentru a începe descărcarea</string>
+</resources>

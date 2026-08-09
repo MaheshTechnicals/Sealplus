@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Tìm kiếm bằng yt-dlp</string>
+    <string name="ytdlp_search_query">Truy vấn tìm kiếm</string>
+    <string name="ytdlp_search_service">Dịch vụ tìm kiếm</string>
+    <string name="ytdlp_search_no_results">Không tìm thấy kết quả</string>
+    <string name="ytdlp_search_tap_thumbnail">Nhấn vào hình thu nhỏ để bắt đầu tải xuống</string>
+</resources>

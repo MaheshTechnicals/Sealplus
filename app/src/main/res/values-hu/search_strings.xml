@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Keresés yt-dlp segítségével</string>
+    <string name="ytdlp_search_query">Keresési lekérdezés</string>
+    <string name="ytdlp_search_service">Keresési szolgáltatás</string>
+    <string name="ytdlp_search_no_results">Nincs találat</string>
+    <string name="ytdlp_search_tap_thumbnail">Koppints egy bélyegképre a letöltés indításához</string>
+</resources>

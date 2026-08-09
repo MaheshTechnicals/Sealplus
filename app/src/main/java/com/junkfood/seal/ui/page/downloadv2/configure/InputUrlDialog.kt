@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.ContentPasteGo
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -75,18 +76,21 @@ import com.junkfood.seal.ui.component.OutlinedDismissButton
 import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.theme.ErrorTonalPalettes
+import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.findURLsFromString
 
 @Composable
 fun InputUrlPage(
     modifier: Modifier = Modifier,
     config: Config,
+    preferences: DownloadUtil.DownloadPreferences,
     onConfigUpdate: (Config) -> Unit,
     onActionPost: (Action) -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val urlList = remember { mutableStateListOf<String>() }
     val savedLinks = remember(config) { mutableStateListOf<String>() }
+    var showSearchDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         clipboardManager.getText()?.let {
@@ -103,11 +107,21 @@ fun InputUrlPage(
         savedLinks = savedLinks,
         onSaveLink = { savedLinks.add(it) },
         onRemoveSavedLink = { savedLinks.remove(it) },
+        onSearchClick = { showSearchDialog = true },
         onActionPost = onActionPost,
     )
 
     DisposableEffect(Unit) {
         onDispose { onConfigUpdate(config.copy(savedLinks = savedLinks.toSet())) }
+    }
+
+    if (showSearchDialog) {
+        YtdlpSearchDialog(
+            config = config,
+            preferences = preferences,
+            onDismissRequest = { showSearchDialog = false },
+            onActionPost = onActionPost,
+        )
     }
 }
 
@@ -132,6 +146,7 @@ private fun InputUrlPageImpl(
     savedLinks: List<String> = emptyList(),
     onSaveLink: (String) -> Unit = {},
     onRemoveSavedLink: (String) -> Unit = {},
+    onSearchClick: () -> Unit = {},
     onActionPost: (Action) -> Unit,
 ) {
 
@@ -162,6 +177,21 @@ private fun InputUrlPageImpl(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(horizontal = 32.dp),
         ) {
+            item(key = "yt-dlp search") {
+                SuggestionChip(
+                    modifier = Modifier.animateItem(),
+                    onClick = onSearchClick,
+                    label = { Text(stringResource(R.string.ytdlp_search_title)) },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(SuggestionChipDefaults.IconSize),
+                        )
+                    },
+                )
+            }
+
             if (urlListFromClipboard.isNotEmpty()) {
                 item(key = "paste url") {
                     SuggestionChip(

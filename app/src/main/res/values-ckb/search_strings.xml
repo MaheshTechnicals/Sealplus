@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">گەڕان بە yt-dlp</string>
+    <string name="ytdlp_search_query">دەقی گەڕان</string>
+    <string name="ytdlp_search_service">خزمەتگوزاری گەڕان</string>
+    <string name="ytdlp_search_no_results">هیچ ئەنجامێک نەدۆزرایەوە</string>
+    <string name="ytdlp_search_tap_thumbnail">بۆ دەستپێکردنی داگرتن لە وێنۆچکەکە بدە</string>
+</resources>

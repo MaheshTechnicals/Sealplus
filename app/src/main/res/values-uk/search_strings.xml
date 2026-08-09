@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Шукати через yt-dlp</string>
+    <string name="ytdlp_search_query">Пошуковий запит</string>
+    <string name="ytdlp_search_service">Сервіс пошуку</string>
+    <string name="ytdlp_search_no_results">Результатів не знайдено</string>
+    <string name="ytdlp_search_tap_thumbnail">Торкніться мініатюри, щоб почати завантаження</string>
+</resources>

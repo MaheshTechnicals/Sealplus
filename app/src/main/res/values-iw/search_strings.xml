@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">חיפוש באמצעות yt-dlp</string>
+    <string name="ytdlp_search_query">שאילתת חיפוש</string>
+    <string name="ytdlp_search_service">שירות חיפוש</string>
+    <string name="ytdlp_search_no_results">לא נמצאו תוצאות</string>
+    <string name="ytdlp_search_tap_thumbnail">הקש על תמונה ממוזערת כדי להתחיל בהורדה</string>
+</resources>

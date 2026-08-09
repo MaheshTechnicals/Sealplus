@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp සමඟ සොයන්න</string>
+    <string name="ytdlp_search_query">සෙවුම් විමසුම</string>
+    <string name="ytdlp_search_service">සෙවුම් සේවාව</string>
+    <string name="ytdlp_search_no_results">ප්‍රතිඵල හමු නොවීය</string>
+    <string name="ytdlp_search_tap_thumbnail">බාගැනීම ආරම්භ කිරීමට සිඟිති රූපයක් තට්ටු කරන්න</string>
+</resources>

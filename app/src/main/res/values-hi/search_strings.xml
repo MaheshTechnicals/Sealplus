@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp से खोजें</string>
+    <string name="ytdlp_search_query">खोज क्वेरी</string>
+    <string name="ytdlp_search_service">खोज सेवा</string>
+    <string name="ytdlp_search_no_results">कोई परिणाम नहीं मिला</string>
+    <string name="ytdlp_search_tap_thumbnail">डाउनलोड शुरू करने के लिए थंबनेल पर टैप करें</string>
+</resources>

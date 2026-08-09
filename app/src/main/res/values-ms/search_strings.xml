@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Cari dengan yt-dlp</string>
+    <string name="ytdlp_search_query">Pertanyaan carian</string>
+    <string name="ytdlp_search_service">Perkhidmatan carian</string>
+    <string name="ytdlp_search_no_results">Tiada hasil ditemui</string>
+    <string name="ytdlp_search_tap_thumbnail">Ketik imej kecil untuk mula memuat turun</string>
+</resources>

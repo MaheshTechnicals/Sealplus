@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">זוכן מיט yt-dlp</string>
+    <string name="ytdlp_search_query">זוך אָנפֿרעג</string>
+    <string name="ytdlp_search_service">זוך דינסט</string>
+    <string name="ytdlp_search_no_results">קיין רעזולטאַטן געפֿונען</string>
+    <string name="ytdlp_search_tap_thumbnail">צאַפּט אויף אַ מיניאַטור צו אָנהייבן די אראפקאפיע</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">ค้นหาด้วย yt-dlp</string>
+    <string name="ytdlp_search_query">คำค้นหา</string>
+    <string name="ytdlp_search_service">บริการค้นหา</string>
+    <string name="ytdlp_search_no_results">ไม่พบผลลัพธ์</string>
+    <string name="ytdlp_search_tap_thumbnail">แตะภาพขนาดย่อเพื่อเริ่มดาวน์โหลด</string>
+</resources>

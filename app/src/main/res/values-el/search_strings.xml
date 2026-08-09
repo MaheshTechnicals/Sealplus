@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Αναζήτηση με yt-dlp</string>
+    <string name="ytdlp_search_query">Ερώτημα αναζήτησης</string>
+    <string name="ytdlp_search_service">Υπηρεσία αναζήτησης</string>
+    <string name="ytdlp_search_no_results">Δεν βρέθηκαν αποτελέσματα</string>
+    <string name="ytdlp_search_tap_thumbnail">Πατήστε μια μικρογραφία για να ξεκινήσει η λήψη</string>
+</resources>

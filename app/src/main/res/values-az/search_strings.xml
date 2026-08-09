@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp ilə axtar</string>
+    <string name="ytdlp_search_query">Axtarış sorğusu</string>
+    <string name="ytdlp_search_service">Axtarış xidməti</string>
+    <string name="ytdlp_search_no_results">Nəticə tapılmadı</string>
+    <string name="ytdlp_search_tap_thumbnail">Endirməyə başlamaq üçün miniatürə toxunun</string>
+</resources>
