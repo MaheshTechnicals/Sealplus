@@ -140,6 +140,8 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.page.downloadv2.configure.FormatPage
 import com.junkfood.seal.ui.page.downloadv2.configure.PlaylistSelectionPage
+import com.junkfood.seal.ui.page.downloadv2.configure.YtdlpSearchDialog
+import com.junkfood.seal.ui.page.downloadv2.configure.YtdlpSearchProvider
 import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.ui.component.SealDialog
@@ -147,6 +149,7 @@ import com.junkfood.seal.ui.theme.GradientDarkColors
 import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
+import com.junkfood.seal.util.findURLsFromString
 import java.io.File
 import com.junkfood.seal.util.toFileSizeText
 import com.junkfood.seal.util.getErrorReport
@@ -213,6 +216,11 @@ fun NewHomePage(
     var showExitDialog by remember { mutableStateOf(false) }
     var urlText by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    // yt-dlp search (non-URL input): opens the existing YtdlpSearchDialog with YouTube as the
+    // default provider; SoundCloud is selectable inside the dialog. Real URLs never reach here.
+    var showSearchDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     // Pre-fill URL from share intent
     val sharedUrl by dialogViewModel.sharedUrlFlow.collectAsState()
@@ -786,13 +794,23 @@ fun NewHomePage(
                     value = urlText,
                     onValueChange = { urlText = it },
                     onDownloadClick = {
-                        if (urlText.isNotBlank()) {
-                            view.slightHapticFeedback()
-                            dialogViewModel.postAction(Action.ShowSheet(listOf(urlText)))
-                            urlText = ""
-                            keyboardController?.hide()
-                        } else {
-                            context.makeToast(R.string.url_empty)
+                        val input = urlText.trim()
+                        when {
+                            input.isBlank() -> context.makeToast(R.string.url_empty)
+                            // Non-URL input → yt-dlp search instead of a normal URL download.
+                            findURLsFromString(input).isEmpty() -> {
+                                view.slightHapticFeedback()
+                                searchQuery = input
+                                showSearchDialog = true
+                                keyboardController?.hide()
+                            }
+                            // Real URL(s) → unchanged download flow.
+                            else -> {
+                                view.slightHapticFeedback()
+                                dialogViewModel.postAction(Action.ShowSheet(listOf(urlText)))
+                                urlText = ""
+                                keyboardController?.hide()
+                            }
                         }
                     },
                     onPasteClick = {
@@ -1067,7 +1085,18 @@ fun NewHomePage(
             onActionPost = { dialogViewModel.postAction(it) },
         )
     }
-    
+
+    if (showSearchDialog) {
+        YtdlpSearchDialog(
+            initialQuery = searchQuery,
+            initialProvider = YtdlpSearchProvider.YouTube,
+            config = Config(),
+            preferences = preferences,
+            onDismissRequest = { showSearchDialog = false },
+            onActionPost = { dialogViewModel.postAction(it) },
+        )
+    }
+
     when (selectionState) {
         is DownloadDialogViewModel.SelectionState.FormatSelection ->
             FormatPage(
