@@ -99,10 +99,7 @@ object TaskFactory {
     ): List<TaskWithState> {
         checkNotNull(playlistResult.entries)
         val indexEntryMap = indexList.associateWith { index -> playlistResult.entries[index - 1] }
-        val isSearchResult =
-            playlistUrl.startsWith("ytsearch") ||
-                playlistUrl.startsWith("scsearch") ||
-                playlistUrl.startsWith("https://music.youtube.com/search")
+        val isSearchResult = playlistUrl.startsWith("ytsearch") || playlistUrl.startsWith("scsearch")
 
         val taskList =
             indexEntryMap.map { (index, entry) ->
@@ -143,8 +140,6 @@ object TaskFactory {
                 (id?.takeIf { it.isNotBlank() } ?: candidate.takeIf { it.isNotBlank() })?.let {
                     "https://www.youtube.com/watch?v=$it"
                 }
-            searchUrl.startsWith("https://music.youtube.com/search") ->
-                id?.takeIf { it.isNotBlank() }?.let { "https://music.youtube.com/watch?v=$it" }
             else -> null
         }
     }

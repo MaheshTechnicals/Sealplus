@@ -1,6 +1,5 @@
 package com.junkfood.seal.ui.page.downloadv2.configure
 
-import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -66,26 +65,20 @@ enum class YtdlpSearchProvider(
         displayName = "YouTube",
         labelRes = R.string.ytdlp_search_provider_youtube,
     ),
-    YouTubeMusic(
-        displayName = "YouTube Music",
-        labelRes = R.string.ytdlp_search_provider_youtube_music,
-    ),
     SoundCloud(
         displayName = "SoundCloud",
         labelRes = R.string.ytdlp_search_provider_soundcloud,
     );
 
     /**
-     * Builds the yt-dlp query/URL used to fetch a search-result playlist for [query].
-     * YouTube and SoundCloud use yt-dlp's inline search prefixes (limited to 10 results);
-     * YouTube Music uses the `youtube:music:search_url` extractor.
+     * Builds the yt-dlp query used to fetch a search-result playlist for [query].
+     * Both engines use yt-dlp's inline search prefixes (limited to 10 results).
      */
     fun buildSearchUrl(query: String): String {
         val trimmed = query.trim()
         return when (this) {
             YouTube -> "ytsearch10:$trimmed"
             SoundCloud -> "scsearch10:$trimmed"
-            YouTubeMusic -> "https://music.youtube.com/search?q=" + Uri.encode(trimmed)
         }
     }
 }
@@ -370,8 +363,6 @@ private fun PlaylistEntry.resolveDownloadUrl(provider: YtdlpSearchProvider): Str
             (id?.takeIf { it.isNotBlank() } ?: candidate.takeIf { it.isNotBlank() })?.let {
                 "https://www.youtube.com/watch?v=$it"
             }
-        YtdlpSearchProvider.YouTubeMusic ->
-            id?.takeIf { it.isNotBlank() }?.let { "https://music.youtube.com/watch?v=$it" }
         YtdlpSearchProvider.SoundCloud -> null
     }
 }

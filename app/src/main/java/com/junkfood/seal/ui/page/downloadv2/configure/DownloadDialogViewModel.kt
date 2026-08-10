@@ -64,9 +64,9 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         ) : Action
 
         /**
-         * Starts a yt-dlp search for [searchUrl] (e.g. "ytsearch10:query" or a
-         * music.youtube.com search URL) and shows its results in the playlist selection view,
-         * mirroring the behaviour of a non-URL input before an explicit provider was selectable.
+         * Starts a yt-dlp search for [searchUrl] (e.g. "ytsearch10:query" or "scsearch10:query")
+         * and shows its results in the playlist selection view, mirroring the behaviour of a
+         * non-URL input before an explicit engine was selectable.
          */
         data class SearchPlaylist(val searchUrl: String) : Action
 
