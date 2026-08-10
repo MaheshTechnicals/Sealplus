@@ -63,6 +63,13 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
             val preferences: DownloadUtil.DownloadPreferences,
         ) : Action
 
+        /**
+         * Starts a yt-dlp search for [searchUrl] (e.g. "ytsearch10:query" or a
+         * music.youtube.com search URL) and shows its results in the playlist selection view,
+         * mirroring the behaviour of a non-URL input before an explicit provider was selectable.
+         */
+        data class SearchPlaylist(val searchUrl: String) : Action
+
         data class FetchFormats(
             val url: String,
             val audioOnly: Boolean,
@@ -112,6 +119,7 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                 is Action.ProceedWithURLs -> proceedWithUrls(this)
                 is Action.FetchFormats -> fetchFormat(this)
                 is Action.FetchPlaylist -> fetchPlaylist(this)
+                is Action.SearchPlaylist -> searchPlaylist(this)
                 is Action.DownloadWithPreset -> downloadWithPreset(urlList, preferences)
                 is Action.RunCommand -> runCommand(url, template, preferences)
                 Action.HideSheet -> hideDialog()
@@ -129,6 +137,23 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
             return
         }
         mSheetStateFlow.update { SheetState.Configure(action.urlList) }
+    }
+
+    private fun searchPlaylist(action: Action.SearchPlaylist) {
+        if (!PreferenceUtil.isNetworkAvailableForDownload()) {
+            val message = PreferenceUtil.getNetworkErrorMessage()
+            App.context.makeToast(message)
+            return
+        }
+        // Expand the sheet first so the loading/error state is visible, then fetch; on success
+        // fetchPlaylist transitions to the playlist selection view.
+        mSheetValueFlow.update { SheetValue.Expanded }
+        fetchPlaylist(
+            Action.FetchPlaylist(
+                url = action.searchUrl,
+                preferences = DownloadUtil.DownloadPreferences.createFromPreferences(),
+            )
+        )
     }
 
     private fun fetchPlaylist(action: Action.FetchPlaylist) {
