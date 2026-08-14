@@ -50,6 +50,7 @@ import com.junkfood.seal.util.PreferenceUtil.updateLong
 import com.junkfood.seal.util.UpdateIntervalList
 import com.junkfood.seal.util.YT_DLP_AUTO_UPDATE
 import com.junkfood.seal.util.YT_DLP_NIGHTLY
+import com.junkfood.seal.util.YT_DLP_REDGIFS
 import com.junkfood.seal.util.YT_DLP_STABLE
 import com.junkfood.seal.util.YT_DLP_UPDATE_CHANNEL
 import com.junkfood.seal.util.YT_DLP_UPDATE_INTERVAL
@@ -142,6 +143,16 @@ fun YtdlpUpdateChannelDialog(modifier: Modifier = Modifier, onDismissRequest: ()
                         labelContainerColor = MaterialTheme.colorScheme.tertiary,
                     ) {
                         ytdlpUpdateChannel = YT_DLP_NIGHTLY
+                    }
+                }
+                item {
+                    DialogSingleChoiceItem(
+                        text = "RedGifs patched",
+                        selected = ytdlpUpdateChannel == YT_DLP_REDGIFS,
+                        label = "Custom",
+                        labelContainerColor = MaterialTheme.colorScheme.secondary,
+                    ) {
+                        ytdlpUpdateChannel = YT_DLP_REDGIFS
                     }
                 }
                 item {
