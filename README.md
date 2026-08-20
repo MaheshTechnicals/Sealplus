@@ -768,7 +768,7 @@ Help make Seal Plus accessible to users worldwide:
 
 Watch how our community has grown over time!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=MaheshTechnicals/Sealplus&type=Timeline)](https://star-history.com/#MaheshTechnicals/Sealplus&Timeline)
+[![Star History Chart](https://star-history.dera.page/svg?repos=MaheshTechnicals/Sealplus&type=Timeline)](https://star-history.dera.page/#MaheshTechnicals/Sealplus&Timeline)
 
 ---
 

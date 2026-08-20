@@ -95,7 +95,7 @@
 
 ## ⭐️ Історія зірочок
 
-[![Star History Chart](https://api.star-history.com/svg?repos=JunkFood02/Seal&type=Timeline)](https://star-history.com/#JunkFood02/Seal&Timeline)
+[![Star History Chart](https://star-history.dera.page/svg?repos=MaheshTechnicals/Sealplus&type=Timeline)](https://star-history.dera.page/#MaheshTechnicals/Sealplus&Timeline)
 
 ## 🧱 Подяки
 
