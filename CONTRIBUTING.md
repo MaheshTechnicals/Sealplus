@@ -39,6 +39,8 @@ If you wish to contribute to the project by submitting code directly, please fir
 
 To avoid multiple pull requests resolving the same issue, let others know you are working on it by saying so in a comment, or ask the issue to be assigned to yourself.
 
+**Important: All pull requests must target the `test` branch, not `main`.** Please make sure your base branch is set to `test` when opening a pull request. Pull requests submitted against `main` will not be accepted and will be asked to be redirected to `test`.
+
 
 
 ## New contributors

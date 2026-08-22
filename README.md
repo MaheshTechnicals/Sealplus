@@ -716,12 +716,16 @@ Help make Seal Plus accessible to users worldwide:
 #### Getting Started
 1. **Fork** the repository
 2. **Clone** your fork: `git clone https://github.com/YOUR_USERNAME/Seal.git`
-3. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-4. **Make** your changes
-5. **Test** thoroughly on multiple devices
-6. **Commit** with clear messages: `git commit -m "Add amazing feature"`
-7. **Push** to your fork: `git push origin feature/amazing-feature`
-8. **Open** a Pull Request with detailed description
+3. **Checkout** the `test` branch: `git checkout test`
+4. **Create** a feature branch from `test`: `git checkout -b feature/amazing-feature`
+5. **Make** your changes
+6. **Test** thoroughly on multiple devices
+7. **Commit** with clear messages: `git commit -m "Add amazing feature"`
+8. **Push** to your fork: `git push origin feature/amazing-feature`
+9. **Open** a Pull Request against the `test` branch (not `main`) with a detailed description
+
+> [!IMPORTANT]
+> All pull requests must target the `test` branch, not `main`. PRs opened against `main` will not be accepted.
 
 #### Development Environment
 ```bash
