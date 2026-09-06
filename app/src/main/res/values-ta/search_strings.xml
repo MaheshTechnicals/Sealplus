@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp மூலம் தேடு</string>
+    <string name="ytdlp_search_query">தேடல் வினவல்</string>
+    <string name="ytdlp_search_service">தேடல் சேவை</string>
+    <string name="ytdlp_search_no_results">முடிவுகள் எதுவும் கிடைக்கவில்லை</string>
+    <string name="ytdlp_search_tap_thumbnail">பதிவிறக்கத்தைத் தொடங்க சிறுபடத்தைத் தட்டவும்</string>
+</resources>

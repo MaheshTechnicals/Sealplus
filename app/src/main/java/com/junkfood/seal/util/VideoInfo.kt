@@ -241,11 +241,13 @@ data class PlaylistEntry(
     val ieKey: String? = null,
     val id: String? = null,
     val url: String? = null,
+    @SerialName("webpage_url") val webpageUrl: String? = null,
     val title: String? = null,
     val duration: Double? = .0,
     val uploader: String? = null,
     val channel: String? = null,
     val thumbnails: List<Thumbnail>? = emptyList(),
+    val thumbnail: String? = null,
 )
 
 @Serializable

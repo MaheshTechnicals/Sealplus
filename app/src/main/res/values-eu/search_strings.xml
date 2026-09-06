@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Bilatu yt-dlp bidez</string>
+    <string name="ytdlp_search_query">Bilaketa-kontsulta</string>
+    <string name="ytdlp_search_service">Bilaketa-zerbitzua</string>
+    <string name="ytdlp_search_no_results">Ez da emaitzarik aurkitu</string>
+    <string name="ytdlp_search_tap_thumbnail">Sakatu miniatura bat deskarga hasteko</string>
+</resources>

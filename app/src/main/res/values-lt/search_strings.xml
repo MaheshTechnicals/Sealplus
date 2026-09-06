@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Ieškoti su yt-dlp</string>
+    <string name="ytdlp_search_query">Paieškos užklausa</string>
+    <string name="ytdlp_search_service">Paieškos paslauga</string>
+    <string name="ytdlp_search_no_results">Rezultatų nerasta</string>
+    <string name="ytdlp_search_tap_thumbnail">Bakstelėkite miniatiūrą, kad pradėtumėte atsisiuntimą</string>
+</resources>

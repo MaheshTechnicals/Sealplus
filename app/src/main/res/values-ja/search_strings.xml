@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp で検索</string>
+    <string name="ytdlp_search_query">検索クエリ</string>
+    <string name="ytdlp_search_service">検索サービス</string>
+    <string name="ytdlp_search_no_results">結果が見つかりません</string>
+    <string name="ytdlp_search_tap_thumbnail">サムネイルをタップしてダウンロードを開始</string>
+</resources>

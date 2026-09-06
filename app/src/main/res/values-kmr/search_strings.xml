@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Bi yt-dlp re bigere</string>
+    <string name="ytdlp_search_query">Pirsîna lêgerînê</string>
+    <string name="ytdlp_search_service">Xizmeta lêgerînê</string>
+    <string name="ytdlp_search_no_results">Encam nehat dîtin</string>
+    <string name="ytdlp_search_tap_thumbnail">Ji bo destpêkirina daxistinê li wêneyê biçûk bitikîne</string>
+</resources>

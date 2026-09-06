@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp로 검색</string>
+    <string name="ytdlp_search_query">검색어</string>
+    <string name="ytdlp_search_service">검색 서비스</string>
+    <string name="ytdlp_search_no_results">검색 결과가 없습니다</string>
+    <string name="ytdlp_search_tap_thumbnail">썸네일을 탭하여 다운로드를 시작하세요</string>
+</resources>

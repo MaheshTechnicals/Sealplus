@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp দিয়ে অনুসন্ধান</string>
+    <string name="ytdlp_search_query">অনুসন্ধান কুয়েরি</string>
+    <string name="ytdlp_search_service">অনুসন্ধান পরিষেবা</string>
+    <string name="ytdlp_search_no_results">কোনো ফলাফল পাওয়া যায়নি</string>
+    <string name="ytdlp_search_tap_thumbnail">ডাউনলোড শুরু করতে থাম্বনেইলে ট্যাপ করুন</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp ile ara</string>
+    <string name="ytdlp_search_query">Arama sorgusu</string>
+    <string name="ytdlp_search_service">Arama hizmeti</string>
+    <string name="ytdlp_search_no_results">Sonuç bulunamadı</string>
+    <string name="ytdlp_search_tap_thumbnail">İndirmeyi başlatmak için bir küçük resme dokunun</string>
+</resources>

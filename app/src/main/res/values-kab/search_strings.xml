@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Nadi s yt-dlp</string>
+    <string name="ytdlp_search_query">Tuttra n unadi</string>
+    <string name="ytdlp_search_service">Ameẓlu n unadi</string>
+    <string name="ytdlp_search_no_results">Ulac igmaḍ</string>
+    <string name="ytdlp_search_tap_thumbnail">Sit ɣef tugna tameẓyant akken ad tebduḍ asider</string>
+</resources>

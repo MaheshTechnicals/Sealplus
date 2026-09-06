@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Maghanap gamit ang yt-dlp</string>
+    <string name="ytdlp_search_query">Query sa paghahanap</string>
+    <string name="ytdlp_search_service">Serbisyo ng paghahanap</string>
+    <string name="ytdlp_search_no_results">Walang nahanap na resulta</string>
+    <string name="ytdlp_search_tap_thumbnail">I-tap ang thumbnail para simulan ang pag-download</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Hľadať pomocou yt-dlp</string>
+    <string name="ytdlp_search_query">Vyhľadávací dopyt</string>
+    <string name="ytdlp_search_service">Vyhľadávacia služba</string>
+    <string name="ytdlp_search_no_results">Nenašli sa žiadne výsledky</string>
+    <string name="ytdlp_search_tap_thumbnail">Klepnutím na miniatúru spustíte sťahovanie</string>
+</resources>

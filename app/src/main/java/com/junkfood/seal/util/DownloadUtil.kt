@@ -266,10 +266,13 @@ object DownloadUtil {
     fun getPlaylistOrVideoInfo(
         playlistURL: String,
         downloadPreferences: DownloadPreferences = DownloadPreferences.createFromPreferences(),
+        showToast: Boolean = true,
     ): Result<YoutubeDLInfo> =
         YoutubeDL.runCatching {
-            App.applicationScope.launch(Dispatchers.Main) {
-                context.makeToast(R.string.fetching_playlist_info)
+            if (showToast) {
+                App.applicationScope.launch(Dispatchers.Main) {
+                    context.makeToast(R.string.fetching_playlist_info)
+                }
             }
             val request = YoutubeDLRequest(playlistURL)
             with(request) {

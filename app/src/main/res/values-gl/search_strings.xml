@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Buscar con yt-dlp</string>
+    <string name="ytdlp_search_query">Consulta de busca</string>
+    <string name="ytdlp_search_service">Servizo de busca</string>
+    <string name="ytdlp_search_no_results">Non se atoparon resultados</string>
+    <string name="ytdlp_search_tap_thumbnail">Toca unha miniatura para iniciar a descarga</string>
+</resources>

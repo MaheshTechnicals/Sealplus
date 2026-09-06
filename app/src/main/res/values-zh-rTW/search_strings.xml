@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">使用 yt-dlp 搜尋</string>
+    <string name="ytdlp_search_query">搜尋關鍵字</string>
+    <string name="ytdlp_search_service">搜尋服務</string>
+    <string name="ytdlp_search_no_results">找不到結果</string>
+    <string name="ytdlp_search_tap_thumbnail">點按縮圖即可開始下載</string>
+</resources>

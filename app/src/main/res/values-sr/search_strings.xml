@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Претражи помоћу yt-dlp</string>
+    <string name="ytdlp_search_query">Упит за претрагу</string>
+    <string name="ytdlp_search_service">Услуга претраге</string>
+    <string name="ytdlp_search_no_results">Нема пронађених резултата</string>
+    <string name="ytdlp_search_tap_thumbnail">Додирните сличицу да започнете преузимање</string>
+</resources>

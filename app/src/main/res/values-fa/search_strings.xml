@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">جستجو با yt-dlp</string>
+    <string name="ytdlp_search_query">عبارت جستجو</string>
+    <string name="ytdlp_search_service">سرویس جستجو</string>
+    <string name="ytdlp_search_no_results">نتیجه‌ای یافت نشد</string>
+    <string name="ytdlp_search_tap_thumbnail">برای شروع دانلود روی تصویر بندانگشتی بزنید</string>
+</resources>

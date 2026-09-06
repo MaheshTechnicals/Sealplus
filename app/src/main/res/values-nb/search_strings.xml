@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">Søk med yt-dlp</string>
+    <string name="ytdlp_search_query">Søkeforespørsel</string>
+    <string name="ytdlp_search_service">Søketjeneste</string>
+    <string name="ytdlp_search_no_results">Ingen resultater funnet</string>
+    <string name="ytdlp_search_tap_thumbnail">Trykk på et miniatyrbilde for å starte nedlastingen</string>
+</resources>

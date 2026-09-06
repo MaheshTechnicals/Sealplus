@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Folder
@@ -140,6 +141,7 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.page.downloadv2.configure.FormatPage
 import com.junkfood.seal.ui.page.downloadv2.configure.PlaylistSelectionPage
+import com.junkfood.seal.ui.page.downloadv2.configure.YtdlpSearchProvider
 import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.ui.component.SealDialog
@@ -147,6 +149,7 @@ import com.junkfood.seal.ui.theme.GradientDarkColors
 import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
+import com.junkfood.seal.util.findURLsFromString
 import java.io.File
 import com.junkfood.seal.util.toFileSizeText
 import com.junkfood.seal.util.getErrorReport
@@ -795,6 +798,18 @@ fun NewHomePage(
                             context.makeToast(R.string.url_empty)
                         }
                     },
+                    onSearch = { provider ->
+                        val query = urlText.trim()
+                        if (query.isNotBlank()) {
+                            view.slightHapticFeedback()
+                            // Non-URL input → yt-dlp search with the chosen engine; results open
+                            // in the playlist selection view.
+                            dialogViewModel.postAction(
+                                Action.SearchPlaylist(provider.buildSearchUrl(query))
+                            )
+                            keyboardController?.hide()
+                        }
+                    },
                     onPasteClick = {
                         val clipText = clipboardManager.getText()?.text
                         if (clipText != null) {
@@ -1067,7 +1082,7 @@ fun NewHomePage(
             onActionPost = { dialogViewModel.postAction(it) },
         )
     }
-    
+
     when (selectionState) {
         is DownloadDialogViewModel.SelectionState.FormatSelection ->
             FormatPage(
@@ -1091,12 +1106,18 @@ fun URLInputField(
     value: String,
     onValueChange: (String) -> Unit,
     onDownloadClick: () -> Unit,
+    onSearch: (YtdlpSearchProvider) -> Unit,
     onPasteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
     val isGradientDark = LocalGradientDarkMode.current
     val fullPlaceholder = stringResource(R.string.enter_url_to_download)
+
+    // When the input is non-blank but contains no URL, the trailing button becomes a search
+    // trigger that offers a drop-down of yt-dlp search engines instead of a normal download.
+    val isSearchQuery = value.isNotBlank() && findURLsFromString(value.trim()).isEmpty()
+    var engineMenuExpanded by remember { mutableStateOf(false) }
 
     // Typewriter animation: reveal characters one by one
     var displayedLength by remember { mutableStateOf(0) }
@@ -1169,24 +1190,58 @@ fun URLInputField(
                     }
                 }
                 
-                FilledIconButton(
-                    onClick = onDownloadClick,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .padding(end = 4.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (isGradientDark && isDarkTheme) {
-                            GradientDarkColors.GradientPrimaryStart
-                        } else {
-                            MaterialTheme.colorScheme.primary
+                Box {
+                    FilledIconButton(
+                        onClick = {
+                            if (isSearchQuery) {
+                                engineMenuExpanded = true
+                            } else {
+                                onDownloadClick()
+                            }
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .padding(end = 4.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = if (isGradientDark && isDarkTheme) {
+                                GradientDarkColors.GradientPrimaryStart
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            }
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (isSearchQuery) {
+                                Icons.Outlined.Search
+                            } else {
+                                Icons.Filled.FileDownload
+                            },
+                            contentDescription = stringResource(
+                                if (isSearchQuery) R.string.ytdlp_search_title
+                                else R.string.download
+                            ),
+                            tint = Color.White
+                        )
+                    }
+
+                    // Engine picker shown when searching (non-URL input).
+                    DropdownMenu(
+                        expanded = engineMenuExpanded,
+                        onDismissRequest = { engineMenuExpanded = false },
+                    ) {
+                        YtdlpSearchProvider.entries.forEach { provider ->
+                            DropdownMenuItem(
+                                text = { Text(provider.displayName) },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Search, contentDescription = null)
+                                },
+                                onClick = {
+                                    engineMenuExpanded = false
+                                    onSearch(provider)
+                                },
+                            )
                         }
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.FileDownload,
-                        contentDescription = stringResource(R.string.download),
-                        tint = Color.White
-                    )
+                    }
                 }
             }
         },

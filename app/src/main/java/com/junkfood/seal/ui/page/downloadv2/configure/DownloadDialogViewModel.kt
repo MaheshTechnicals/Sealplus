@@ -10,6 +10,7 @@ import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.PlaylistResult
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.VideoInfo
+import com.junkfood.seal.util.findURLsFromString
 import com.junkfood.seal.util.makeToast
 import com.yausername.youtubedl_android.YoutubeDL
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +63,13 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
             val preferences: DownloadUtil.DownloadPreferences,
         ) : Action
 
+        /**
+         * Starts a yt-dlp search for [searchUrl] (e.g. "ytsearch10:query" or "scsearch10:query")
+         * and shows its results in the playlist selection view, mirroring the behaviour of a
+         * non-URL input before an explicit engine was selectable.
+         */
+        data class SearchPlaylist(val searchUrl: String) : Action
+
         data class FetchFormats(
             val url: String,
             val audioOnly: Boolean,
@@ -111,6 +119,7 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                 is Action.ProceedWithURLs -> proceedWithUrls(this)
                 is Action.FetchFormats -> fetchFormat(this)
                 is Action.FetchPlaylist -> fetchPlaylist(this)
+                is Action.SearchPlaylist -> searchPlaylist(this)
                 is Action.DownloadWithPreset -> downloadWithPreset(urlList, preferences)
                 is Action.RunCommand -> runCommand(url, template, preferences)
                 Action.HideSheet -> hideDialog()
@@ -122,7 +131,6 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
     }
 
     private fun proceedWithUrls(action: Action.ProceedWithURLs) {
-        // Check network availability before proceeding
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -131,10 +139,26 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         mSheetStateFlow.update { SheetState.Configure(action.urlList) }
     }
 
+    private fun searchPlaylist(action: Action.SearchPlaylist) {
+        if (!PreferenceUtil.isNetworkAvailableForDownload()) {
+            val message = PreferenceUtil.getNetworkErrorMessage()
+            App.context.makeToast(message)
+            return
+        }
+        // Expand the sheet first so the loading/error state is visible, then fetch; on success
+        // fetchPlaylist transitions to the playlist selection view.
+        mSheetValueFlow.update { SheetValue.Expanded }
+        fetchPlaylist(
+            Action.FetchPlaylist(
+                url = action.searchUrl,
+                preferences = DownloadUtil.DownloadPreferences.createFromPreferences(),
+            )
+        )
+    }
+
     private fun fetchPlaylist(action: Action.FetchPlaylist) {
         val (url, preferences) = action
 
-        // Check network availability before fetching
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -169,13 +193,13 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                         mSheetStateFlow.update { SheetState.Error(action = action, throwable = th) }
                     }
             }
-        mSheetStateFlow.update { SheetState.Loading(taskKey = "FetchPlaylist_$url", job = job) }
+        // getPlaylistOrVideoInfo registers the yt-dlp process using the URL itself as the process ID.
+        mSheetStateFlow.update { SheetState.Loading(taskKey = url, job = job) }
     }
 
     private fun fetchFormat(action: Action.FetchFormats) {
         val (url, audioOnly, preferences) = action
 
-        // Check network availability before fetching
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -211,7 +235,6 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         urlList: List<String>,
         preferences: DownloadUtil.DownloadPreferences,
     ) {
-        // Check network availability based on user's network type restriction
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -227,7 +250,6 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         template: CommandTemplate,
         preferences: DownloadUtil.DownloadPreferences,
     ) {
-        // Check network availability for custom commands too
         if (!PreferenceUtil.isNetworkAvailableForDownload()) {
             val message = PreferenceUtil.getNetworkErrorMessage()
             App.context.makeToast(message)
@@ -257,7 +279,27 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
     private fun showDialog(action: Action.ShowSheet) {
         val urlList = action.urlList
         if (!urlList.isNullOrEmpty()) {
-            mSheetStateFlow.update { SheetState.Configure(urlList) }
+            if (urlList.size == 1) {
+                val input = urlList.first().trim()
+                val detectedUrls = findURLsFromString(input).distinct()
+
+                if (input.isNotBlank() && detectedUrls.isEmpty()) {
+                    mSheetValueFlow.update { SheetValue.Expanded }
+                    fetchPlaylist(
+                        Action.FetchPlaylist(
+                            url = "ytsearch10:$input",
+                            preferences = DownloadUtil.DownloadPreferences.createFromPreferences(),
+                        )
+                    )
+                    return
+                }
+
+                mSheetStateFlow.update {
+                    SheetState.Configure(if (detectedUrls.isNotEmpty()) detectedUrls else urlList)
+                }
+            } else {
+                mSheetStateFlow.update { SheetState.Configure(urlList) }
+            }
         } else {
             mSheetStateFlow.update { SheetState.InputUrl }
         }

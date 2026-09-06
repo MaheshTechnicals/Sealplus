@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ytdlp_search_title">yt-dlp ಮೂಲಕ ಹುಡುಕಿ</string>
+    <string name="ytdlp_search_query">ಹುಡುಕಾಟ ಪ್ರಶ್ನೆ</string>
+    <string name="ytdlp_search_service">ಹುಡುಕಾಟ ಸೇವೆ</string>
+    <string name="ytdlp_search_no_results">ಯಾವುದೇ ಫಲಿತಾಂಶ ಕಂಡುಬಂದಿಲ್ಲ</string>
+    <string name="ytdlp_search_tap_thumbnail">ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಲು ಥಂಬ್‌ನೇಲ್ ಟ್ಯಾಪ್ ಮಾಡಿ</string>
+</resources>
