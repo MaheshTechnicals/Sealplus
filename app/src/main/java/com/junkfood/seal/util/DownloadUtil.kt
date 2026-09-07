@@ -1036,11 +1036,19 @@ object DownloadUtil {
                 }
                 addOption("--parse-metadata", "%(release_year,upload_date)s:%(meta_date)s")
 
+                // Prefer the song metadata YouTube detects ("Music in this video":
+                // track / artist / album) over the raw video title and channel name. Fields
+                // fall back safely so non-music downloads keep sensible tags: the title
+                // defaults to the video title and the artist to the uploader; the "|" gives
+                // album an empty default so nothing bogus is written when there is no album.
+                addOption("--parse-metadata", "%(track,title)s:%(meta_title)s")
+                addOption("--parse-metadata", "%(artist,artists,creator,uploader)s:%(meta_artist)s")
+
                 if (playlistUrl.isNotEmpty()) {
-                    addOption("--parse-metadata", "%(album,playlist,title)s:%(meta_album)s")
+                    addOption("--parse-metadata", "%(album,playlist)s:%(meta_album)s")
                     addOption("--parse-metadata", "%(track_number,playlist_index)d:%(meta_track)s")
                 } else {
-                    addOption("--parse-metadata", "%(album,title)s:%(meta_album)s")
+                    addOption("--parse-metadata", "%(album|)s:%(meta_album)s")
                 }
             }
         }
