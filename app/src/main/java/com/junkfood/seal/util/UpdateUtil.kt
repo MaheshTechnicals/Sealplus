@@ -56,18 +56,14 @@ object UpdateUtil {
     private val requestForReleases =
         Request.Builder().url("https://api.github.com/repos/${OWNER}/${REPO}/releases").build()
 
-    private const val ytdlpNightlyBuildRelease =
-        "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest"
+    private const val ytdlpRedGifsRelease =
+        "https://api.github.com/repos/thirteenth13/ytdlnis-redgifs-yt-dlp/releases/latest"
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }
 
     suspend fun updateYtDlp(): YoutubeDL.UpdateStatus? =
         withContext(Dispatchers.IO) {
-            val channel =
-                when (YT_DLP_UPDATE_CHANNEL.getInt()) {
-                    YT_DLP_NIGHTLY -> YoutubeDL.UpdateChannel.NIGHTLY
-                    else -> YoutubeDL.UpdateChannel.STABLE
-                }
+            val channel = getYtDlpUpdateChannel(YT_DLP_UPDATE_CHANNEL.getInt())
 
             YoutubeDL.getInstance()
                 .updateYoutubeDL(appContext = context, updateChannel = channel)
@@ -80,6 +76,13 @@ object UpdateUtil {
                     val now = System.currentTimeMillis()
                     YT_DLP_UPDATE_TIME.updateLong(now)
                 }
+        }
+
+    internal fun getYtDlpUpdateChannel(preference: Int): YoutubeDL.UpdateChannel =
+        when (preference) {
+            YT_DLP_STABLE -> YoutubeDL.UpdateChannel.STABLE
+            YT_DLP_NIGHTLY -> YoutubeDL.UpdateChannel.NIGHTLY
+            else -> YoutubeDL.UpdateChannel(ytdlpRedGifsRelease)
         }
 
     private fun getLatestRelease(): Release =

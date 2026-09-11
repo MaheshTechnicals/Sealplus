@@ -26,4 +26,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew buildGenericRelease
+        run: ./gradlew testGenericDebugUnitTest assembleGenericRelease assembleGenericDebug
+
+      - name: Upload installable APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: Seal-RedGifs-${{ github.sha }}
+          path: app/build/outputs/apk/generic/debug/*.apk
+          if-no-files-found: error
