@@ -2,6 +2,7 @@ package com.junkfood.seal.ui.page.settings
 
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -147,9 +148,12 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                             // Fall back to the standard Android battery settings if that happens.
                             runCatching {
                                 launcher.launch(batteryIntent)
-                            }.onFailure {
+                            }.onFailure { oemErr ->
+                                Log.w("SettingsPage", "OEM battery intent failed, using fallback: ${oemErr.message}")
                                 runCatching {
                                     launcher.launch(BatteryUtil.buildStandardBatteryIntent(context))
+                                }.onFailure { fallbackErr ->
+                                    Log.e("SettingsPage", "Fallback battery intent also failed: ${fallbackErr.message}")
                                 }
                             }
                         }

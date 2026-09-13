@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -642,11 +643,16 @@ fun NewHomePage(
                             runCatching {
                                 val intent = BatteryUtil.buildBatterySettingsIntent(context)
                                 batteryOptimizationLauncher.launch(intent)
-                            }.onFailure {
+                            }.onFailure { oemErr ->
+                                Log.w("NewHomePage", "OEM battery intent failed, using fallback: ${oemErr.message}")
                                 runCatching {
                                     batteryOptimizationLauncher.launch(
                                         BatteryUtil.buildStandardBatteryIntent(context)
                                     )
+                                }.onFailure { fallbackErr ->
+                                    // ACTION_APPLICATION_DETAILS_SETTINGS should always be
+                                    // resolvable; if even this fails, log and do nothing.
+                                    Log.e("NewHomePage", "Fallback battery intent also failed: ${fallbackErr.message}")
                                 }
                             }
                         }

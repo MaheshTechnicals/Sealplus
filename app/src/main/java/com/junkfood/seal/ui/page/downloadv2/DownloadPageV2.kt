@@ -497,8 +497,15 @@ fun DownloadPageImplV2(
                                 filteredMap.count {
                                     !it.value.viewState.videoFormats.isNullOrEmpty()
                                 }
-                            val hasRetryableTasks = taskDownloadStateMap.values.any {
-                                it.downloadState is Canceled || it.downloadState is Error
+                            // derivedStateOf ensures SubHeader only recomposes when the
+                            // boolean value actually flips — not every ~200ms when any
+                            // task's progress/progressText changes in the snapshot map.
+                            val hasRetryableTasks by remember {
+                                derivedStateOf {
+                                    taskDownloadStateMap.values.any {
+                                        it.downloadState is Canceled || it.downloadState is Error
+                                    }
+                                }
                             }
                             SubHeader(
                                 modifier = Modifier,
