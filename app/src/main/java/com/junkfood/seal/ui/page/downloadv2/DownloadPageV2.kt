@@ -40,6 +40,9 @@ import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Replay
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
@@ -243,6 +246,15 @@ fun DownloadPageV2(
             dialogViewModel.postAction(Action.ShowSheet())
         },
         onMenuOpen = onMenuOpen,
+        onRetryAll = {
+            view.slightHapticFeedback()
+            // Restart every task that is in a Canceled or Error state
+            downloader.getTaskStateMap().entries
+                .filter { (_, state) ->
+                    state.downloadState is Canceled || state.downloadState is Error
+                }
+                .forEach { (task, _) -> downloader.restart(task) }
+        },
     ) { task, action ->
         view.slightHapticFeedback()
         when (action) {
@@ -364,6 +376,7 @@ fun DownloadPageImplV2(
     taskDownloadStateMap: SnapshotStateMap<Task, Task.State>,
     downloadCallback: () -> Unit = {},
     onMenuOpen: (() -> Unit) = {},
+    onRetryAll: (() -> Unit) = {},
     onActionPost: (Task, UiAction) -> Unit,
 ) {
     var activeFilter by remember { mutableStateOf(Filter.All) }
@@ -484,13 +497,17 @@ fun DownloadPageImplV2(
                                 filteredMap.count {
                                     !it.value.viewState.videoFormats.isNullOrEmpty()
                                 }
+                            val hasRetryableTasks = taskDownloadStateMap.values.any {
+                                it.downloadState is Canceled || it.downloadState is Error
+                            }
                             SubHeader(
                                 modifier = Modifier,
                                 videoCount = videoCount,
                                 audioCount = filteredMap.size - videoCount,
                                 isGridView = isGridView,
+                                hasRetryableTasks = hasRetryableTasks,
                                 onToggleView = { isGridView = !isGridView },
-                                onShowMenu = { context.makeToast(R.string.not_implemented_yet) },
+                                onRetryAll = onRetryAll,
                             )
                         }
                     }
@@ -712,8 +729,9 @@ fun SubHeader(
     videoCount: Int = 0,
     audioCount: Int = 0,
     isGridView: Boolean = true,
+    hasRetryableTasks: Boolean = false,
     onToggleView: () -> Unit,
-    onShowMenu: () -> Unit,
+    onRetryAll: () -> Unit = {},
 ) {
     val text = buildString {
         if (videoCount > 0) {
@@ -726,6 +744,8 @@ fun SubHeader(
             append(pluralStringResource(R.plurals.audio_count, audioCount).format(audioCount))
         }
     }
+
+    var menuExpanded by remember { mutableStateOf(false) }
 
     Row(
         modifier = modifier.padding(top = 12.dp, bottom = 12.dp),
@@ -757,17 +777,42 @@ fun SubHeader(
 
         Spacer(Modifier.width(4.dp))
 
-        FilledIconButton(
-            onClick = onShowMenu,
-            modifier = Modifier.clearAndSetSemantics {}.size(32.dp),
-            colors = IconButtonDefaults.filledIconButtonColors(containerColor = containerColor),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.MoreVert,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.secondary,
-            )
+        Box {
+            FilledIconButton(
+                onClick = { menuExpanded = true },
+                modifier = Modifier.clearAndSetSemantics {}.size(32.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = containerColor),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.MoreVert,
+                    contentDescription = stringResource(R.string.show_more_actions),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.secondary,
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+            ) {
+                DropdownMenuItem(
+                    enabled = hasRetryableTasks,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Replay,
+                            contentDescription = null,
+                            tint = if (hasRetryableTasks)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        )
+                    },
+                    text = { Text(stringResource(R.string.retry_all)) },
+                    onClick = {
+                        menuExpanded = false
+                        onRetryAll()
+                    },
+                )
+            }
         }
     }
 }

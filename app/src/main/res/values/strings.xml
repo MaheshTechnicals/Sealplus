@@ -539,6 +539,7 @@
     <string name="directory_not_supported">This directory is not supported</string>
     <string name="not_implemented_yet">Not implemented yet!</string>
     <string name="retry">Retry</string>
+    <string name="retry_all">Retry All</string>
     
     <!-- Security and Authentication strings -->
     <string name="security_settings">Security Settings</string>

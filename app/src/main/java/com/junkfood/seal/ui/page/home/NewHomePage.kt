@@ -632,8 +632,21 @@ fun NewHomePage(
                     onClick = {
                         showBatteryOptimizationDialog = false
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val intent = BatteryUtil.buildBatterySettingsIntent(context)
-                            batteryOptimizationLauncher.launch(intent)
+                            // Wrap in try-catch: on some OEM ROMs (e.g. HarmonyOS 4.x) an
+                            // intent may pass resolveActivity() but still throw a
+                            // SecurityException or ActivityNotFoundException when launched
+                            // due to a restricted permission requirement. Fall back to the
+                            // standard Android battery settings in that case.
+                            runCatching {
+                                val intent = BatteryUtil.buildBatterySettingsIntent(context)
+                                batteryOptimizationLauncher.launch(intent)
+                            }.onFailure {
+                                runCatching {
+                                    batteryOptimizationLauncher.launch(
+                                        BatteryUtil.buildStandardBatteryIntent(context)
+                                    )
+                                }
+                            }
                         }
                     }
                 ) {

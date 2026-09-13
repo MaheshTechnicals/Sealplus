@@ -138,7 +138,16 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                             icon = Icons.Rounded.EnergySavingsLeaf,
                             description = stringResource(R.string.battery_configuration_desc),
                         ) {
-                            launcher.launch(batteryIntent)
+                            // Try-catch: OEM intents can throw SecurityException at launch
+                            // even when resolveActivity() returned non-null (e.g. HarmonyOS 4.x).
+                            // Fall back to the standard Android battery settings if that happens.
+                            runCatching {
+                                launcher.launch(batteryIntent)
+                            }.onFailure {
+                                runCatching {
+                                    launcher.launch(BatteryUtil.buildStandardBatteryIntent(context))
+                                }
+                            }
                         }
                     }
                 }

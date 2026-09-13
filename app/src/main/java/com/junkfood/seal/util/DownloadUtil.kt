@@ -329,7 +329,10 @@ object DownloadUtil {
         preferences: DownloadPreferences = DownloadPreferences.createFromPreferences(),
     ): Result<VideoInfo> {
         with(preferences) {
-            val request =
+            // Build the request inside runCatching so that any exception thrown during
+            // request setup (e.g. enableCookies() when no cookie profiles are configured)
+            // is captured and returned as Result.failure instead of propagating uncaught.
+            val requestResult = runCatching {
                 YoutubeDLRequest(url).apply {
                     addOption("-o", BASENAME)
                     if (restrictFilenames) {
@@ -373,6 +376,9 @@ object DownloadUtil {
                     addOption("-R", "3")
                     addOption("--socket-timeout", "15")
                 }
+            }
+            // If request setup failed (e.g. cookie config error), propagate as Result.failure.
+            val request = requestResult.getOrElse { return Result.failure(it) }
             return getVideoInfo(request, taskKey)
         }
     }
@@ -403,7 +409,8 @@ object DownloadUtil {
             if (COOKIES.getBoolean()) {
                 val userAgentString =
                     USER_AGENT_STRING.run { if (USER_AGENT.getBoolean()) getString() else "" }
-                enableCookies(userAgentString)
+                runCatching { enableCookies(userAgentString) }
+                    .onFailure { cookieErr -> return Result.failure(cookieErr) }
             }
             // Comment pagination alone can take a while on heavily-commented videos —
             // more generous timeouts than the info-only fetch above so it isn't cut short.
@@ -585,6 +592,11 @@ object DownloadUtil {
     }
 
     private fun YoutubeDLRequest.enableCookies(userAgentString: String): YoutubeDLRequest {
+        // refreshCookiesFile() throws if cookies are not properly configured (no profiles,
+        // no cookies in browser, etc.). We let that exception propagate so the download task
+        // enters an Error state with a clear, actionable message rather than silently
+        // proceeding without cookies (which would cause a confusing yt-dlp "Sign in to
+        // confirm you're not a bot" error with no hint about what the user should do).
         refreshCookiesFile()
         return this.addOption("--cookies", context.getCookiesFile().absolutePath).apply {
             if (userAgentString.isNotEmpty()) {
@@ -596,6 +608,10 @@ object DownloadUtil {
     /**
      * Rebuilds the on-disk Netscape cookie file from the current in-memory WebView cookie store.
      * Called automatically before every download when cookies are enabled.
+     *
+     * @throws Exception with a user-friendly message if cookies are not configured or cannot
+     *   be retrieved. The message is shown directly in the download error card so the user
+     *   knows exactly what to do (go to Settings → Network → Cookies).
      */
     fun refreshCookiesFile() {
         context.getCookiesFile().let { cookiesFile ->
@@ -609,6 +625,13 @@ object DownloadUtil {
                 .onFailure { err ->
                     Log.w(TAG, "Failed to refresh cookies file: ${err.message}")
                     if (cookiesFile.exists()) cookiesFile.delete()
+                    // Re-throw with a clear, user-facing message so the download task's
+                    // error card shows actionable instructions instead of a raw internal error.
+                    throw Exception(
+                        "Cookies setup failed: ${err.message}\n\n" +
+                        "Go to Settings → Network → Cookies to add a cookie profile " +
+                        "and log in to the site in the in-app browser."
+                    )
                 }
         }
     }
@@ -1192,14 +1215,17 @@ object DownloadUtil {
             // Index 0 = start time ms, index 1 = end time ms
             val downloadTiming = LongArray(2)
 
-            request
-                .apply {
+            request.apply {
                     addOption("--no-mtime")
                     addOption("--continue")
                     enableRetryOptions()
                     //                addOption("-v")
                     if (cookies) {
-                        enableCookies(userAgentString)
+                        // runCatching inside apply (which is inline) lets us use return
+                        // to surface cookie-setup failures as Result.failure — the non-local
+                        // return is valid here because apply is an inline function.
+                        runCatching { enableCookies(userAgentString) }
+                            .onFailure { cookieErr -> return Result.failure(cookieErr) }
                     }
                     if (restrictFilenames) {
                         addOption("--restrict-filenames")
@@ -1449,7 +1475,8 @@ object DownloadUtil {
                             .absolutePath,
                     )
                     if (cookies) {
-                        enableCookies(userAgentString)
+                        runCatching { enableCookies(userAgentString) }
+                            .onFailure { cookieErr -> return Result.failure(cookieErr) }
                     }
                     if (noCheckCertificate) {
                         addOption("--no-check-certificate")
@@ -1476,7 +1503,7 @@ object DownloadUtil {
             App.applicationScope.launch(Dispatchers.Main) {
                 context.makeToast(R.string.start_execute)
             }
-            val request =
+            val request = try {
                 YoutubeDLRequest(urlList).apply {
                     commandDirectory.takeIf { it.isNotEmpty() }?.let { addOption("-P", it) }
                     addOption("--newline")
@@ -1501,6 +1528,13 @@ object DownloadUtil {
                         addOption("--no-check-certificate")
                     }
                 }
+            } catch (e: Exception) {
+                // Cookie setup or other config error — report and abort.
+                withContext(Dispatchers.Main) {
+                    Downloader.onTaskError(e.message ?: "Setup error", template, url)
+                }
+                return@run
+            }
 
             onProcessStarted()
             withContext(Dispatchers.Main) { onTaskStarted(template, url) }

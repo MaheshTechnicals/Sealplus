@@ -83,7 +83,7 @@ object BatteryUtil {
     }
 
     @SuppressLint("BatteryLife")
-    private fun buildStandardBatteryIntent(context: Context, pkg: String): Intent {
+    fun buildStandardBatteryIntent(context: Context, pkg: String = context.packageName): Intent {
         val ignoreIntent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
             data = Uri.parse("package:$pkg")
         }
@@ -212,13 +212,15 @@ object BatteryUtil {
     }
 
     private fun tryHuaweiBatteryIntent(context: Context, pkg: String): Intent? {
-        val huaweiMgr = Intent().apply {
-            setClassName(
-                "com.huawei.systemmanager",
-                "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"
-            )
-        }
-        if (isIntentResolvable(context, huaweiMgr)) return huaweiMgr
+        // NOTE: StartupNormalAppListActivity is intentionally skipped here.
+        // On HarmonyOS 4.x (and some Huawei EMUI variants), PackageManager.resolveActivity()
+        // reports this activity as available, but actually launching it throws:
+        //   SecurityException: Permission Denial: requires
+        //   com.huawei.permission.external_app_settings.USE_COMPONENT
+        // which is a restricted permission not granted to third-party apps.
+        // Attempting to start it crashes the app — so we skip it and fall through
+        // to ProtectActivity (which does not require a special permission) or the
+        // standard Android battery settings fallback.
 
         val huaweiProtection = Intent().apply {
             setClassName(
