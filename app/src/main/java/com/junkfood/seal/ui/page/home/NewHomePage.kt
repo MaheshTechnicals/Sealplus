@@ -100,6 +100,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -945,44 +946,79 @@ fun NewHomePage(
                     key = { it.id }
                 ) { downloadInfo ->
                     var showRecentDeleteDialog by remember { mutableStateOf(false) }
+
+                    // rememberUpdatedState ensures the lambdas below always call the LATEST
+                    // version of these closures without creating a new lambda instance on every
+                    // recomposition. This is critical: during an active download, taskStateMap
+                    // updates every ~200ms which triggers recomposition of this item. Without
+                    // rememberUpdatedState, each recomposition creates new lambda objects →
+                    // RecentDownloadCard sees its parameters as changed → fully recomposes →
+                    // the open DropdownMenu loses its composition state and dismisses.
+                    // With rememberUpdatedState, the lambda references passed to RecentDownloadCard
+                    // are stable across recompositions, so the card only recomposes when
+                    // downloadInfo itself actually changes.
+                    val currentDownloadInfo by rememberUpdatedState(downloadInfo)
+                    val currentList by rememberUpdatedState(recentFiveDownloadsFiltered)
+                    val currentLocalHiddenIds by rememberUpdatedState(localHiddenIds)
+                    
+                    val stableOnClick: () -> Unit = remember {
+                        {
+                            FileUtil.openFile(currentDownloadInfo.videoPath) {
+                                context.makeToast(R.string.file_unavailable)
+                            }
+                            Unit
+                        }
+                    }
+                    val stableOnShare: () -> Unit = remember {
+                        {
+                            view.slightHapticFeedback()
+                            val shareTitle = context.getString(R.string.share)
+                            FileUtil.createIntentForSharingFile(currentDownloadInfo.videoPath)?.let {
+                                context.startActivity(Intent.createChooser(it, shareTitle))
+                            }
+                            Unit
+                        }
+                    }
+                    val stableOnCopyLink: () -> Unit = remember {
+                        {
+                            view.slightHapticFeedback()
+                            clipboardManager.setText(AnnotatedString(currentDownloadInfo.videoUrl))
+                            context.makeToast(R.string.link_copied)
+                        }
+                    }
+                    val stableOnShowDetails: () -> Unit = remember {
+                        {
+                            view.slightHapticFeedback()
+                            val idx = currentList.indexOfFirst { it.id == currentDownloadInfo.id }
+                            detailsDialogIndex = if (idx >= 0) idx else 0
+                        }
+                    }
+                    val stableOnDelete: () -> Unit = remember {
+                        {
+                            view.slightHapticFeedback()
+                            showRecentDeleteDialog = true
+                        }
+                    }
+                    val stableOnHide: () -> Unit = remember {
+                        {
+                            view.slightHapticFeedback()
+                            localHiddenIds = currentLocalHiddenIds + currentDownloadInfo.id
+                            scope.launch(Dispatchers.IO) {
+                                DatabaseUtil.hideItem(currentDownloadInfo)
+                            }
+                            Unit
+                        }
+                    }
                     
                     RecentDownloadCard(
                         downloadInfo = downloadInfo,
                         refreshKey = lifecycleRefreshTrigger,
-                        onClick = {
-                            FileUtil.openFile(downloadInfo.videoPath) {
-                                context.makeToast(R.string.file_unavailable)
-                            }
-                        },
-                        onShare = {
-                            view.slightHapticFeedback()
-                            val shareTitle = context.getString(R.string.share)
-                            FileUtil.createIntentForSharingFile(downloadInfo.videoPath)?.let {
-                                context.startActivity(Intent.createChooser(it, shareTitle))
-                            }
-                        },
-                        onCopyLink = {
-                            view.slightHapticFeedback()
-                            clipboardManager.setText(AnnotatedString(downloadInfo.videoUrl))
-                            context.makeToast(R.string.link_copied)
-                        },
-                        onShowDetails = {
-                            view.slightHapticFeedback()
-                            val idx = recentFiveDownloadsFiltered.indexOfFirst { it.id == downloadInfo.id }
-                            detailsDialogIndex = if (idx >= 0) idx else 0
-                        },
-                        onDelete = {
-                            view.slightHapticFeedback()
-                            showRecentDeleteDialog = true
-                        },
-                        onHide = {
-                            view.slightHapticFeedback()
-                            // Optimistically remove from UI immediately, then persist to DB
-                            localHiddenIds = localHiddenIds + downloadInfo.id
-                            scope.launch(Dispatchers.IO) {
-                                DatabaseUtil.hideItem(downloadInfo)
-                            }
-                        }
+                        onClick = stableOnClick,
+                        onShare = stableOnShare,
+                        onCopyLink = stableOnCopyLink,
+                        onShowDetails = stableOnShowDetails,
+                        onDelete = stableOnDelete,
+                        onHide = stableOnHide,
                     )
                     
                     if (showRecentDeleteDialog) {

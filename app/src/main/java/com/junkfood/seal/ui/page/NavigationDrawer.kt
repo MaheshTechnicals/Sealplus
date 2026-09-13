@@ -341,9 +341,17 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.home)) },
                     icon = { Icon(Icons.Filled.Download, null, tint = ThemedIconColors.primary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.HOME) }
+                        // Use a single coroutine: close the drawer first (suspend), then navigate.
+                        // invokeOnCompletion was fragile — it fires even on cancellation (e.g. when
+                        // the composition recomposes during an active download), causing navigation
+                        // to be skipped or called in an inconsistent state. Sequential suspend
+                        // calls inside a single launch guarantee the drawer is fully closed before
+                        // the navigation call runs, and the navigation is never triggered if the
+                        // coroutine is cancelled mid-way.
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.HOME)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -352,9 +360,10 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.downloads_history)) },
                     icon = { Icon(Icons.Outlined.Subscriptions, null, tint = ThemedIconColors.secondary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.DOWNLOADS) }
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.DOWNLOADS)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -376,9 +385,10 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.custom_command)) },
                     icon = { Icon(Icons.Outlined.Terminal, null, tint = ThemedIconColors.tertiary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.TASK_LIST) }
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.TASK_LIST)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -387,9 +397,10 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.more_tools)) },
                     icon = { Icon(Icons.Outlined.Build, null, tint = ThemedIconColors.primary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.MORE_TOOLS) }
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.MORE_TOOLS)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -410,9 +421,10 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.settings)) },
                     icon = { Icon(Icons.Outlined.Settings, null, tint = ThemedIconColors.primary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.SETTINGS) }
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.SETTINGS)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -421,9 +433,10 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.trouble_shooting)) },
                     icon = { Icon(Icons.Rounded.BugReport, null, tint = ThemedIconColors.secondary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.TROUBLESHOOTING) }
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.TROUBLESHOOTING)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -432,9 +445,10 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.sponsor)) },
                     icon = { Icon(Icons.Outlined.VolunteerActivism, null, tint = ThemedIconColors.tertiary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.DONATE) }
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.DONATE)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -443,9 +457,10 @@ fun NavigationDrawerSheetContent(
                     label = { Text(stringResource(R.string.about)) },
                     icon = { Icon(Icons.Rounded.Info, null, tint = ThemedIconColors.primary) },
                     onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.ABOUT) }
+                        scope.launch {
+                            onDismissRequest()
+                            onNavigateToRoute(Route.ABOUT)
+                        }
                     },
                     selected = false,
                     modifier = Modifier.padding(vertical = 2.dp)
