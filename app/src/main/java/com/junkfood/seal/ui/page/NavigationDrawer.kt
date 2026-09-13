@@ -186,8 +186,13 @@ fun NavigationDrawer(
                 onUnlocked = {
                     hiddenContentAuthDone = true
                     showHiddenContentAuthScreen = false
-                    scope.launch { onDismissRequest() }
-                        .invokeOnCompletion { onNavigateToRoute(Route.HIDDEN_CONTENT) }
+                    // Same sequential pattern used in NavigationDrawerSheetContent:
+                    // close the drawer first (suspend), then navigate. invokeOnCompletion
+                    // was firing even on cancellation (e.g. screen rotation mid-auth).
+                    scope.launch {
+                        onDismissRequest()
+                        onNavigateToRoute(Route.HIDDEN_CONTENT)
+                    }
                 },
                 useBiometric = AuthenticationManager.useBiometric()
             )

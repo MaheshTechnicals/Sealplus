@@ -1041,15 +1041,20 @@ fun NewHomePage(
                             confirmButton = {
                                 ConfirmButton {
                                     showRecentDeleteDialog = false
-                                    localHiddenIds = localHiddenIds + downloadInfo.id
+                                    // Use currentDownloadInfo and currentLocalHiddenIds
+                                    // (from rememberUpdatedState) so we always act on the
+                                    // latest item data — not a stale snapshot captured
+                                    // when this lambda was first composed.
+                                    val info = currentDownloadInfo
+                                    localHiddenIds = currentLocalHiddenIds + info.id
                                     scope.launch(Dispatchers.IO) {
                                         val baseName =
-                                            File(downloadInfo.videoPath)
+                                            File(info.videoPath)
                                                 .nameWithoutExtension
-                                                .ifEmpty { downloadInfo.videoTitle }
-                                        FileUtil.deleteTempFilesForTask(baseName, downloadInfo.videoId)
+                                                .ifEmpty { info.videoTitle }
+                                        FileUtil.deleteTempFilesForTask(baseName, info.videoId)
                                         DatabaseUtil.deleteInfoList(
-                                            infoList = listOf(downloadInfo),
+                                            infoList = listOf(info),
                                             deleteFile = false
                                         )
                                     }
