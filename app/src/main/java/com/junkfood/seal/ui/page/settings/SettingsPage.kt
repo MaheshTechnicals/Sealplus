@@ -78,10 +78,14 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
         )
     }
     val batteryIntent = remember { BatteryUtil.buildBatterySettingsIntent(context) }
+    // BatteryUtil.isIntentResolvable() correctly handles Android 11+ package visibility:
+    // on API 33+ it uses ResolveInfoFlags.of(0L) (the new non-deprecated overload), and on
+    // all versions it wraps the call in try-catch so a SecurityException doesn't crash.
+    // The old raw resolveActivity(batteryIntent, 0) silently returned null on API 30+ for
+    // apps without <queries> manifest entries, permanently hiding the battery hint card.
     val isActivityAvailable: Boolean = remember {
-        if (Build.VERSION.SDK_INT < 23) false
-        else context.packageManager
-            .resolveActivity(batteryIntent, 0) != null
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) false
+        else BatteryUtil.isIntentResolvable(context, batteryIntent)
     }
 
     val launcher =

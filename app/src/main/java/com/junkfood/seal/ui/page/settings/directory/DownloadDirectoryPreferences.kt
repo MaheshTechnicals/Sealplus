@@ -198,7 +198,15 @@ fun DownloadDirectoryPreferences(onNavigateBack: () -> Unit) {
         ) {
             it?.let { uri ->
                 App.updateDownloadDir(uri, editingDirectory)
-                if (editingDirectory != Directory.SDCARD) {
+                // Handle the SD card case outside the getRealPath() call since SD card
+                // URIs are content:// URIs that must be stored as-is, not converted to
+                // a file-system path. The old code had Directory.SDCARD inside an
+                // `if (editingDirectory != Directory.SDCARD)` guard — making that branch
+                // unreachable dead code. Fixed: SD card URI update is now handled first,
+                // before the path-based branches.
+                if (editingDirectory == Directory.SDCARD) {
+                    sdcardUri = uri.toString()
+                } else {
                     val path = FileUtil.getRealPath(uri)
                     when (editingDirectory) {
                         Directory.AUDIO -> {
@@ -209,13 +217,11 @@ fun DownloadDirectoryPreferences(onNavigateBack: () -> Unit) {
                             videoDirectoryText = path
                         }
 
-                        Directory.SDCARD -> {
-                            sdcardUri = uri.toString()
-                        }
-
                         Directory.CUSTOM_COMMAND -> {
                             customCommandDirectory = path
                         }
+
+                        else -> { /* SDCARD handled above */ }
                     }
                 }
             }

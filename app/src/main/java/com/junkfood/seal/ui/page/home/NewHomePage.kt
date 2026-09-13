@@ -188,6 +188,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -2388,26 +2389,26 @@ private fun RecentDownloadDetailsContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Extract resolution from video file
-                    val resolution = remember(downloadInfo.videoPath) {
-                        try {
-                            if (file.exists()) {
-                                val retriever = android.media.MediaMetadataRetriever()
-                                retriever.setDataSource(downloadInfo.videoPath)
-                                val width = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
-                                val height = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
-                                retriever.release()
-                                
-                                if (width != null && height != null) {
-                                    "${width}x${height}"
-                                } else {
-                                    "N/A"
-                                }
-                            } else {
+                    // Extract resolution from video file.
+                    // Uses produceState + Dispatchers.IO so the blocking MediaMetadataRetriever
+                    // call never runs on the main thread (avoids ANR / frame drops on large
+                    // files or slow storage). try/finally guarantees release() even if
+                    // setDataSource() throws (minSdk=24, AutoCloseable added in API 29).
+                    val resolution by produceState(initialValue = "N/A", key1 = downloadInfo.videoPath) {
+                        value = withContext(Dispatchers.IO) {
+                            val retriever = android.media.MediaMetadataRetriever()
+                            try {
+                                if (file.exists()) {
+                                    retriever.setDataSource(downloadInfo.videoPath)
+                                    val width = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                                    val height = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                                    if (width != null && height != null) "${width}x${height}" else "N/A"
+                                } else "N/A"
+                            } catch (e: Exception) {
                                 "N/A"
+                            } finally {
+                                retriever.release()
                             }
-                        } catch (e: Exception) {
-                            "N/A"
                         }
                     }
                     

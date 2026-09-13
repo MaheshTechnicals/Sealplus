@@ -247,7 +247,7 @@ object BatteryUtil {
         return null
     }
 
-    private fun isIntentResolvable(context: Context, intent: Intent): Boolean {
+    fun isIntentResolvable(context: Context, intent: Intent): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.packageManager.resolveActivity(
