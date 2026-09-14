@@ -280,22 +280,41 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                     val preState = state.downloadState
                     val downloadState =
                         when (preState) {
-                            is FetchingInfo,
-                            Idle -> {
+                            is FetchingInfo -> {
+                                // FetchingInfo had a live coroutine job that died with the
+                                // process — the job reference is @Transient and not restored,
+                                // so this state is invalid. Mark as Canceled so the user can
+                                // tap Retry to re-fetch info.
                                 Canceled(action = FetchInfo)
                             }
+                            Idle -> {
+                                // Idle = "queued, waiting for a download slot". It has NO
+                                // associated coroutine job — it is pure data. Restoring it
+                                // as Idle lets doYourWork() automatically pick it up and
+                                // continue the queue without requiring any user interaction,
+                                // matching the expected "reopen and continue" behavior.
+                                // Previously, Idle was co-handled with FetchingInfo in the
+                                // same branch and incorrectly converted to Canceled, which
+                                // caused queued tasks to show as Failed after force-stop.
+                                Idle
+                            }
                             is Running -> {
+                                // Running had a live download coroutine — the process died
+                                // mid-download. Restore as Paused so the user can resume.
                                 Paused(action = Download, progress = preState.progress)
                             }
 
                             ReadyWithInfo -> {
+                                // Info was fetched but download had not started yet.
+                                // Restore as Paused so user can resume.
                                 Paused(action = Download, progress = null)
                             }
                             is Paused -> {
-                                // Keep paused state on restart
+                                // Keep paused state on restart — user explicitly paused this.
                                 preState
                             }
                             else -> {
+                                // Error, Canceled, etc. — keep as-is.
                                 preState
                             }
                         }

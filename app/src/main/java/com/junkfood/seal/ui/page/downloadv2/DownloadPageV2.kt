@@ -41,8 +41,6 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Replay
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
@@ -491,15 +489,20 @@ fun DownloadPageImplV2(
                             PaddingValues(start = 20.dp, end = 20.dp, bottom = 80.dp),
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
-                    if (filteredMap.isNotEmpty()) {
+                    // Show SubHeader whenever the FULL task map is non-empty — not just
+                    // when filteredMap is non-empty. When a filter like "Downloading" is
+                    // active and all tasks are in Canceled/Error state (e.g. after force-
+                    // stop+reopen), filteredMap becomes empty and SubHeader was hidden,
+                    // making "Retry All" completely invisible. Using the full map ensures
+                    // the SubHeader (with Retry All) is always reachable.
+                    if (taskDownloadStateMap.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             val videoCount =
                                 filteredMap.count {
                                     !it.value.viewState.videoFormats.isNullOrEmpty()
                                 }
-                            // derivedStateOf ensures SubHeader only recomposes when the
-                            // boolean value actually flips — not every ~200ms when any
-                            // task's progress/progressText changes in the snapshot map.
+                            // derivedStateOf: only recompose SubHeader when the boolean
+                            // actually flips, not on every 200ms progress tick.
                             val hasRetryableTasks by remember {
                                 derivedStateOf {
                                     taskDownloadStateMap.values.any {
@@ -752,8 +755,6 @@ fun SubHeader(
         }
     }
 
-    var menuExpanded by remember { mutableStateOf(false) }
-
     Row(
         modifier = modifier.padding(top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -768,6 +769,26 @@ fun SubHeader(
 
         Spacer(modifier = Modifier.weight(1f))
 
+        // Retry All — shown as a direct icon button when there are retryable tasks.
+        // Previously this was buried inside a DropdownMenu (two taps to reach).
+        // Now it is always visible as a first-class button so users can see at a
+        // glance that failed/canceled tasks can be restarted, and act immediately.
+        if (hasRetryableTasks) {
+            FilledIconButton(
+                onClick = onRetryAll,
+                modifier = Modifier.clearAndSetSemantics {}.size(32.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = containerColor),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Replay,
+                    contentDescription = stringResource(R.string.retry_all),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Spacer(Modifier.width(4.dp))
+        }
+
         FilledIconButton(
             onClick = onToggleView,
             modifier = Modifier.clearAndSetSemantics {}.size(32.dp),
@@ -780,46 +801,6 @@ fun SubHeader(
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.secondary,
             )
-        }
-
-        Spacer(Modifier.width(4.dp))
-
-        Box {
-            FilledIconButton(
-                onClick = { menuExpanded = true },
-                modifier = Modifier.clearAndSetSemantics {}.size(32.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(containerColor = containerColor),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.MoreVert,
-                    contentDescription = stringResource(R.string.show_more_actions),
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.secondary,
-                )
-            }
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
-            ) {
-                DropdownMenuItem(
-                    enabled = hasRetryableTasks,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Replay,
-                            contentDescription = null,
-                            tint = if (hasRetryableTasks)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                        )
-                    },
-                    text = { Text(stringResource(R.string.retry_all)) },
-                    onClick = {
-                        menuExpanded = false
-                        onRetryAll()
-                    },
-                )
-            }
         }
     }
 }
