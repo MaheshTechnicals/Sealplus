@@ -101,10 +101,24 @@ fun PlaylistSelectionPage(
             skipHalfExpanded = true,
         )
 
-    LaunchedEffect(state) { sheetState.show() }
+    // Use Unit as key (always runs once when this composable first enters composition)
+    // instead of `state`. Using `state` (a data class) as the key means LaunchedEffect
+    // does NOT relaunch if the user fetches the same playlist URL a second time — Kotlin
+    // data class equality makes the new and old PlaylistSelection objects compare equal,
+    // so Compose skips the re-run and sheetState.show() is never called, leaving the
+    // sheet permanently hidden. Using Unit guarantees the sheet always opens when this
+    // composable is first composed (which happens exactly when selectionState transitions
+    // from Idle → PlaylistSelection).
+    LaunchedEffect(Unit) { sheetState.show() }
     val scope = rememberCoroutineScope()
     val onBack: () -> Unit = {
-        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+        // Sequential suspend pattern: hide first, then dismiss.
+        // invokeOnCompletion fires even on cancellation (e.g. composition restarts),
+        // which could call onDismissRequest() at the wrong time.
+        scope.launch {
+            sheetState.hide()
+            onDismissRequest()
+        }
     }
 
     BackHandler(onBack = onBack)

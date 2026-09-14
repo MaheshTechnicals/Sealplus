@@ -149,6 +149,14 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                     )
                     .onSuccess { info ->
                         withContext(Dispatchers.Main) {
+                            // Reset sheetState from Loading to InputUrl BEFORE calling
+                            // hideDialog(). Without this, hideDialog() sees sheetState is
+                            // still Loading and calls cancel() → state.job.cancel() on the
+                            // currently-executing coroutine (self-cancellation) and
+                            // YoutubeDL.destroyProcessById() on the already-finished process.
+                            // Resetting to InputUrl first makes hideDialog()'s cancel()
+                            // guard (is SheetState.Loading) false, so cancel() is skipped.
+                            mSheetStateFlow.update { SheetState.InputUrl }
                             when (info) {
                                 is PlaylistResult -> {
                                     mSelectionStateFlow.update {
@@ -166,7 +174,12 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                         }
                     }
                     .onFailure { th ->
-                        mSheetStateFlow.update { SheetState.Error(action = action, throwable = th) }
+                        // Must dispatch to Main — state updates observed by Compose must
+                        // come from the Main thread. fetchFormat() already does this correctly
+                        // at line 201; fetchPlaylist() was missing the withContext wrapper.
+                        withContext(Dispatchers.Main) {
+                            mSheetStateFlow.update { SheetState.Error(action = action, throwable = th) }
+                        }
                     }
             }
         mSheetStateFlow.update { SheetState.Loading(taskKey = "FetchPlaylist_$url", job = job) }

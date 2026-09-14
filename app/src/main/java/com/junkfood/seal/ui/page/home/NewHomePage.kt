@@ -217,12 +217,19 @@ fun NewHomePage(
     var urlText by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Pre-fill URL from share intent
+    // Pre-fill URL from share intent and auto-open the download dialog.
+    // The original code only filled the text field without opening the dialog, causing the
+    // "nothing appears" bug when a URL was shared to the app — the URL silently appeared in
+    // the input box with no feedback and no dialog. Match the behavior of DownloadPageV2
+    // which calls postAction(Action.ShowSheet(...)) on share.
     val sharedUrl by dialogViewModel.sharedUrlFlow.collectAsState()
     LaunchedEffect(sharedUrl) {
         if (sharedUrl.isNotBlank()) {
             urlText = sharedUrl
             dialogViewModel.consumeSharedUrl()
+            // Auto-open the dialog with the shared URL so the user immediately sees it,
+            // rather than having to find and tap the text field.
+            dialogViewModel.postAction(Action.ShowSheet(listOf(sharedUrl)))
         }
     }
     
