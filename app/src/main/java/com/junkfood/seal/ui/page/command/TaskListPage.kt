@@ -158,7 +158,7 @@ fun TaskListPage(onNavigateBack: () -> Unit, onNavigateToDetail: (Int) -> Unit) 
         }
     }
     val onDismissRequest: () -> Unit = {
-        scope.launch { sheetState.hide() }.invokeOnCompletion { showBottomSheet = false }
+        scope.launch { sheetState.hide(); showBottomSheet = false }
     }
 
     BackHandler(showBottomSheet) { onDismissRequest() }

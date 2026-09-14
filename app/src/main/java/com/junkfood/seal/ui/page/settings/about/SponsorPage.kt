@@ -268,7 +268,7 @@ fun GitHubSponsorsPage(onNavigateBack: () -> Unit) {
             }
             if (showSheet) {
                 SponsorDialog(sponsorShip = viewingSponsorShip, sheetState = sheetState) {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion { showSheet = false }
+                    scope.launch { sheetState.hide(); showSheet = false }
                 }
             }
         },

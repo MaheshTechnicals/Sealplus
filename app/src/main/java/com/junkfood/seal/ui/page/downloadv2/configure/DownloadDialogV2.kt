@@ -335,7 +335,10 @@ private fun ErrorPage(modifier: Modifier = Modifier, state: Error, onActionPost:
                 is Action.FetchFormats -> url
                 is Action.FetchPlaylist -> url
                 else -> {
-                    throw IllegalArgumentException()
+                    // Gracefully handle any non-fetch action that ends up in Error state —
+                    // show an empty URL rather than crashing. Log for diagnostics.
+                    android.util.Log.w("DownloadDialogV2", "ErrorPage shown for unexpected action type: ${this::class.simpleName}")
+                    ""
                 }
             }
         }
@@ -518,14 +521,14 @@ fun FormatPage(
 
     LaunchedEffect(state) { sheetState.show() }
     val scope = rememberCoroutineScope()
-    BackHandler { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() } }
+    BackHandler { scope.launch { sheetState.hide(); onDismissRequest() } }
 
     SealModalBottomSheetM2Variant(sheetState = sheetState, sheetGesturesEnabled = false) {
         FormatPage(
             modifier = modifier,
             videoInfo = state.info,
             onNavigateBack = {
-                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+                scope.launch { sheetState.hide(); onDismissRequest() }
             },
         )
     }

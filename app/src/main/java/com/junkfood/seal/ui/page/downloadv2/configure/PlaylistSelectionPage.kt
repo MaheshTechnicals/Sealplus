@@ -135,9 +135,7 @@ fun PlaylistSelectionPage(
     }
 
     val onDismissConfigurationSheet: () -> Unit = {
-        scope
-            .launch { configureSheetState.hide() }
-            .invokeOnCompletion { showConfigurationSheet = false }
+        scope.launch { configureSheetState.hide(); showConfigurationSheet = false }
     }
 
     if (showConfigurationSheet) {
@@ -287,7 +285,11 @@ fun PlaylistSelectionPageImpl(
                                         result.originalUrl ?: result.webpageUrl.toString(),
                                     indexList = selectedItems,
                                     playlistResult = result,
-                                    preferences = DownloadUtil.DownloadPreferences.EMPTY,
+                                    // Use createFromPreferences() instead of EMPTY so the user's
+                                    // global settings (audio format, video quality, cookies, etc.)
+                                    // are applied to playlist downloads started directly without
+                                    // going through the per-item configure sheet.
+                                    preferences = DownloadUtil.DownloadPreferences.createFromPreferences(),
                                 )
                             )
                         },

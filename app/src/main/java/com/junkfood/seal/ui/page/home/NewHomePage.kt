@@ -855,8 +855,10 @@ fun NewHomePage(
                     key = { (task, _) -> task.id }
                 ) { (task, state) ->
                     var showDetailsDialog by remember { mutableStateOf(false) }
-                    var detailsTask by remember { mutableStateOf<Task?>(null) }
-                    var detailsState by remember { mutableStateOf<Task.State?>(null) }
+                    // Combine task+state into a single holder to avoid a TOCTOU window where
+                    // two separate state writes could cause a recomposition between them —
+                    // detailsTask set but detailsState still null → NPE in DownloadDetailsDialog.
+                    var detailsInfo by remember { mutableStateOf<Pair<Task, Task.State>?>(null) }
                     var showActiveDeleteDialog by remember { mutableStateOf(false) }
                     
                     ActiveDownloadCard(
@@ -881,8 +883,7 @@ fun NewHomePage(
                                     context.makeToast(R.string.link_copied)
                                 }
                                 UiAction.ShowDetails -> {
-                                    detailsTask = task
-                                    detailsState = state
+                                    detailsInfo = task to state
                                     showDetailsDialog = true
                                 }
                                 is UiAction.OpenFile -> {
@@ -908,10 +909,11 @@ fun NewHomePage(
                         }
                     )
                     
-                    if (showDetailsDialog && detailsTask != null && detailsState != null) {
+                    val detailsSnapshot = detailsInfo
+                    if (showDetailsDialog && detailsSnapshot != null) {
                         DownloadDetailsDialog(
-                            task = detailsTask!!,
-                            state = detailsState!!,
+                            task = detailsSnapshot.first,
+                            state = detailsSnapshot.second,
                             onDismiss = { showDetailsDialog = false }
                         )
                     }
@@ -1121,15 +1123,18 @@ fun NewHomePage(
         if (sheetValue == DownloadDialogViewModel.SheetValue.Expanded) {
             showDialog = true
         } else {
-            launch { sheetState.hide() }.invokeOnCompletion { showDialog = false }
+            launch { sheetState.hide(); showDialog = false }
         }
     }
     
+    // Config() reads MMKV preferences — memoize it to avoid 5 MMKV reads/sec during
+    // active downloads when the 200ms progress throttle triggers recompositions.
+    val dialogConfig = remember { Config() }
     if (showDialog) {
         DownloadDialog(
             state = dialogState,
             sheetState = sheetState,
-            config = Config(),
+            config = dialogConfig,
             preferences = preferences,
             onPreferencesUpdate = { preferences = it },
             onActionPost = { dialogViewModel.postAction(it) },

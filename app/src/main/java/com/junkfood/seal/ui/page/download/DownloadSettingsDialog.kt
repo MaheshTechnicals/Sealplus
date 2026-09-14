@@ -514,7 +514,7 @@ fun DownloadSettingDialog(
             } else {
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                 val onSheetDismiss: () -> Unit = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+                    scope.launch { sheetState.hide(); onDismissRequest() }
                 }
 
                 SealModalBottomSheet(

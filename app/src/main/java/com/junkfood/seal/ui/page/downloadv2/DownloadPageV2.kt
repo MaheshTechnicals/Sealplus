@@ -320,7 +320,7 @@ fun DownloadPageV2(
         if (sheetValue == DownloadDialogViewModel.SheetValue.Expanded) {
             showDialog = true
         } else {
-            launch { sheetState.hide() }.invokeOnCompletion { showDialog = false }
+            launch { sheetState.hide(); showDialog = false }
         }
     }
 
@@ -588,7 +588,7 @@ fun DownloadPageImplV2(
             sheetState = sheetState,
             contentPadding = PaddingValues(),
             onDismissRequest = {
-                scope.launch { sheetState.hide() }.invokeOnCompletion { selectedTask = null }
+                scope.launch { sheetState.hide(); selectedTask = null }
             },
         ) {
             SheetContent(
@@ -596,7 +596,7 @@ fun DownloadPageImplV2(
                 downloadState = downloadState,
                 viewState = viewState,
                 onDismissRequest = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion { selectedTask = null }
+                    scope.launch { sheetState.hide(); selectedTask = null }
                 },
                 onActionPost = onActionPost,
             )

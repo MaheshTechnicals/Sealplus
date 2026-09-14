@@ -527,7 +527,7 @@ fun VideoListPage(viewModel: VideoListViewModel = koinViewModel(), onNavigateBac
             info = currentVideoInfo,
             isFileAvailable = isFileAvailable,
             onDismissRequest = {
-                scope.launch { sheetState.hide() }.invokeOnCompletion { showBottomSheet = false }
+                scope.launch { sheetState.hide(); showBottomSheet = false }
             },
             onDelete = { showRemoveDialog = true },
         )

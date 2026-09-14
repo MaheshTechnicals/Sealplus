@@ -388,9 +388,10 @@ fun CookieProfilePage(
     if (showClearCookieDialog) {
         ClearCookiesDialog(onDismissRequest = { showClearCookieDialog = false }) {
             view.slightHapticFeedback()
-            scope
-                .launch(Dispatchers.IO) { CookieManager.getInstance().removeAllCookies(null) }
-                .invokeOnCompletion { cookieRefreshKey++ }
+            scope.launch(Dispatchers.IO) {
+                CookieManager.getInstance().removeAllCookies(null)
+                withContext(Dispatchers.Main) { cookieRefreshKey++ }
+            }
         }
     }
 }

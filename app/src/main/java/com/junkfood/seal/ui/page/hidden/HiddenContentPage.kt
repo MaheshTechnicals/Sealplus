@@ -93,7 +93,7 @@ fun HiddenContentPage(
     var currentInfo by remember { mutableStateOf(DownloadedVideoInfo()) }
 
     BackHandler(sheetState.targetValue == ModalBottomSheetValue.Expanded) {
-        scope.launch { sheetState.hide() }.invokeOnCompletion { showBottomSheet = false }
+        scope.launch { sheetState.hide(); showBottomSheet = false }
     }
 
     Scaffold(
@@ -187,11 +187,11 @@ fun HiddenContentPage(
                     ) {
                         OutlinedButton(
                             onClick = {
-                                scope.launch { sheetState.hide() }
-                                    .invokeOnCompletion {
-                                        showBottomSheet = false
-                                        showRemoveDialog = true
-                                    }
+                                scope.launch {
+                                    sheetState.hide()
+                                    showBottomSheet = false
+                                    showRemoveDialog = true
+                                }
                             },
                             modifier = Modifier
                                 .height(52.dp)
@@ -217,11 +217,11 @@ fun HiddenContentPage(
                         Button(
                             onClick = {
                                 val info = currentInfo
-                                scope.launch { sheetState.hide() }
-                                    .invokeOnCompletion {
-                                        showBottomSheet = false
-                                        viewModel.unhideItem(info)
-                                    }
+                                scope.launch {
+                                    sheetState.hide()
+                                    showBottomSheet = false
+                                    viewModel.unhideItem(info)
+                                }
                             },
                             modifier = Modifier
                                 .height(52.dp)

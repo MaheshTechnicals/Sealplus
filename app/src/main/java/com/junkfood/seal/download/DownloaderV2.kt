@@ -39,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -129,7 +130,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     // Cleared on success or after MAX_AUTO_RETRIES exhausted.
     private val retryCountMap = java.util.concurrent.ConcurrentHashMap<String, Int>()
     private val waitingForNetwork = java.util.concurrent.ConcurrentHashMap<String, Task.RestartableAction>()
-    private var networkPauseJob: Job? = null
+    @Volatile private var networkPauseJob: Job? = null
     @Volatile private var networkDegradedAtMs: Long = 0L
 
     // Held only while at least one task is Running/FetchingInfo. Without this, Doze mode can
@@ -248,26 +249,33 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
             // stream of progress callbacks (~5/sec) does NOT trigger a full MMKV serialization.
             snapshotFlow
                 .map { map ->
+                    // Filter + strip here for change-detection only.
+                    // We use the SAME filtered map as the backup payload (not re-reading
+                    // taskStateMap later) to avoid a TOCTOU race where a task completes
+                    // between the distinctUntilChanged trigger and the actual write —
+                    // previously, a completed task could vanish from the live map before
+                    // taskStateMap.toMap() ran in collect{}, causing it to be missing from
+                    // the backup entirely and never restored after force-stop.
                     map
                         .filter { (_, state) -> state.downloadState !is Completed }
                         .mapValues { (_, state) ->
-                            state.copy(
-                                downloadState = when (val ds = state.downloadState) {
-                                    is Running -> ds.copy(progress = -1f, progressText = "")
-                                    else -> ds
-                                }
-                            )
+                            // Preserve real progress in the backup payload so paused-on-kill
+                            // tasks restore with their last known progress value. Strip only
+                            // for deduplication comparison (the copy below keeps real values).
+                            state
                         }
                 }
-                .distinctUntilChanged()
+                .distinctUntilChanged { old, new ->
+                    // Custom comparator: compare by structural state class (not progress) so
+                    // 200ms progress ticks don't trigger a serialization write.
+                    old.size == new.size && old.all { (task, oldState) ->
+                        val newState = new[task] ?: return@distinctUntilChanged false
+                        oldState.downloadState::class == newState.downloadState::class
+                    }
+                }
                 .collect { snapshot ->
                     snapshot.forEach { (_, state) -> Log.d(TAG, state.viewState.title) }
-                    // Write back original map (with real progress) so paused-on-kill tasks
-                    // restore with the last known progress value.
-                    val original = taskStateMap
-                        .toMap()
-                        .filter { (_, state) -> state.downloadState !is Completed }
-                    PreferenceUtil.encodeTaskListBackup(original)
+                    PreferenceUtil.encodeTaskListBackup(snapshot)
                 }
         }
     }
@@ -368,32 +376,51 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
             App.connectivityManager.unregisterNetworkCallback(networkCallback)
         }
         releaseDownloadWakeLock()
+        // Cancel the supervisor scope to stop all in-flight download coroutines and the
+        // backup-write collector. Without this, the scope's SupervisorJob and its children
+        // continue running after cleanup() is called (e.g. on low-memory conditions),
+        // holding references to the Koin context and leaking resources indefinitely.
+        scope.cancel()
     }
 
+    // Safe state getter — returns null if the task has been removed from the map
+    // (e.g. user tapped Delete on an active card while a download was in progress).
+    // Previously used !! which would crash with NPE on concurrent removal.
+    private val Task.stateOrNull: Task.State?
+        get() = taskStateMap[this]
+
     private var Task.state: Task.State
-        get() = taskStateMap[this]!!
+        get() = taskStateMap[this] ?: Task.State(
+            downloadState = DownloadState.Canceled(action = Task.RestartableAction.Download),
+            videoInfo = null,
+            viewState = Task.ViewState(url = url, title = url),
+        )
         set(value) {
-            taskStateMap[this] = value
+            // Only write back if the task is still in the map — avoids writing a ghost
+            // state after the task has been removed by the user.
+            if (taskStateMap.containsKey(this)) {
+                taskStateMap[this] = value
+            }
         }
 
     private var Task.downloadState: DownloadState
-        get() = state.downloadState
+        get() = stateOrNull?.downloadState ?: DownloadState.Canceled(Task.RestartableAction.Download)
         set(value) {
-            val prevState = state
+            val prevState = stateOrNull ?: return  // task was removed — silently ignore
             taskStateMap[this] = prevState.copy(downloadState = value)
         }
 
     private var Task.info: VideoInfo?
-        get() = state.videoInfo
+        get() = stateOrNull?.videoInfo
         set(value) {
-            val prevState = state
+            val prevState = stateOrNull ?: return
             taskStateMap[this] = prevState.copy(videoInfo = value)
         }
 
     private var Task.viewState: Task.ViewState
-        get() = state.viewState
+        get() = stateOrNull?.viewState ?: Task.ViewState(url = url, title = url)
         set(value) {
-            val prevState = state
+            val prevState = stateOrNull ?: return
             taskStateMap[this] = prevState.copy(viewState = value)
         }
 
@@ -414,12 +441,15 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 state.downloadState == ReadyWithInfo || state.downloadState == Idle
             }
             ?.let { (task, state) ->
-                when (state.downloadState) {
+                // Re-read the task's current state at the point of execution. Between the
+                // sortedBy/firstOrNull pass above and this lambda, a concurrent UI action
+                // (pause, cancel, delete) may have already changed the state. If the state
+                // is no longer Idle/ReadyWithInfo, skip it — doYourWork() will fire again
+                // on the next state-change tick and pick the correct next task.
+                when (task.stateOrNull?.downloadState ?: return) {
                     Idle -> task.prepare()
                     ReadyWithInfo -> task.download()
-                    else -> {
-                        throw IllegalStateException()
-                    }
+                    else -> { /* state changed concurrently — skip, will retry next tick */ }
                 }
             }
     }
@@ -666,8 +696,11 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             )
                         }
                         // Write docs text file if enabled
-                        if (preferences.downloadDocs && info != null) {
-                            DownloadUtil.writeDocsTextFile(info!!)
+                        // Capture `info` into a local val before the null check to avoid
+                        // a concurrent remove() between the check and the force-unwrap.
+                        val videoInfoSnapshot = info
+                        if (preferences.downloadDocs && videoInfoSnapshot != null) {
+                            DownloadUtil.writeDocsTextFile(videoInfoSnapshot)
                         }
                     }
                     .onFailure { throwable ->
@@ -826,7 +859,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.restartImpl() {
-        when (val preState = downloadState) {
+        when (val preState = stateOrNull?.downloadState) {
             is DownloadState.Restartable -> {
                 downloadState =
                     when (preState.action) {
@@ -834,8 +867,15 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                         FetchInfo -> Idle
                     }
             }
+            null -> {
+                // Task was removed from the map (e.g. deleted while Retry was tapped).
+                // Silently ignore rather than crashing — the task no longer exists.
+                Log.w(TAG, "restartImpl: task ${id} not in map, ignoring restart")
+            }
             else -> {
-                throw IllegalStateException()
+                // State is not Restartable (e.g. already Running after a rapid double-tap).
+                // Silently ignore — crashing the UI thread here is worse than a no-op.
+                Log.w(TAG, "restartImpl: task ${id} is in non-restartable state ${preState::class.simpleName}, ignoring")
             }
         }
     }
