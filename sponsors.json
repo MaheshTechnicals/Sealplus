@@ -134,6 +134,21 @@
       "id": 27,
       "name": "Francesco Capaccioni",
       "METHOD": "PAYPAL"
+    },
+    {
+      "id": 28,
+      "name": "Artie Miles",
+      "METHOD": "PAYPAL"
+    },
+    {
+      "id": 29,
+      "name": "Lorenzo Vuerich",
+      "METHOD": "PAYPAL"
+    },
+    {
+      "id": 30,
+      "name": "Dawid Engler",
+      "METHOD": "PAYPAL"
     }
   ]
 }
