@@ -45,6 +45,7 @@ object Route {
     const val THUMBNAIL_DOWNLOAD = "thumbnail_download"
     const val COMMENT_DOWNLOAD = "comment_download"
     const val COMMENT_DETAIL = "comment_detail"
+    const val BROWSER = "browser"
 
     const val TASK_HASHCODE = "task_hashcode"
     const val TEMPLATE_ID = "template_id"

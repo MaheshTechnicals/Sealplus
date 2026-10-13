@@ -41,6 +41,7 @@ import com.junkfood.seal.ui.common.slideInVerticallyComposable
 import com.junkfood.seal.ui.page.command.TaskListPage
 import com.junkfood.seal.ui.page.command.TaskLogPage
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
+import com.junkfood.seal.ui.page.browser.BrowserPage
 import com.junkfood.seal.ui.page.home.NewHomePage
 import com.junkfood.seal.ui.page.onboarding.OnboardingScreen
 import com.junkfood.seal.ui.page.settings.SettingsPage
@@ -171,6 +172,12 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                         },
                         onNavigateToVideoInfoDownload = {
                             navController.navigate(Route.VIDEO_INFO_DOWNLOAD) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNavigateToBrowser = {
+                            view.slightHapticFeedback()
+                            navController.navigate(Route.BROWSER) {
                                 launchSingleTop = true
                             }
                         },
@@ -379,6 +386,9 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateToSecurity = { onNavigateTo(Route.SECURITY_SETTINGS) },
                 onNavigateToHiddenContent = { onNavigateTo(Route.HIDDEN_CONTENT) },
             )
+        }
+        animatedComposable(Route.BROWSER) {
+            BrowserPage(onNavigateBack = onNavigateBack)
         }
         animatedComposable(Route.HIDDEN_CONTENT) {
             HiddenContentPage(onNavigateBack = onNavigateBack)

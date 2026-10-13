@@ -768,5 +768,19 @@
     <string name="pinned_badge">Pinned</string>
     <string name="no_comments_available">No comments to show</string>
     <string name="more_comments_export_hint">+%1$d more comments — export to view all</string>
+    <string name="browser_title">Browser</string>
+    <string name="browser_address_hint">Search or enter URL</string>
+    <string name="browser_detected_title">File(s) detected!</string>
+    <string name="browser_no_media_title">No file to download</string>
+    <string name="browser_no_media_tips">1) Start playing the video or audio on the page. Detected files appear in this list.
+2) If a file is missing, play it again, then reopen this list.
+3) Media that the page builds in memory cannot be detected.</string>
+    <string name="browser_size_unknown">Size unknown</string>
+    <string name="browser_kind_video">Video</string>
+    <string name="browser_kind_audio">Audio</string>
+    <string name="browser_kind_stream">Stream</string>
+    <string name="browser_clear_all">Clear all</string>
+    <string name="browser_download_all">Download all</string>
+    <string name="browser_download_started">Download started</string>
 </resources>
 

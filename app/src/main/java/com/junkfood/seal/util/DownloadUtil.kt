@@ -342,6 +342,8 @@ object DownloadUtil {
                         addOption("-x")
                     }
                     applyFormatSorter(this@with, toFormatSorter())
+                    if (referer.isNotEmpty()) addOption("--referer", referer)
+                    if (pageUserAgent.isNotEmpty()) addOption("--user-agent", pageUserAgent)
                     if (cookies) {
                         enableCookies(userAgentString)
                     }
@@ -473,6 +475,10 @@ object DownloadUtil {
         val mergeAudioStream: Boolean,
         val mergeToMkv: Boolean,
         val downloadDocs: Boolean = false,
+        /** Page URL the media was found on; sent as --referer for sniffed browser downloads. */
+        val referer: String = "",
+        /** User-Agent of the browser session that found the media (empty = yt-dlp default). */
+        val pageUserAgent: String = "",
     ) {
         companion object {
             val EMPTY =
@@ -1213,6 +1219,8 @@ object DownloadUtil {
                     addOption("--continue")
                     enableRetryOptions()
                     //                addOption("-v")
+                    if (referer.isNotEmpty()) addOption("--referer", referer)
+                    if (pageUserAgent.isNotEmpty()) addOption("--user-agent", pageUserAgent)
                     if (cookies) {
                         // runCatching inside apply (which is inline) lets us use return
                         // to surface cookie-setup failures as Result.failure — the non-local

@@ -201,6 +201,7 @@ fun NewHomePage(
     modifier: Modifier = Modifier,
     onMenuOpen: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
+    onNavigateToBrowser: () -> Unit = {},
     onNavigateToSupport: () -> Unit = {},
     onNavigateToBatchUrlImport: () -> Unit = {},
     onNavigateToVideoInfoDownload: () -> Unit = {},
@@ -752,6 +753,13 @@ fun NewHomePage(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToBrowser) {
+                        Icon(
+                            imageVector = Icons.Outlined.Language,
+                            contentDescription = stringResource(R.string.browser_title),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     IconButton(onClick = onNavigateToSupport) {
                         Icon(
                             imageVector = Icons.Outlined.AttachMoney,
