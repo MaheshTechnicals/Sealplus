@@ -495,7 +495,14 @@ private fun DetectedRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "$kindLabel · ${media.host} · $sizeText",
+                text = listOfNotNull(media.resolutionLabel ?: media.bitrateLabel ?: kindLabel, kindLabel.takeIf { media.resolutionLabel != null || media.bitrateLabel != null }).joinToString(" · "),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${media.host} · $sizeText",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
