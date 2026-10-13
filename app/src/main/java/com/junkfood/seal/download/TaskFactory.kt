@@ -25,6 +25,7 @@ object TaskFactory {
         selectedSubtitles: List<String>,
         selectedAutoCaptions: List<String>,
         overridePreferences: DownloadPreferences? = null,
+        isAudioOnlyDownload: Boolean? = null,
     ): TaskWithState {
         val fileSize =
             formatList.fold(.0) { acc, format ->
@@ -38,7 +39,7 @@ object TaskFactory {
 
         val audioOnlyFormats = formatList.filter { it.isAudioOnly() }
         val videoFormats = formatList.filter { it.containsVideo() }
-        val audioOnly = audioOnlyFormats.isNotEmpty() && videoFormats.isEmpty()
+        val audioOnly = isAudioOnlyDownload ?: (audioOnlyFormats.isNotEmpty() && videoFormats.isEmpty())
         val mergeAudioStream = audioOnlyFormats.size > 1
         val formatId = formatList.joinToString(separator = "+") { it.formatId.toString() }
         
@@ -59,7 +60,7 @@ object TaskFactory {
                         splitByChapter = splitByChapter,
                         newTitle = newTitle,
                         mergeAudioStream = mergeAudioStream,
-                        extractAudio = extractAudio || audioOnly,
+                        extractAudio = audioOnly,
                         mergeToMkv = shouldUseMp4,
                     )
                 }

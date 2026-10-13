@@ -241,6 +241,7 @@ private data class FormatConfig(
     val newTitle: String,
     val selectedSubtitles: List<String>,
     val selectedAutoCaptions: List<String>,
+    val isAudioOnlyDownload: Boolean,
     val downloadDocs: Boolean = false,
 )
 
@@ -304,6 +305,7 @@ fun FormatPage(
                     selectedSubtitles = selectedSubtitles,
                     selectedAutoCaptions = selectedAutoCaptions,
                     overridePreferences = null,
+                    isAudioOnlyDownload = config.isAudioOnlyDownload,
                 )
                 downloader.enqueue(taskWithState)
 
@@ -814,6 +816,12 @@ private fun FormatPageImpl(
                                     newTitle = videoTitle,
                                     selectedSubtitles = selectedSubtitles,
                                     selectedAutoCaptions = selectedAutoCaptions,
+                                    isAudioOnlyDownload = audioOnly || (
+                                        !isSuggestedFormatSelected && 
+                                        selectedVideoAudioFormat == NOT_SELECTED && 
+                                        selectedVideoOnlyFormat == NOT_SELECTED && 
+                                        selectedAudioOnlyFormats.isNotEmpty()
+                                    ),
                                 )
                             )
                         }
