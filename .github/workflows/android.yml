@@ -83,51 +83,34 @@ jobs:
         tag_name: v${{ steps.version.outputs.VERSION }}
         name: Seal Plus v${{ steps.version.outputs.VERSION }}
         body: |
-          ## ✨ Seal Plus v3.0.0 - Dedicated Tools Hub, Swipeable Details Sheet, Battery Re-Arming
+          ## ✨ Seal Plus v3.1.0 - Retry All, Download Reliability, Battery Opt-Out
           
           ---
           
-          ### 🧰 Dedicated "More Tools" Section & Tool Suite
+          ### 🔁 Retry All & Queue Recovery
           
-          * **Dedicated "More Tools" Page** — Centralized tools hub accessible from the navigation drawer and quick-access toolbar on the home screen
-          * **Home Screen Quick-Access Toolbar** — Instant 1-tap shortcut icons on the main home screen to jump directly to dedicated utilities
-          * **Batch URL Import (Custom Playlist)** — Download multiple YouTube videos & audios simultaneously as a custom playlist with quality selection, animated color transitions, live URL line counter, paste success animations, and haptic feedback
-          * **Thumbnail Download Tool** — Extract and download high-resolution video thumbnails with image format conversion options (PNG / WebP / JPG)
-          * **Video Info Download Tool** — Download full video metadata (title, description, tags, view count, upload date) as structured `.txt` or `.json` files
-          * **Comment Download Tool** — Extract, download, and manage YouTube video comments as readable text or JSON files
-          * **Interactive Tool Cards** — Long-press action sheets, info dialogs, and reordered grid layouts
+          * **Retry All on Home** — Retry All button in the "Recent downloads" header for Canceled or Failed tasks
+          * **Queued Tasks Survive Restarts** — Queued tasks restore as queued after force-stop instead of becoming Failed
           
-          ### 👆 Swipeable Download Details Sheet
+          ### 🎬 Download Fixes
           
-          * **Spotify-Style Swipeable Sheet** — Switch between downloaded item details seamlessly by swiping left or right on the details bottom sheet
-          * **Smooth Pager Transitions** — Redesigned pager container to eliminate height flickering and improve item navigation
+          * **Custom Video Formats Fixed** — Custom formats with unreported codecs download the video correctly (thanks @ptgullas, PR #29)
+          * **MP4 Output for Merged Videos** — Video downloads use MP4 unless MKV is selected
+          * **Configure Switch Respected** — With "Configure before download" off, Quick Download, share, and the URL button download immediately (#30)
+          * **Output Template** — Custom templates no longer need `.%(ext)s` (#14)
+          * **Douyin Login** — Opens as a desktop session (#27)
           
-          ### 🧹 Streamlined Configure & Download Flow
+          ### 🔋 Battery & Stability
           
-          * **Removed Docs & Thumbnail Options from Dialogs** — Consolidated documentation and thumbnail downloads into their dedicated "More Tools" pages, cleaning up `DownloadDialogV2` and `FormatPage`
-          * **Format Page Enhancements** — Grid/list layout toggle, selection summary subtitle, M3 `SegmentedButton` controls, compact format cards, soft borders, and animated chip transitions
+          * **Hide Battery Reminder** — Opt-out in General settings (#26)
+          * **HarmonyOS Crash Fixed** — Battery settings no longer crash on HarmonyOS 4.x (#20)
+          * **Smoother Progress** — Throttled progress updates fix unresponsive menus on OEM ROMs (#10)
+          * **Crash & Memory Hardening** — Safer download state handling and memory leak fixes
           
-          ### 🔋 Battery Optimization & Background Execution
+          ### 💖 Donations & Sponsors
           
-          * **Battery Optimization Re-Arming** — Centralized OEM detection (MIUI/HyperOS, ColorOS, iQOO, Samsung) that automatically re-prompts for battery optimization exclusions on app resume
-          * **Doze Mode Wake Lock Protection** — Prevents downloads from stalling in Deep Doze mode by maintaining CPU wake locks
-          * **Android 12+ Foreground Service Fix** — Resolved `ForegroundServiceStartNotAllowedException` during background execution
-          
-          ### 🍪 Cookie & Network Enhancements
-          
-          * **Cookie Domain Matching Fix** — Aligned dot-prefixed domains (`.youtube.com`) with `includeSubdomains` flag
-          * **Removed Legacy Proxy Feature** — Completely removed outdated Proxy settings and `ProxyManager` from Sealplus Extras
-          
-          ### 💖 Crypto Donation Support & Sponsors
-          
-          * **Crypto Donations Page** — Added dedicated Crypto Donation page with Bitcoin (BTC) wallet support, QR codes, and updated UPI payment details
-          * **Updated Sponsors List** — Added latest community supporters to `sponsors.json`
-          
-          ### ⚡ Memory & Performance Optimization
-          
-          * **In-Memory State Pruning** — Automatic pruning of completed/cancelled download tasks from memory map
-          
-          ---
+          * **Trust Wallet Donations** — Crypto Donations page with Trust Wallet deep link and QR code
+          * **Sponsor List** — New community supporters added
           
           ### 📦 Installation
           
@@ -137,17 +120,6 @@ jobs:
           - **armeabi-v7a**: For 32-bit ARM devices
           - **x86_64**: For 64-bit x86 devices
           - **x86**: For 32-bit x86 devices
-          
-          ### ✨ Key Features (v3.0)
-          - 🧰 **Dedicated "More Tools" Hub** - Centralized suite for batch imports, thumbnails, video info, and comments
-          - 📋 **Batch URL Import** - Download multiple videos/audios as custom playlists with quality selection
-          - 👆 **Swipeable Download Details** - Spotify-style swipe left/right to switch between item details
-          - 🧹 **Streamlined Dialogs** - Cleaned up download dialogs by consolidating docs/thumbnail tools
-          - 🔋 **Battery Optimization Re-Arming** - OEM-specific re-prompting on resume, Doze mode wake locks
-          - 🍪 **Cookie Matching Fix** - Aligned dot-prefixed domains with subdomains flag
-          - 🚫 **Proxy Cleanup** - Removed legacy proxy handling for cleaner network architecture
-          - 💖 **Crypto Donations** - Bitcoin and crypto wallet support with QR codes
-          - ⚡ **Task Memory Pruning** - Automatic in-memory state cleanup for long download sessions
           
           ### 📜 Full Changelog
           See [CHANGELOG.md](https://github.com/MaheshTechnicals/Sealplus/blob/main/CHANGELOG.md) for complete version history.
@@ -186,43 +158,30 @@ jobs:
         MESSAGE+="📱 <b>App Name:</b> Seal Plus\n\n"
         MESSAGE+="🏷️ <b>Version:</b> v${{ steps.version.outputs.VERSION }}\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="📋 <b>Changelog (v3.0):</b>\n\n"
-        MESSAGE+="<b>🧰 Dedicated More Tools Hub</b>\n"
-        MESSAGE+="  ➤ Batch URL import custom playlist with quality selection\n"
-        MESSAGE+="  ➤ Thumbnail download tool with PNG/WebP/JPG format conversion\n"
-        MESSAGE+="  ➤ Video info download tool for text/JSON metadata export\n"
-        MESSAGE+="  ➤ Comment download tool for video comments extraction\n\n"
-        MESSAGE+="<b>👆 Swipeable Download Details</b>\n"
-        MESSAGE+="  ➤ Spotify-style swipe left/right between item details\n"
-        MESSAGE+="  ➤ Smooth pager height transitions\n\n"
-        MESSAGE+="<b>🧹 Streamlined Download Flow</b>\n"
-        MESSAGE+="  ➤ Consolidated docs & thumbnail tools out of download dialogs\n"
-        MESSAGE+="  ➤ Format page grid/list toggle & SegmentedButtons\n\n"
-        MESSAGE+="<b>🔋 Battery Optimization Re-Arming</b>\n"
-        MESSAGE+="  ➤ Auto re-prompts for battery exclusions on app resume\n"
-        MESSAGE+="  ➤ Doze mode CPU wake locks during downloads\n"
-        MESSAGE+="  ➤ Android 12+ foreground service crash fix\n\n"
-        MESSAGE+="<b>🍪 Cookie &amp; Network Improvements</b>\n"
-        MESSAGE+="  ➤ Dot-prefixed domain matching aligned with subdomains flag\n"
-        MESSAGE+="  ➤ Removed legacy proxy feature for cleaner architecture\n\n"
-        MESSAGE+="<b>💖 Crypto Donations</b>\n"
-        MESSAGE+="  ➤ Bitcoin (BTC) wallet support with QR codes & updated UPI\n\n"
-        MESSAGE+="<b>⚡ Memory Optimization</b>\n"
-        MESSAGE+="  ➤ Automatic in-memory state pruning for completed tasks\n\n"
+        MESSAGE+="📋 <b>Changelog (v3.1):</b>\n\n"
+        MESSAGE+="<b>🔁 Retry All &amp; Queue Recovery</b>\n"
+        MESSAGE+="  ➤ Retry All button on Home for canceled/failed tasks\n"
+        MESSAGE+="  ➤ Queued tasks survive force-stop instead of failing\n\n"
+        MESSAGE+="<b>🎬 Download Fixes</b>\n"
+        MESSAGE+="  ➤ Custom video formats download video correctly (thanks @ptgullas)\n"
+        MESSAGE+="  ➤ MP4 output for merged videos\n"
+        MESSAGE+="  ➤ Configure switch respected in Quick Download and share\n"
+        MESSAGE+="  ➤ Custom output templates no longer need .%(ext)s\n"
+        MESSAGE+="  ➤ Douyin login opens as desktop session\n\n"
+        MESSAGE+="<b>🔋 Battery &amp; Stability</b>\n"
+        MESSAGE+="  ➤ Hide battery reminder option in General settings\n"
+        MESSAGE+="  ➤ HarmonyOS 4.x battery settings crash fixed\n"
+        MESSAGE+="  ➤ Smoother progress on OEM ROMs, crash &amp; memory hardening\n\n"
+        MESSAGE+="<b>💖 Donations</b>\n"
+        MESSAGE+="  ➤ Trust Wallet deep link &amp; QR code, new sponsors\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="✨ <b>Key Features (v3.0):</b>\n"
-        MESSAGE+="🧰 More Tools Hub — Batch import, thumbnail, info, comments\n"
-        MESSAGE+="📋 Batch URL Import — Download custom playlists with quality options\n"
-        MESSAGE+="👆 Swipeable Details — Spotify-style swipe left/right\n"
-        MESSAGE+="🧹 Streamlined Flow — Cleaned download dialogs\n"
-        MESSAGE+="🔋 Battery Optimization — OEM re-arm on resume, wake locks\n"
-        MESSAGE+="🍪 Cookie Domain Fix — Aligned dot-prefixed domains\n"
-        MESSAGE+="🚫 Proxy Cleanup — Removed legacy proxy settings\n"
-        MESSAGE+="💖 Crypto Donations — BTC & QR codes support\n"
-        MESSAGE+="⚡ Memory Pruning — Automatic state map cleanup\n"
-        MESSAGE+="🌐 1000+ sites via yt-dlp — YouTube, TikTok, Instagram\n\n"
+        MESSAGE+="✨ <b>Key Features (v3.1):</b>\n"
+        MESSAGE+="🔁 Retry All — Restart canceled/failed downloads in one tap\n"
+        MESSAGE+="🎬 Custom Formats — Video downloads fixed (PR #29)\n"
+        MESSAGE+="🔋 Hide Battery Reminder — Opt-out in settings\n"
+        MESSAGE+="🌐 1000+ sites via yt-dlp\n\n"
         MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        MESSAGE+="💡 <b>Note:</b> v3.0 introduces a dedicated More Tools section with 4 tools (Batch URL Import custom playlist, Thumbnail Download, Video Info Download, Comment Download), home screen quick-access toolbar, Spotify-style swipeable download details sheet, battery optimization re-arming, cookie subdomain matching fix, legacy proxy cleanup, and crypto donations.\n\n"
+        MESSAGE+="💡 <b>Note:</b> v3.1 adds Retry All on the home screen, fixes custom video format downloads, keeps queued tasks after restarts, adds a battery reminder opt-out, and fixes the HarmonyOS battery crash.\n\n"
         MESSAGE+="🕐 <i>Released: $(date '+%B %d, %Y at %H:%M UTC')</i>"
         
         # URL encode the message to avoid HTML parsing issues

@@ -172,6 +172,39 @@ English
 ## ⬇️ Download & Installation
 
 
+### 🚀 What's New in v3.1?
+
+<details open>
+<summary><b>📱 Click to see latest updates - Retry All, Download Fixes, Battery Opt-Out (October 13, 2026)</b></summary>
+
+## ✨ Seal Plus v3.1.0 - Retry All, Download Reliability, Battery Opt-Out
+
+---
+
+### 🔁 Retry All & Queue Recovery
+
+* **Retry All on Home** — Retry All button in the "Recent downloads" header for Canceled or Failed tasks
+* **Queued Tasks Survive Restarts** — Queued tasks restore as queued after force-stop instead of becoming Failed
+
+### 🎬 Download Fixes
+
+* **Custom Video Formats Fixed** — Custom formats with unreported codecs download the video correctly (thanks @ptgullas, PR #29)
+* **MP4 Output for Merged Videos** — Video downloads use MP4 unless MKV is selected
+* **Configure Switch Respected** — With "Configure before download" off, Quick Download, share, and the URL button download immediately (#30)
+* **Output Template** — Custom templates no longer need `.%(ext)s` (#14)
+* **Douyin Login** — Opens as a desktop session (#27)
+
+### 🔋 Battery & Stability
+
+* **Hide Battery Reminder** — Opt-out in General settings (#26)
+* **HarmonyOS Crash Fixed** — Battery settings no longer crash on HarmonyOS 4.x (#20)
+* **Smoother Progress** — Throttled progress updates fix unresponsive menus on OEM ROMs (#10)
+* **Crash & Memory Hardening** — Safer download state handling and memory leak fixes
+
+For the full list see the [CHANGELOG](CHANGELOG.md).
+
+</details>
+
 ### 🚀 What's New in v3.0?
 
 <details open>
@@ -452,7 +485,9 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 ### 🚀 Latest Releases
 
 - **Latest Stable**: [Download from GitHub Releases](https://github.com/MaheshTechnicals/Sealplus/releases/latest)
-  - ✅ **Current Version**: v3.0.0 (July 2026)
+  - ✅ **Current Version**: v3.1.0 (October 2026)
+  - 🔁 **Retry All** - Restart all canceled or failed downloads from the home screen or Downloads page
+  - 🔋 **Hide Battery Reminder** - Opt-out of the battery optimization popup
   - 🧰 **Dedicated "More Tools" Hub** - Centralized suite for batch imports, thumbnails, video info, and comments
   - 📋 **Batch URL Import** - Download multiple videos/audios as custom playlists with quality selection
   - 👆 **Swipeable Download Details** - Spotify-style swipe left/right to switch between item details
@@ -476,8 +511,8 @@ For most Android devices, install the **arm64-v8a** version for optimal performa
 |------------|---------------|
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target Android** | Android 17 (API 37) |
-| **Current Version** | 3.0.0 |
-| **Release Date** | July 30, 2026 |
+| **Current Version** | 3.1.0 |
+| **Release Date** | October 13, 2026 |
 
 ### 🏗️ Architecture Support
 

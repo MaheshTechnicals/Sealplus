@@ -149,6 +149,11 @@
       "id": 30,
       "name": "Dawid Engler",
       "METHOD": "PAYPAL"
+    },
+    {
+      "id": 31,
+      "name": "Janusz Filanowski",
+      "METHOD": "PAYPAL"
     }
   ]
 }

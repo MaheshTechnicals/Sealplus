@@ -5,6 +5,59 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-10-13
+
+### 🔁 Retry All & Download Queue Recovery
+
+* **Retry All on Home** — A Retry All button now appears in the "Recent downloads" header whenever a task is Canceled or Failed (Downloads page already had it)
+* **Queued Tasks Survive Restarts** — Queued (Idle) tasks restore as queued after the app is force-stopped, instead of becoming Failed/Canceled
+* **Retry All Always Visible** — Retry All is shown on the Downloads page even when a status filter is active
+
+### 🎬 Download Fixes
+
+* **Custom Video Formats Fixed** — Selecting a custom video format whose codec is reported as `none` now downloads the video instead of triggering an audio extraction (thanks @ptgullas, PR #29)
+* **MP4 Output for Merged Videos** — Video downloads use MP4 unless MKV is selected
+* **Configure Switch Respected** — With "Configure before download" turned off, Quick Download, share, and the URL button start the download straight away with your saved preferences (#30)
+* **Quick Download Leaves No Background Service** — Canceling Quick Download no longer keeps "Seal is Downloading" running (#25)
+* **Playlist Start Uses Saved Preferences** — Starting a playlist download directly now honors your global format and cookie settings
+* **Playlist Share Works** — Sharing a playlist URL opens the selection sheet, and repeated fetches of the same playlist no longer get stuck (5 bugs fixed)
+* **Output Template Accepts Any Template** — Custom templates no longer need `.%(ext)s`; the extension is added automatically (#14)
+* **Douyin Login** — Douyin cookie login opens as a desktop session instead of redirecting to the download page (#27)
+* **Smoother Progress Updates** — Progress callbacks are throttled (UI every 200 ms, notifications every 750 ms), fixing unresponsive menus and drawer on OEM ROMs (#10)
+* **Notification Throttling for Custom Commands** — Progress notifications no longer flood the UI during custom command execution
+
+### 🔋 Battery & Background Execution
+
+* **Hide Battery Reminder** — New opt-out in General settings to stop the battery optimization popup from showing on the home screen (#26)
+* **HarmonyOS Crash Fixed** — Battery settings no longer crash on HarmonyOS 4.x; a safe fallback is used (#20)
+* **Battery Hint Visibility** — The battery hint in Settings is visible on Android 11+ (package visibility fix)
+* **Android 13+ Intent Resolution** — Battery intent resolution uses the Tiramisu-compatible API
+
+### 🧭 Navigation & Stability
+
+* **Reliable Drawer Navigation** — Drawer items navigate reliably during active downloads (no more skipped navigation)
+* **Crash Hardening** — Removed several crash paths in the download engine (task state races, null lookups, and unsafe throws)
+* **Memory Leak Fix** — Download coroutine scope is cancelled on cleanup
+* **Main-Thread Fix** — Media metadata is read off the main thread, and the retriever is always released (no ANR-level frame drops in the details sheet)
+* **SD Card Directory** — The selected SD card folder is shown immediately after picking
+* **Biometric & Auth Compatibility** — Works on older Android versions, and app-background authentication no longer re-prompts incorrectly
+* **Safer File Creation** — Output directories are created recursively, and file creation failures are reported
+* **Cookie Domain Parsing** — Cookie domains are sanitized, so malformed URLs no longer break cookie matching
+* **Cookie Error Messages** — Missing or unreadable cookie profiles show a clear message instead of a confusing bot-detection error (#17)
+* **Update Asset Resolution** — Update checks fall back to the universal APK when no architecture-specific asset matches
+
+### 💖 Sponsors & Donations
+
+* **Trust Wallet Donations** — Crypto Donations page includes a Trust Wallet deep link and QR code
+* **Sponsor List** — Added new community supporters and moved the sponsor list URL to jsDelivr
+* **Sponsor Likes** — Like counts are handled as 64-bit numbers
+
+### 🛠️ Project & CI
+
+* **Contribution Target** — Pull requests should target the `test` branch
+* **GitLab CI** — APK artifacts are private and restricted to maintainers
+* **README** — Star history chart uses a working embed
+
 ## [3.0.0] - 2026-07-30
 
 ### 🧰 Dedicated "More Tools" Section & Tool Suite
