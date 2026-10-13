@@ -66,6 +66,8 @@
     <string name="cancel">Cancel</string>
     <string name="settings_before_download">Configure before download</string>
     <string name="settings_before_download_desc">Configure preferences before downloading</string>
+    <string name="hide_battery_popup">Hide battery reminder</string>
+    <string name="hide_battery_popup_desc">Stop the battery optimization popup from appearing on the home screen. Background downloads may be less reliable.</string>
     <string name="settings_before_download_text">Adjust this download</string>
     <string name="error_copied">Error report copied to clipboard</string>
     <string name="thumbnail">Thumbnail</string>

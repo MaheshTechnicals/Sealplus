@@ -38,6 +38,9 @@ const val YT_DLP_VERSION = "yt-dlp_init"
 const val YT_DLP_AUTO_UPDATE = "yt-dlp_update"
 const val DEBUG = "debug"
 const val CONFIGURE = "configure"
+// User opt-out for the home-screen battery optimization reminder (issue #26). Off by default,
+// so the reminder keeps showing unless the user turns this on in General settings.
+const val BATTERY_POPUP_HIDDEN = "battery_popup_hidden"
 const val DARK_THEME_VALUE = "dark_theme_value"
 const val AUDIO_CONVERT = "audio_convert"
 const val AUDIO_CONVERSION_FORMAT = "audio_convert_format"
@@ -259,6 +262,7 @@ private val BooleanPreferenceDefaults =
     mapOf(
         FORMAT_SELECTION to true,
         CONFIGURE to true,
+        BATTERY_POPUP_HIDDEN to false,
         CELLULAR_DOWNLOAD to false,
         YT_DLP_AUTO_UPDATE to true,
         NOTIFICATION to true,

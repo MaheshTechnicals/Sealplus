@@ -19,6 +19,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.History
@@ -82,6 +83,7 @@ import com.junkfood.seal.ui.component.PreferenceSwitch
 import com.junkfood.seal.ui.component.PreferenceSwitchWithDivider
 import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.ui.page.download.NotificationPermissionDialog
+import com.junkfood.seal.util.BATTERY_POPUP_HIDDEN
 import com.junkfood.seal.util.CONFIGURE
 import com.junkfood.seal.util.CUSTOM_COMMAND
 import com.junkfood.seal.util.DEBUG
@@ -282,6 +284,20 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
                         onClick = {
                             configureBeforeDownload = !configureBeforeDownload
                             PreferenceUtil.updateValue(CONFIGURE, configureBeforeDownload)
+                        },
+                    )
+                }
+
+                item {
+                    var batteryPopupHidden by BATTERY_POPUP_HIDDEN.booleanState
+                    PreferenceSwitch(
+                        title = stringResource(id = R.string.hide_battery_popup),
+                        description = stringResource(id = R.string.hide_battery_popup_desc),
+                        icon = Icons.Outlined.BatteryAlert,
+                        isChecked = batteryPopupHidden,
+                        onClick = {
+                            batteryPopupHidden = !batteryPopupHidden
+                            PreferenceUtil.updateValue(BATTERY_POPUP_HIDDEN, batteryPopupHidden)
                         },
                     )
                 }

@@ -49,6 +49,10 @@ import com.junkfood.seal.util.USER_AGENT_STRING
 
 private const val TAG = "WebViewPage"
 
+private const val DESKTOP_CHROME_UA =
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) " +
+        "Chrome/136.0.0.0 Safari/537.36"
+
 // =============================================================================
 // WHY FACEBOOK / INSTAGRAM LOGIN PAGES SHOWED A BLANK PAGE
 // =============================================================================
@@ -368,7 +372,10 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
 
                             // Strip " wv" suffix so User-Agent string looks like real Chrome.
                             val chromeLikeUA = userAgentString.replace(Regex("\\swv\\b"), "")
-                            setUserAgentString(chromeLikeUA)
+                            // Douyin's login page sends mobile browsers straight to the download
+                            // page, so it is opened as a desktop Chrome session (issue #27).
+                            val desktopLogin = websiteUrl.contains("douyin.com", ignoreCase = true)
+                            setUserAgentString(if (desktopLogin) DESKTOP_CHROME_UA else chromeLikeUA)
                             USER_AGENT_STRING.updateString(chromeLikeUA)
 
                             // -----------------------------------------------------------------
@@ -412,7 +419,7 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                         // except the brands list.
                                         val metaBuilder = UserAgentMetadata.Builder()
                                             .setBrandVersionList(newBrands)
-                                            .setMobile(true)
+                                            .setMobile(!desktopLogin)
                                         current.platform?.let       { metaBuilder.setPlatform(it) }
                                         current.platformVersion?.let { metaBuilder.setPlatformVersion(it) }
                                         current.architecture?.let   { metaBuilder.setArchitecture(it) }

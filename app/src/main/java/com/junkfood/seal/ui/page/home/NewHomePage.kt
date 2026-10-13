@@ -45,6 +45,7 @@ import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.ExitToApp
@@ -158,7 +159,9 @@ import com.junkfood.seal.util.SPONSOR_DIALOG_FREQUENCY
 import com.junkfood.seal.util.SPONSOR_DIALOG_LAST_SHOWN
 import com.junkfood.seal.util.SPONSOR_FREQ_OFF
 import com.junkfood.seal.util.SPONSOR_FREQ_WEEKLY
+import com.junkfood.seal.util.BATTERY_POPUP_HIDDEN
 import com.junkfood.seal.util.BatteryUtil
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.PreferenceUtil.getLong
 import com.junkfood.seal.util.PreferenceUtil.updateLong
@@ -599,7 +602,8 @@ fun NewHomePage(
     // Battery Optimization Dialog — no dismissal state is persisted, so this simply hides for
     // the current screen visit. It will show again on the next app open/resume as long as
     // battery optimization is still not disabled (see shouldPromptBatteryDialog above).
-    if (showBatteryOptimizationDialog) {
+    // The user can opt out of this reminder in General settings (issue #26).
+    if (showBatteryOptimizationDialog && !BATTERY_POPUP_HIDDEN.getBoolean()) {
         AlertDialog(
             onDismissRequest = {
                 showBatteryOptimizationDialog = false
@@ -816,7 +820,7 @@ fun NewHomePage(
                     onDownloadClick = {
                         if (urlText.isNotBlank()) {
                             view.slightHapticFeedback()
-                            dialogViewModel.postAction(Action.ShowSheet(listOf(urlText)))
+                            dialogViewModel.startDownload(listOf(urlText))
                             urlText = ""
                             keyboardController?.hide()
                         } else {
@@ -840,11 +844,48 @@ fun NewHomePage(
             // tasks are Completed and already present in the DB-backed section.
             if (activeDownloads.isNotEmpty() || recentFiveDownloadsFiltered.isNotEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.recent_downloads),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    // Retry All lives here too, so canceled/failed tasks can be restarted from
+                    // the home screen without opening the Downloads page.
+                    val hasRetryableTasks by remember {
+                        derivedStateOf {
+                            taskStateMap.values.any {
+                                it.downloadState is Task.DownloadState.Canceled ||
+                                    it.downloadState is Task.DownloadState.Error
+                            }
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.recent_downloads),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (hasRetryableTasks) {
+                            IconButton(
+                                onClick = {
+                                    view.slightHapticFeedback()
+                                    // Restart every task in a Canceled or Error state.
+                                    taskStateMap.entries
+                                        .filter { (_, state) ->
+                                            state.downloadState is Task.DownloadState.Canceled ||
+                                                state.downloadState is Task.DownloadState.Error
+                                        }
+                                        .map { it.key }
+                                        .forEach { downloader.restart(it) }
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Replay,
+                                    contentDescription = stringResource(R.string.retry_all),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
                 }
             }
             

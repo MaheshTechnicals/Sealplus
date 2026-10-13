@@ -6,8 +6,10 @@ import com.junkfood.seal.App
 import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.download.DownloaderV2
 import com.junkfood.seal.download.Task
+import com.junkfood.seal.util.CONFIGURE
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.PlaylistResult
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.VideoInfo
 import com.junkfood.seal.util.makeToast
@@ -93,6 +95,24 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
     val sheetStateFlow = mSheetStateFlow.asStateFlow()
     val sheetValueFlow = mSheetValueFlow.asStateFlow()
     val sharedUrlFlow = mSharedUrlFlow.asStateFlow()
+
+    /**
+     * Starts a download for [urlList]. Opens the configure sheet only when the
+     * "Configure before download" preference is on; otherwise downloads right away
+     * with the saved preferences.
+     */
+    fun startDownload(urlList: List<String>) {
+        if (CONFIGURE.getBoolean()) {
+            postAction(Action.ShowSheet(urlList))
+        } else {
+            postAction(
+                Action.DownloadWithPreset(
+                    urlList = urlList,
+                    preferences = DownloadUtil.DownloadPreferences.createFromPreferences(),
+                )
+            )
+        }
+    }
 
     fun setSharedUrl(url: String) {
         mSharedUrlFlow.update { url }

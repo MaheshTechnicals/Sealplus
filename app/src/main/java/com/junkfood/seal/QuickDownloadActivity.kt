@@ -27,8 +27,10 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Se
 import com.junkfood.seal.ui.page.downloadv2.configure.FormatPage
 import com.junkfood.seal.ui.page.downloadv2.configure.PlaylistSelectionPage
 import com.junkfood.seal.ui.theme.SealTheme
+import com.junkfood.seal.util.CONFIGURE
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.PreferenceUtil
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.matchUrlFromSharedText
 import com.junkfood.seal.util.setLanguage
 import androidx.lifecycle.lifecycleScope
@@ -72,7 +74,8 @@ class QuickDownloadActivity : ComponentActivity() {
             return
         }
 
-        App.startService()
+        // The download service is started by the downloader when a task actually runs. Starting
+        // it here kept the "Seal is Downloading" notification alive after the panel was closed.
 
         enableEdgeToEdge()
 
@@ -83,6 +86,14 @@ class QuickDownloadActivity : ComponentActivity() {
         }
 
         val viewModel: DownloadDialogViewModel = getViewModel()
+
+        if (!CONFIGURE.getBoolean()) {
+            // "Configure before download" is off: enqueue with saved preferences and close.
+            viewModel.startDownload(listOf(sharedUrlCached))
+            finish()
+            return
+        }
+
         viewModel.postAction(Action.ShowSheet(listOf(sharedUrlCached)))
 
         setContent {

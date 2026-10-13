@@ -536,13 +536,18 @@ fun OutputTemplateDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             ConfirmButton(enabled = error == 0) {
+                // A custom template without an extension gets ".%(ext)s" appended, so
+                // "%(uploader)s - %(title)s" saves as a valid file name.
+                val custom =
+                    if (editingTemplate.contains("%(ext")) editingTemplate
+                    else editingTemplate + DownloadUtil.EXTENSION
                 onConfirm(
                     when (selectedItem) {
                         1 -> DownloadUtil.OUTPUT_TEMPLATE_DEFAULT
                         2 -> DownloadUtil.OUTPUT_TEMPLATE_ID
-                        else -> editingTemplate
+                        else -> custom
                     },
-                    editingTemplate,
+                    custom,
                 )
             }
         },
@@ -600,14 +605,8 @@ fun OutputTemplateDialog(
                                     // force .%(ext)s to be at the very end — both are too
                                     // strict and block perfectly valid yt-dlp templates like
                                     // %(uploader)s - %(title)s.%(ext)s.
-                                    error =
-                                        if (!it.contains("%(title")) {
-                                            1
-                                        } else if (!it.contains(DownloadUtil.EXTENSION)) {
-                                            2
-                                        } else {
-                                            0
-                                        }
+                                    // The extension is optional here: it is appended on save.
+                                    error = if (!it.contains("%(title")) 1 else 0
                                     editingTemplate = it
                                 },
                                 isError = error != 0,
@@ -615,8 +614,7 @@ fun OutputTemplateDialog(
                                     Text(
                                         when (error) {
                                             1 -> "Must contain: %(title)s or %(title).200B"
-                                            2 -> "Must contain: ${DownloadUtil.EXTENSION}"
-                                            else -> "Example: %(uploader)s - %(title)s${DownloadUtil.EXTENSION}"
+                                            else -> "Example: %(uploader)s - %(title)s (extension is added automatically)"
                                         },
                                         fontFamily = FontFamily.Monospace,
                                     )
