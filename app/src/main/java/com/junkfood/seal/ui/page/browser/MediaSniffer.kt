@@ -279,7 +279,7 @@ object MediaSniffer {
             when {
                 line.startsWith("#EXT-X-STREAM-INF") -> {
                     val res = Regex("RESOLUTION=(\\d+)x(\\d+)").find(line)
-                    val bw = Regex("(?:^|,)BANDWIDTH=(\\d+)").find(line)
+                    val bw = Regex("[:,]BANDWIDTH=(\\d+)").find(line)
                     pending =
                         HlsVariant(
                             uri = "",
