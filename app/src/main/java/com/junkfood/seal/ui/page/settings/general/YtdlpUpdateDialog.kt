@@ -1,26 +1,23 @@
 package com.junkfood.seal.ui.page.settings.general
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.SyncAlt
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
@@ -30,16 +27,17 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.booleanState
 import com.junkfood.seal.ui.common.intState
 import com.junkfood.seal.ui.component.ConfirmButton
+import com.junkfood.seal.ui.component.DialogSingleChoiceItemVariant
 import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.util.PreferenceStrings.getUpdateIntervalText
@@ -54,40 +52,23 @@ import com.junkfood.seal.util.YT_DLP_STABLE
 import com.junkfood.seal.util.YT_DLP_UPDATE_CHANNEL
 import com.junkfood.seal.util.YT_DLP_UPDATE_INTERVAL
 
+/** Small pill that shows the channel kind. It never wraps, so it stays readable on any width. */
 @Composable
-private fun DialogSingleChoiceItem(
-    modifier: Modifier = Modifier,
-    text: String,
-    selected: Boolean,
-    label: String,
-    labelContainerColor: Color = MaterialTheme.colorScheme.primary,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .selectable(selected = selected, enabled = true, onClick = onClick)
-                .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start,
+private fun ChannelBadge(text: String, containerColor: Color) {
+    Surface(
+        modifier = Modifier.wrapContentWidth(),
+        shape = RoundedCornerShape(50),
+        color = containerColor,
     ) {
-        RadioButton(
-            modifier = Modifier.clearAndSetSemantics {},
-            selected = selected,
-            onClick = onClick,
+        Text(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            text = text,
+            color = MaterialTheme.colorScheme.contentColorFor(containerColor),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Clip,
         )
-
-        Text(text = text, style = MaterialTheme.typography.bodyLarge)
-        Spacer(modifier = Modifier.weight(1f))
-        Surface(modifier.padding(end = 12.dp), shape = CircleShape, color = labelContainerColor) {
-            Text(
-                modifier = Modifier.padding(4.dp),
-                text = label,
-                color = MaterialTheme.colorScheme.contentColorFor(labelContainerColor),
-                style = MaterialTheme.typography.labelSmall,
-            )
-        }
     }
 }
 
@@ -97,6 +78,7 @@ fun YtdlpUpdateChannelDialog(modifier: Modifier = Modifier, onDismissRequest: ()
     var ytdlpUpdateChannel by YT_DLP_UPDATE_CHANNEL.intState
     var ytdlpAutoUpdate by YT_DLP_AUTO_UPDATE.booleanState
     var updateInterval by remember { mutableLongStateOf(YT_DLP_UPDATE_INTERVAL.getLong()) }
+    var autoUpdateExpanded by remember { mutableStateOf(false) }
 
     SealDialog(
         modifier = modifier,
@@ -113,97 +95,106 @@ fun YtdlpUpdateChannelDialog(modifier: Modifier = Modifier, onDismissRequest: ()
         title = { Text(text = stringResource(id = R.string.update)) },
         icon = { Icon(Icons.Outlined.SyncAlt, null, tint = MaterialTheme.colorScheme.primary) },
         text = {
-            LazyColumn() {
-                item {
-                    Text(
-                        text = stringResource(id = R.string.update_channel),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(horizontal = 24.dp)
-                                .padding(top = 16.dp, bottom = 8.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                }
-                item {
-                    DialogSingleChoiceItem(
-                        text = "yt-dlp",
-                        selected = ytdlpUpdateChannel == YT_DLP_STABLE,
-                        label = "Stable",
-                    ) {
-                        ytdlpUpdateChannel = YT_DLP_STABLE
-                    }
-                }
-                item {
-                    DialogSingleChoiceItem(
-                        text = "yt-dlp-nightly-builds",
-                        selected = ytdlpUpdateChannel == YT_DLP_NIGHTLY,
-                        label = "Nightly",
-                        labelContainerColor = MaterialTheme.colorScheme.tertiary,
-                    ) {
-                        ytdlpUpdateChannel = YT_DLP_NIGHTLY
-                    }
-                }
-                item {
-                    Text(
-                        text = stringResource(id = R.string.additional_settings),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(horizontal = 24.dp)
-                                .padding(top = 16.dp, bottom = 16.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                }
-                item {
-                    var expanded by remember { mutableStateOf(false) }
+            Column(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .heightIn(max = 480.dp)
+                        .verticalScroll(rememberScrollState())
+            ) {
+                SectionLabel(text = stringResource(id = R.string.update_channel))
 
-                    ExposedDropdownMenuBox(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
+                DialogSingleChoiceItemVariant(
+                    title = "yt-dlp",
+                    desc = "Recommended. Tested stable release.",
+                    selected = ytdlpUpdateChannel == YT_DLP_STABLE,
+                    action = {
+                        ChannelBadge(
+                            text = "Stable",
+                            containerColor = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                ) {
+                    ytdlpUpdateChannel = YT_DLP_STABLE
+                }
+
+                DialogSingleChoiceItemVariant(
+                    title = "yt-dlp nightly builds",
+                    desc = "Newest fixes. May be less stable.",
+                    selected = ytdlpUpdateChannel == YT_DLP_NIGHTLY,
+                    action = {
+                        ChannelBadge(
+                            text = "Nightly",
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                        )
+                    },
+                ) {
+                    ytdlpUpdateChannel = YT_DLP_NIGHTLY
+                }
+
+                SectionLabel(
+                    text = stringResource(id = R.string.additional_settings),
+                    topPadding = 20.dp,
+                )
+
+                ExposedDropdownMenuBox(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    expanded = autoUpdateExpanded,
+                    onExpandedChange = { autoUpdateExpanded = it },
+                ) {
+                    OutlinedTextField(
+                        value =
+                            if (!ytdlpAutoUpdate) stringResource(id = R.string.disabled)
+                            else getUpdateIntervalText(updateInterval),
+                        onValueChange = {},
+                        label = { Text(text = stringResource(id = R.string.auto_update)) },
+                        readOnly = true,
+                        singleLine = true,
+                        modifier =
+                            Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                        colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = autoUpdateExpanded)
+                        },
+                    )
+                    ExposedDropdownMenu(
+                        expanded = autoUpdateExpanded,
+                        onDismissRequest = { autoUpdateExpanded = false },
                     ) {
-                        OutlinedTextField(
-                            value =
-                                if (!ytdlpAutoUpdate) stringResource(id = R.string.disabled)
-                                else getUpdateIntervalText(updateInterval),
-                            onValueChange = {},
-                            label = { Text(text = stringResource(id = R.string.auto_update)) },
-                            readOnly = true,
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        DropdownMenuItem(
+                            text = { Text(stringResource(id = R.string.disabled)) },
+                            onClick = {
+                                ytdlpAutoUpdate = false
+                                autoUpdateExpanded = false
                             },
                         )
-                        ExposedDropdownMenu(
-                            modifier = Modifier.verticalScroll(rememberScrollState()),
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                        ) {
+                        for ((interval, stringId) in UpdateIntervalList) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(id = R.string.disabled)) },
+                                text = { Text(text = stringResource(id = stringId)) },
                                 onClick = {
-                                    ytdlpAutoUpdate = false
-                                    expanded = false
+                                    ytdlpAutoUpdate = true
+                                    updateInterval = interval
+                                    autoUpdateExpanded = false
                                 },
                             )
-                            for ((interval, stringId) in UpdateIntervalList) {
-                                DropdownMenuItem(
-                                    text = { Text(text = stringResource(id = stringId)) },
-                                    onClick = {
-                                        ytdlpAutoUpdate = true
-                                        updateInterval = interval
-                                        expanded = false
-                                    },
-                                )
-                            }
                         }
                     }
                 }
             }
         },
+    )
+}
+
+@Composable
+private fun SectionLabel(text: String, topPadding: Dp = 0.dp) {
+    Text(
+        text = text,
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(top = topPadding + 8.dp, bottom = 8.dp),
+        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.labelLarge,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
