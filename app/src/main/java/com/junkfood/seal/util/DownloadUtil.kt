@@ -1164,7 +1164,14 @@ object DownloadUtil {
                         ?: Uri.parse(webpageUrl ?: originalUrl ?: "").host?.removePrefix("www.")
                         ?: "",
                 videoUrl = webpageUrl ?: originalUrl ?: "",
-                thumbnailUrl = thumbnail.toHttpsUrl(),
+                // Site thumbnail when there is one, otherwise a frame taken from the saved file.
+                thumbnailUrl =
+                    thumbnail.toHttpsUrl().takeIf { it.isNotBlank() }
+                        ?: com.junkfood.seal.ui.page.videolist.saveLocalThumbnail(
+                            context.cacheDir,
+                            videoPath,
+                        )
+                        ?: "",
                 videoPath = videoPath,
                 videoId = this.id,
                 extractor = extractorKey,
@@ -1410,6 +1417,8 @@ object DownloadUtil {
                 }
 
             Log.d(TAG, "onFinishDownloading: $fileName")
+            // History shows the name the file was saved with (e.g. the page title for browser downloads).
+            val videoInfo = if (newTitle.isNotEmpty()) videoInfo.copy(title = newTitle) else videoInfo
             if (sdcard) {
                 moveFilesToSdcard(
                         sdcardUri = sdcardUri,

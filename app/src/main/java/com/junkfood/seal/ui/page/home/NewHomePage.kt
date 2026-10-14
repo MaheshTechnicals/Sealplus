@@ -1682,7 +1682,8 @@ fun ActiveDownloadCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Thumbnail
-                state.videoInfo?.thumbnail?.let { thumbnailUrl ->
+                // Page thumbnail (set when the download starts) before the site info arrives.
+                (state.viewState.thumbnailUrl?.takeIf { it.isNotBlank() } ?: state.videoInfo?.thumbnail)?.let { thumbnailUrl ->
                     AsyncImage(
                         model = thumbnailUrl,
                         contentDescription = null,

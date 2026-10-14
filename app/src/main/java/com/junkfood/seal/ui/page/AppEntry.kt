@@ -108,7 +108,12 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
         }
     }
 
-    if (sheetState is DownloadDialogViewModel.SheetState.Configure) {
+    // Only pop to Home while the configure sheet is actually visible. sheetState stays Configure
+    // after the sheet is hidden, which used to close any screen opened later (e.g. the browser).
+    val sheetValue by dialogViewModel.sheetValueFlow.collectAsStateWithLifecycle()
+    if (sheetState is DownloadDialogViewModel.SheetState.Configure &&
+        sheetValue == DownloadDialogViewModel.SheetValue.Expanded
+    ) {
         if (navController.currentDestination?.route != Route.HOME) {
             navController.popBackStack(route = Route.HOME, inclusive = false, saveState = true)
         }

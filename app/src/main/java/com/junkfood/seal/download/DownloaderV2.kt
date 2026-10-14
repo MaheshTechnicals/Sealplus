@@ -563,7 +563,18 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                     .onSuccess {
                         info = it
                         downloadState = ReadyWithInfo
-                        viewState = Task.ViewState.fromVideoInfo(it)
+                        // Keep a caller-supplied name (e.g. the browser page title) instead of the
+                        // URL-derived title from the site, so the card shows the real name throughout.
+                        val previous = viewState
+                        viewState =
+                            Task.ViewState.fromVideoInfo(it).let { vs ->
+                                vs.copy(
+                                    title = preferences.newTitle.ifEmpty { vs.title },
+                                    // Keep the page thumbnail when the site gives none (direct files).
+                                    thumbnailUrl = vs.thumbnailUrl?.takeIf { t -> t.isNotBlank() }
+                                        ?: previous.thumbnailUrl,
+                                )
+                            }
                     }
                     .onFailure { throwable ->
                         if (throwable is YoutubeDL.CanceledException) {

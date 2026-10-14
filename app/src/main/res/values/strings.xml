@@ -792,5 +792,12 @@
     <string name="browser_sort_size">Size</string>
     <string name="browser_sort_name">Name</string>
     <string name="browser_reset">Reset</string>
+    <string name="browser_popup_title">Open new tab?</string>
+    <string name="browser_popup_open">Open</string>
+    <string name="browser_popup_block">Block</string>
+    <string name="browser_download_image">Download image</string>
+    <string name="browser_download_link">Download link</string>
+    <string name="browser_image_saved">Image saved: %1$s</string>
+    <string name="browser_download_failed">Download failed</string>
 </resources>
 

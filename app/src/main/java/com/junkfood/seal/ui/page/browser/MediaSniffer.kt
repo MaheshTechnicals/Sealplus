@@ -183,7 +183,7 @@ object MediaSniffer {
         return changed
     }
 
-        /**
+    /**
      * Real videos (over 1 MB) come first, then quality, then size. Small previews, tracking clips
      * and ad creatives (a few hundred kB or less) go below the real videos, whatever their size.
      */
