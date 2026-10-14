@@ -597,6 +597,13 @@ object DownloadUtil {
         }
     }
 
+    /**
+     * Direct-file URLs use the whole URL (with its signed query string) as the video id. That id
+     * cannot be a folder name on Android, so it is cleaned before it is used for temp folders.
+     */
+    internal fun safeTempChild(id: String?): String? =
+        id?.replace(Regex("[\\\\/:*?\"<>|%&=\\[\\]]"), "_")?.take(120)?.takeIf { it.isNotBlank() }
+
     private fun YoutubeDLRequest.enableCookies(userAgentString: String): YoutubeDLRequest {
         // refreshCookiesFile() throws if cookies are not properly configured (no profiles,
         // no cookies in browser, etc.). We let that exception propagate so the download task
@@ -1151,7 +1158,11 @@ object DownloadUtil {
             DownloadedVideoInfo(
                 id = id,
                 videoTitle = title,
-                videoAuthor = uploader ?: channel ?: uploaderId.toString(),
+                // Direct files have no uploader; fall back to the site name instead of "null".
+                videoAuthor =
+                    uploader ?: channel ?: uploaderId
+                        ?: Uri.parse(webpageUrl ?: originalUrl ?: "").host?.removePrefix("www.")
+                        ?: "",
                 videoUrl = webpageUrl ?: originalUrl ?: "",
                 thumbnailUrl = thumbnail.toHttpsUrl(),
                 videoPath = videoPath,
@@ -1312,7 +1323,7 @@ object DownloadUtil {
                     }
 
                     if (sdcard) {
-                        addOption("-P", context.getSdcardTempDir(videoInfo.id).absolutePath)
+                        addOption("-P", context.getSdcardTempDir(safeTempChild(videoInfo.id)).absolutePath)
                     } else {
                         addOption("-P", pathBuilder.toString())
                     }
@@ -1327,7 +1338,7 @@ object DownloadUtil {
                         addCommands(listOf("--replace-in-metadata", "title", ".+", newTitle))
                     }
                     if (Build.VERSION.SDK_INT > 23 && !sdcard) {
-                        addOption("-P", "temp:" + getExternalTempDir(videoInfo.id))
+                        addOption("-P", "temp:" + getExternalTempDir(safeTempChild(videoInfo.id)))
                     }
 
                     if (splitByChapter) {

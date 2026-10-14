@@ -28,6 +28,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.HighQuality
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Speed
@@ -44,9 +47,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import android.text.format.Formatter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
@@ -195,6 +205,11 @@ fun VideoDetailDrawerImpl(
 ) {
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+    // File facts (size, resolution, duration, first frame) are read off the UI thread.
+    val localInfo by
+        produceState<LocalMediaInfo?>(initialValue = null, key1 = videoPath) {
+            value = withContext(Dispatchers.IO) { readLocalMediaInfo(videoPath) }
+        }
 
     SealModalBottomSheetM2(
         sheetState = sheetState,
@@ -257,6 +272,28 @@ fun VideoDetailDrawerImpl(
                                 .aspectRatio(16f / 9f),
                             contentScale = ContentScale.Crop,
                         )
+                    }
+                }
+
+                // Site did not give a thumbnail: use a frame from the downloaded file.
+                if (thumbnailUrl.isBlank()) {
+                    localInfo?.frame?.let { frame ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        ) {
+                            Image(
+                                bitmap = frame.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(16f / 9f),
+                                contentScale = ContentScale.Crop,
+                            )
+                        }
                     }
                 }
 
@@ -352,6 +389,68 @@ fun VideoDetailDrawerImpl(
                     }
                 } else {
                     Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // ── File facts (size, resolution, duration, location) ────────
+                localInfo?.let { info ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        StatCard(
+                            icon = Icons.Outlined.Storage,
+                            label = stringResource(R.string.file_size),
+                            value = Formatter.formatShortFileSize(context, info.sizeBytes),
+                            modifier = Modifier.weight(1f),
+                        )
+                        info.resolutionLabel?.let {
+                            StatCard(
+                                icon = Icons.Outlined.HighQuality,
+                                label = stringResource(R.string.resolution),
+                                value = it,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        info.durationMs?.takeIf { it > 0 }?.let {
+                            StatCard(
+                                icon = Icons.Outlined.Schedule,
+                                label = stringResource(R.string.duration),
+                                value = formatDurationMs(it),
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                }
+                if (videoPath.isNotBlank()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 14.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        ),
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(videoPath))
+                            context.makeToast(R.string.link_copied)
+                        },
+                    ) {
+                        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+                            Text(
+                                text = stringResource(R.string.file_path),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = videoPath,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
                 }
 
                 // ── Action buttons ───────────────────────────────────────────

@@ -18,3 +18,4 @@ local.properties
 /keystore.properties
 .kotlin
 .kilo/kilo.jsonc
+test

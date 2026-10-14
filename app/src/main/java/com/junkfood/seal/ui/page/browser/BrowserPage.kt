@@ -38,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AudioFile
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.LiveTv
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
@@ -46,7 +47,6 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -82,14 +82,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.junkfood.seal.R
+import com.junkfood.seal.App
 import com.junkfood.seal.download.DownloaderV2
 import com.junkfood.seal.download.Task
 import com.junkfood.seal.ui.component.ConfirmButton
+import com.junkfood.seal.ui.component.DismissButton
 import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.makeToast
 import java.net.URLEncoder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -100,6 +103,19 @@ private const val SEARCH_URL = "https://www.google.com/search?q="
 private class PageContext {
     @Volatile var pageUrl: String = HOME_URL
     @Volatile var userAgent: String = ""
+}
+
+/** Reads the rendered page HTML from the WebView and passes it to [MediaSniffer] off the UI thread. */
+private fun scanPage(view: WebView, pageContext: PageContext) {
+    view.evaluateJavascript("(function(){return document.documentElement.outerHTML})()") { raw ->
+        // Parsing and regex scanning a large page must not run on the UI thread (it caused ANR).
+        App.applicationScope.launch(Dispatchers.Default) {
+            val html = runCatching { org.json.JSONArray("[$raw]").optString(0) }.getOrDefault("")
+            if (html.isNotEmpty()) {
+                MediaSniffer.scanPageSource(html, pageContext.pageUrl, pageContext.userAgent)
+            }
+        }
+    }
 }
 
 /**
@@ -123,6 +139,7 @@ fun BrowserPage(onNavigateBack: () -> Unit) {
     var canGoBack by remember { mutableStateOf(false) }
     var showNoMediaDialog by remember { mutableStateOf(false) }
     var showDetectedSheet by remember { mutableStateOf(false) }
+    var pendingDownload by remember { mutableStateOf<SniffedMedia?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val webView = remember {
@@ -192,6 +209,12 @@ fun BrowserPage(onNavigateBack: () -> Unit) {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         canGoBack = view?.canGoBack() == true
+                        // Read the page's own source for media URLs, now and again after the
+                        // player has had time to set up its qualities.
+                        view?.let { v ->
+                            scanPage(v, pageContext)
+                            v.postDelayed({ scanPage(v, pageContext) }, 6_000)
+                        }
                     }
 
                     override fun doUpdateVisitedHistory(
@@ -226,9 +249,13 @@ fun BrowserPage(onNavigateBack: () -> Unit) {
         webView.loadUrl(url)
     }
 
-    fun downloadOne(media: SniffedMedia) {
+    fun startDownload(media: SniffedMedia) {
         if (enqueueSniffed(context, downloader, media)) {
             context.makeToast(R.string.browser_download_started)
+            pendingDownload = null
+            showDetectedSheet = false
+            // Back to Home, where the new task shows in "Recent downloads".
+            onNavigateBack()
         }
     }
 
@@ -315,6 +342,14 @@ fun BrowserPage(onNavigateBack: () -> Unit) {
         )
     }
 
+    pendingDownload?.let { media ->
+        SniffedDownloadDialog(
+            media = media,
+            onConfirm = { startDownload(media) },
+            onDismiss = { pendingDownload = null },
+        )
+    }
+
     if (showDetectedSheet) {
         ModalBottomSheet(
             onDismissRequest = { showDetectedSheet = false },
@@ -322,16 +357,12 @@ fun BrowserPage(onNavigateBack: () -> Unit) {
         ) {
             DetectedFilesContent(
                 items = detected,
-                onDownload = ::downloadOne,
+                onOpen = { media -> pendingDownload = media },
                 onCopyLink = { media ->
                     clipboard.setText(AnnotatedString(media.url))
                     context.makeToast(R.string.link_copied)
                 },
                 onRemove = { media -> MediaSniffer.remove(media.url) },
-                onDownloadAll = {
-                    detected.forEach { media -> enqueueSniffed(context, downloader, media) }
-                    context.makeToast(R.string.browser_download_started)
-                },
                 onClearAll = { MediaSniffer.clear() },
                 onClose = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -381,19 +412,46 @@ private fun AddressField(
     }
 }
 
+private enum class SortOrder { Quality, Size, Name }
+
+private enum class KindFilter { All, Video, Audio, Stream }
+
+private fun SniffedKind.toFilter(): KindFilter =
+    when (this) {
+        SniffedKind.Video -> KindFilter.Video
+        SniffedKind.Audio -> KindFilter.Audio
+        SniffedKind.Stream -> KindFilter.Stream
+    }
+
 @Composable
 private fun DetectedFilesContent(
     items: List<SniffedMedia>,
-    onDownload: (SniffedMedia) -> Unit,
+    onOpen: (SniffedMedia) -> Unit,
     onCopyLink: (SniffedMedia) -> Unit,
     onRemove: (SniffedMedia) -> Unit,
-    onDownloadAll: () -> Unit,
     onClearAll: () -> Unit,
     onClose: () -> Unit,
 ) {
+    var sort by remember { mutableStateOf(SortOrder.Quality) }
+    var filter by remember { mutableStateOf(KindFilter.All) }
+    var sortMenu by remember { mutableStateOf(false) }
+    var filterMenu by remember { mutableStateOf(false) }
+
+    // Items are already sorted by quality in MediaSniffer; the other orders are applied here.
+    val visible =
+        items
+            .filter { filter == KindFilter.All || it.kind.toFilter() == filter }
+            .let { list ->
+                when (sort) {
+                    SortOrder.Quality -> list
+                    SortOrder.Size -> list.sortedByDescending { it.sizeBytes ?: -1L }
+                    SortOrder.Name -> list.sortedBy { it.fileName.lowercase() }
+                }
+            }
+
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -402,10 +460,40 @@ private fun DetectedFilesContent(
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = items.size.toString(),
+                text = visible.size.toString(),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
+            Box {
+                IconButton(onClick = { filterMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Outlined.FilterList,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                DropdownMenu(expanded = filterMenu, onDismissRequest = { filterMenu = false }) {
+                    KindFilter.entries.forEach { option ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text =
+                                        when (option) {
+                                            KindFilter.All -> stringResource(R.string.browser_filter_all)
+                                            KindFilter.Video -> stringResource(R.string.browser_kind_video)
+                                            KindFilter.Audio -> stringResource(R.string.browser_kind_audio)
+                                            KindFilter.Stream -> stringResource(R.string.browser_kind_stream)
+                                        }
+                                )
+                            },
+                            onClick = {
+                                filter = option
+                                filterMenu = false
+                            },
+                        )
+                    }
+                }
+            }
         }
 
         if (items.isEmpty()) {
@@ -416,11 +504,11 @@ private fun DetectedFilesContent(
                 modifier = Modifier.padding(vertical = 16.dp),
             )
         } else {
-            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp)) {
-                items(items = items, key = { it.url }) { media ->
+            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
+                items(items = visible, key = { it.url }) { media ->
                     DetectedRow(
                         media = media,
-                        onDownload = { onDownload(media) },
+                        onOpen = { onOpen(media) },
                         onCopyLink = { onCopyLink(media) },
                         onRemove = { onRemove(media) },
                     )
@@ -430,33 +518,100 @@ private fun DetectedFilesContent(
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             TextButton(onClick = onClose) { Text(text = stringResource(R.string.close)) }
             Spacer(modifier = Modifier.weight(1f))
             if (items.isNotEmpty()) {
                 TextButton(onClick = onClearAll) { Text(text = stringResource(R.string.browser_clear_all)) }
-                FilledTonalButton(onClick = onDownloadAll) {
-                    Text(text = stringResource(R.string.browser_download_all))
+                Box {
+                    TextButton(onClick = { sortMenu = true }) {
+                        Text(text = stringResource(R.string.browser_sort))
+                    }
+                    DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
+                        SortOrder.entries.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text =
+                                            when (option) {
+                                                SortOrder.Quality -> stringResource(R.string.browser_sort_quality)
+                                                SortOrder.Size -> stringResource(R.string.browser_sort_size)
+                                                SortOrder.Name -> stringResource(R.string.browser_sort_name)
+                                            }
+                                    )
+                                },
+                                onClick = {
+                                    sort = option
+                                    sortMenu = false
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+/** Confirmation for one detected file. Confirm starts the download and returns to Home. */
+@Composable
+private fun SniffedDownloadDialog(media: SniffedMedia, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val sizeText =
+        media.sizeBytes?.let { (if (media.sizeIsEstimate) "~" else "") + Formatter.formatShortFileSize(context, it) }
+            ?: stringResource(R.string.browser_size_unknown)
+    SealDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { ConfirmButton(text = stringResource(R.string.download)) { onConfirm() } },
+        dismissButton = { DismissButton(text = stringResource(R.string.cancel)) { onDismiss() } },
+        icon = {
+            Icon(
+                imageVector = kindIcon(media.kind),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
+        title = { Text(text = media.fileName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                listOfNotNull(media.resolutionLabel ?: media.bitrateLabel, media.durationLabel)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let {
+                        Text(
+                            text = it.joinToString(" · "),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                Text(
+                    text = "${media.host} · $sizeText",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+    )
+}
+
 @Composable
 private fun DetectedRow(
     media: SniffedMedia,
-    onDownload: () -> Unit,
+    onOpen: () -> Unit,
     onCopyLink: () -> Unit,
     onRemove: () -> Unit,
 ) {
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
     val sizeText =
-        media.sizeBytes?.let { Formatter.formatShortFileSize(context, it) }
+        media.sizeBytes?.let { (if (media.sizeIsEstimate) "~" else "") + Formatter.formatShortFileSize(context, it) }
             ?: stringResource(R.string.browser_size_unknown)
+    val partsText =
+        media.segments?.let { count ->
+            val parts = stringResource(R.string.browser_parts, count)
+            media.durationLabel?.let { "$parts · $it" } ?: parts
+        }
     val kindLabel =
         when (media.kind) {
             SniffedKind.Video -> stringResource(R.string.browser_kind_video)
@@ -468,12 +623,12 @@ private fun DetectedRow(
         modifier =
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .clickable(onClick = onDownload)
-                .padding(vertical = 10.dp, horizontal = 4.dp),
+                .clickable(onClick = onOpen)
+                .padding(vertical = 6.dp, horizontal = 0.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            modifier = Modifier.size(44.dp),
+            modifier = Modifier.size(40.dp),
             shape = RoundedCornerShape(12.dp),
             color = MaterialTheme.colorScheme.primaryContainer,
         ) {
@@ -502,10 +657,10 @@ private fun DetectedRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "${media.host} · $sizeText",
+                text = listOfNotNull(media.host, sizeText, partsText).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }
@@ -518,7 +673,7 @@ private fun DetectedRow(
                     text = { Text(text = stringResource(R.string.download)) },
                     onClick = {
                         menuOpen = false
-                        onDownload()
+                        onOpen()
                     },
                 )
                 DropdownMenuItem(
@@ -563,9 +718,22 @@ private fun enqueueSniffed(context: Context, downloader: DownloaderV2, media: Sn
             downloadPlaylist = false,
             referer = media.pageUrl,
             pageUserAgent = media.pageUserAgent,
+            // Use a clean name: the signed URL's query string must not end up in the file name.
+            outputTemplate = "${cleanBaseName(media.fileName)}.%(ext)s",
+            // The same name is used to find the finished file for Downloads history.
+            newTitle = cleanBaseName(media.fileName),
+            // Browser downloads always go to Downloads history, so they show in the list and in
+            // "Recent downloads" even when the global Incognito setting is on.
+            privateMode = false,
         )
     downloader.enqueue(Task(url = media.url, preferences = preferences))
     return true
+}
+
+/** "240P_1000K_41863125.mp4" -> "240P_1000K_41863125", with characters that break paths removed. */
+internal fun cleanBaseName(fileName: String): String {
+    val base = fileName.substringBeforeLast('.', fileName)
+    return base.replace(Regex("[\\\\/:*?\"<>|%\\[\\]&=]"), "_").trim().take(150).ifBlank { "video" }
 }
 
 /** Turns what the user typed into a URL. Text that is not a URL becomes a Google search. */

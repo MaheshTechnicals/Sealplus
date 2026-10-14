@@ -39,6 +39,12 @@ data class SniffedMedia(
     val height: Int? = null,
     /** Bits per second from the manifest's BANDWIDTH, used when the resolution is unknown. */
     val bitrate: Long? = null,
+    /** Number of media segments (parts) in an HLS variant playlist. */
+    val segments: Int? = null,
+    /** Total playing time in seconds, from the variant playlist. */
+    val durationSec: Double? = null,
+    /** True when [sizeBytes] is estimated from bitrate × duration rather than read from the server. */
+    val sizeIsEstimate: Boolean = false,
 ) {
     val fileName: String
         get() = Uri.parse(url).lastPathSegment?.takeIf { it.isNotBlank() } ?: url
@@ -48,7 +54,24 @@ data class SniffedMedia(
 
     /** "1920×1080", or null when the resolution is unknown. */
     val resolutionLabel: String?
-        get() = if (width != null && height != null) "$width×$height" else null
+        get() =
+            when {
+                width != null && height != null -> "$width×$height"
+                height != null -> "${height}p"
+                else -> null
+            }
+
+    /** "1:02:03" or "4:05", or null when the duration is unknown. */
+    val durationLabel: String?
+        get() =
+            durationSec?.let { seconds ->
+                val total = seconds.toLong()
+                val h = total / 3600
+                val m = (total % 3600) / 60
+                val sec = total % 60
+                if (h > 0) String.format(java.util.Locale.US, "%d:%02d:%02d", h, m, sec)
+                else String.format(java.util.Locale.US, "%d:%02d", m, sec)
+            }
 
     /** "2.5 Mbps", or null when the bitrate is unknown. */
     val bitrateLabel: String?
@@ -72,6 +95,8 @@ object MediaSniffer {
     /** Enough bytes to find the MP4 'tkhd' box in files whose 'moov' box is at the start or end. */
     private const val HEADER_PROBE_BYTES = 2 * 1024 * 1024
     private const val MANIFEST_MAX_BYTES = 512 * 1024
+    private const val MAIN_VIDEO_MIN_BYTES = 1_000_000L
+    private const val MIN_MEDIA_BYTES = 10_000L
 
     private val _items = MutableStateFlow<List<SniffedMedia>>(emptyList())
     val items: StateFlow<List<SniffedMedia>> = _items.asStateFlow()
@@ -100,10 +125,39 @@ object MediaSniffer {
         }
     }
 
+    private val pageMediaRegex =
+        Regex(
+            """https?://[^"'\s<>\\]+?\.(?:mp4|m3u8|webm)(?:\?[^"'\s<>\\]*)?""",
+            RegexOption.IGNORE_CASE,
+        )
+
+    private val nameHeightRegex = Regex("""(?<!\d)(144|240|360|480|540|720|1080|1440|2160)[pP](?![a-zA-Z])""")
+
+    /** "360P_360K_…mp4" -> 360. Used when the file itself is not probed. */
+    internal fun heightFromName(url: String): Int? =
+        nameHeightRegex.find(Uri.parse(url).lastPathSegment.orEmpty())?.groupValues?.get(1)?.toIntOrNull()
+
+    /**
+     * Finds every media URL written in a page's HTML or scripts (for example the player's
+     * mediaDefinitions list). This is how the qualities the player has not requested yet are found.
+     */
+    fun scanPageSource(source: String, pageUrl: String, pageUserAgent: String) {
+        val text = source.replace("\\/", "/").replace("&amp;", "&")
+        pageMediaRegex
+            .findAll(text)
+            .map { it.value }
+            .distinct()
+            .forEach { url ->
+                val kind = if (url.contains(".m3u8", ignoreCase = true)) SniffedKind.Stream else SniffedKind.Video
+                offer(url, pageUrl, pageUserAgent, kind)
+            }
+    }
+
     /** Adds [url] if it is new, then probes it in the background. Safe to call from any thread. */
     fun offer(url: String, pageUrl: String, pageUserAgent: String, kind: SniffedKind) {
         val added = mutate { list ->
-            if (list.any { it.url == url }) null else list + SniffedMedia(url, pageUrl, pageUserAgent, kind)
+            if (list.any { it.url == url }) null
+            else list + SniffedMedia(url, pageUrl, pageUserAgent, kind, height = heightFromName(url))
         }
         if (!added) return
         App.applicationScope.launch(Dispatchers.IO) {
@@ -129,9 +183,13 @@ object MediaSniffer {
         return changed
     }
 
-    /** Highest resolution first, then larger file first. Items with no resolution go last. */
+        /**
+     * Real videos (over 1 MB) come first, then quality, then size. Small previews, tracking clips
+     * and ad creatives (a few hundred kB or less) go below the real videos, whatever their size.
+     */
     private val QUALITY_ORDER =
-        compareByDescending<SniffedMedia> { (it.height ?: -1) }
+        compareByDescending<SniffedMedia> { (it.sizeBytes ?: 0L) >= MAIN_VIDEO_MIN_BYTES }
+            .thenByDescending { (it.height ?: -1) }
             .thenByDescending { it.width ?: -1 }
             .thenByDescending { it.bitrate ?: -1L }
             .thenByDescending { it.sizeBytes ?: -1L }
@@ -152,11 +210,22 @@ object MediaSniffer {
                 .getOrNull()
                 ?.takeIf { it > 0 }
 
+        // A few hundred bytes is an error or JSON reply, not media, so drop it from the list.
+        if (length != null && length < MIN_MEDIA_BYTES) {
+            mutate { list -> list.filterNot { it.url == url } }
+            return
+        }
+
         val dims = probeMp4Dimensions(url, headers, length)
         mutate { list ->
             list.map {
                 if (it.url != url) it
-                else it.copy(sizeBytes = length ?: it.sizeBytes, width = dims?.first, height = dims?.second)
+                else
+                    it.copy(
+                        sizeBytes = length ?: it.sizeBytes,
+                        width = dims?.first ?: it.width,
+                        height = dims?.second ?: it.height,
+                    )
             }
         }
     }
@@ -255,12 +324,50 @@ object MediaSniffer {
                         }
                 without + added
             }
+            variants.forEach { v -> probeVariantPlaylist(v.uri, v.bitrate, pageUrl, pageUserAgent) }
         } else if (body.contains("<MPD")) {
             val size = parseDashMaxDimensions(body) ?: return
             mutate { list ->
                 list.map { if (it.url == url) it.copy(width = size.first, height = size.second) else it }
             }
         }
+    }
+
+    /**
+     * Reads a variant's media playlist to count its parts and total duration. When the manifest
+     * gives a bitrate, the file size is estimated as bitrate × duration.
+     */
+    private fun probeVariantPlaylist(url: String, bitrate: Long?, pageUrl: String, pageUserAgent: String) {
+        val body = fetchText(url, headers(pageUrl, pageUserAgent)) ?: return
+        val (count, seconds) = parseMediaPlaylist(body)
+        if (count == 0) return
+        val estimate = bitrate?.let { (it / 8.0 * seconds).toLong() }
+        mutate { list ->
+            list.map {
+                if (it.url != url) it
+                else
+                    it.copy(
+                        segments = count,
+                        durationSec = seconds,
+                        sizeBytes = estimate ?: it.sizeBytes,
+                        sizeIsEstimate = estimate != null,
+                    )
+            }
+        }
+    }
+
+    /** Counts #EXTINF segments and adds up their durations. */
+    internal fun parseMediaPlaylist(body: String): Pair<Int, Double> {
+        var count = 0
+        var total = 0.0
+        for (raw in body.lineSequence()) {
+            val line = raw.trim()
+            if (line.startsWith("#EXTINF:")) {
+                count++
+                total += line.removePrefix("#EXTINF:").substringBefore(',').toDoubleOrNull() ?: 0.0
+            }
+        }
+        return count to total
     }
 
     internal data class HlsVariant(
