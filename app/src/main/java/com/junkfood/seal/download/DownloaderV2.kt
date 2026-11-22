@@ -219,6 +219,10 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         // (e.g. WiFi reconnects after the restriction blocked queued tasks).
         App.connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
+        // Restore unfinished tasks synchronously before launching any snapshotFlow collectors
+        // so the backup collector never overwrites persisted state with an empty map on startup.
+        enqueueFromBackup()
+
         scope.launch(Dispatchers.Default) {
             // Only trigger doYourWork() when a state TYPE changes (not on every progress tick).
             // Progress updates change Running.progress/progressText every ~200ms — filtering those
@@ -241,9 +245,6 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         }
 
         scope.launch(Dispatchers.IO) {
-            // don't write before we read
-            enqueueFromBackup()
-
             // Only write backup when a structurally important state changes.
             // Strip volatile Running.progress/progressText before comparing so that the constant
             // stream of progress callbacks (~5/sec) does NOT trigger a full MMKV serialization.
@@ -284,8 +285,9 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         val taskList =
             PreferenceUtil.decodeTaskListBackup()
                 .filter { it.value.downloadState !is Completed }
-                .mapValues { (_, state) ->
+                .mapValues { (task, state) ->
                     val preState = state.downloadState
+                    val needsInfoFetch = task.type !is TypeInfo.CustomCommand && state.videoInfo == null
                     val downloadState =
                         when (preState) {
                             is FetchingInfo -> {
@@ -309,26 +311,52 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             is Running -> {
                                 // Running had a live download coroutine — the process died
                                 // mid-download. Restore as Paused so the user can resume.
-                                Paused(action = Download, progress = preState.progress)
+                                if (needsInfoFetch) {
+                                    Paused(action = FetchInfo, progress = null)
+                                } else {
+                                    Paused(action = Download, progress = preState.progress)
+                                }
                             }
 
                             ReadyWithInfo -> {
                                 // Info was fetched but download had not started yet.
                                 // Restore as Paused so user can resume.
-                                Paused(action = Download, progress = null)
+                                if (needsInfoFetch) {
+                                    Paused(action = FetchInfo, progress = null)
+                                } else {
+                                    Paused(action = Download, progress = null)
+                                }
                             }
                             is Paused -> {
                                 // Keep paused state on restart — user explicitly paused this.
-                                preState
+                                if (needsInfoFetch && preState.action == Download) {
+                                    preState.copy(action = FetchInfo, progress = null)
+                                } else {
+                                    preState
+                                }
+                            }
+                            is Canceled -> {
+                                if (needsInfoFetch && preState.action == Download) {
+                                    preState.copy(action = FetchInfo, progress = null)
+                                } else {
+                                    preState
+                                }
+                            }
+                            is Error -> {
+                                if (needsInfoFetch && preState.action == Download) {
+                                    preState.copy(action = FetchInfo)
+                                } else {
+                                    preState
+                                }
                             }
                             else -> {
-                                // Error, Canceled, etc. — keep as-is.
+                                // Completed, etc. — keep as-is.
                                 preState
                             }
                         }
                     state.copy(downloadState = downloadState)
                 }
-        taskList.forEach(::enqueue)
+        taskStateMap.putAll(taskList)
     }
 
     private fun Map<Task, Task.State>.countRunning(): Int = count { (_, state) ->
@@ -372,6 +400,10 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     override fun cleanup() {
+        runCatching {
+            val unfinished = taskStateMap.toMap().filter { (_, state) -> state.downloadState !is Completed }
+            PreferenceUtil.encodeTaskListBackup(unfinished)
+        }
         runCatching {
             App.connectivityManager.unregisterNetworkCallback(networkCallback)
         }
@@ -428,6 +460,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         get() = id.hashCode()
 
     /** Processes pending tasks, prioritizing downloads. */
+    @Synchronized
     private fun doYourWork() {
         // Respect WiFi-only / mobile-only restriction set in Network settings.
         if (!PreferenceUtil.isNetworkAvailableForDownload()) return
@@ -455,7 +488,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.prepare() {
-        check(downloadState == Idle)
+        if (downloadState != Idle) return
         if (type is TypeInfo.CustomCommand) {
             execute()
         } else {
@@ -540,7 +573,12 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 waitingForNetwork.remove(task.id)
                 task.downloadState =
                     when (downloadState.action) {
-                        Download -> ReadyWithInfo
+                        Download ->
+                            if (task.type !is TypeInfo.CustomCommand && task.info != null) {
+                                ReadyWithInfo
+                            } else {
+                                Idle
+                            }
                         FetchInfo -> Idle
                     }
             }
@@ -548,7 +586,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.fetchInfo() {
-        check(downloadState == Idle)
+        if (downloadState != Idle) return
         val task = this
         val taskInfo = task.type
         val playlistIndex = if (taskInfo is TypeInfo.Playlist) taskInfo.index else null
@@ -607,9 +645,14 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.download() {
-        check(downloadState == ReadyWithInfo && info != null)
+        if (downloadState != ReadyWithInfo) return
         if (type is TypeInfo.CustomCommand) {
             execute()
+            return
+        }
+        if (info == null) {
+            downloadState = Idle
+            fetchInfo()
             return
         }
         scope
@@ -817,7 +860,12 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 }
                 downloadState =
                     when (preState.action) {
-                        Download -> ReadyWithInfo
+                        Download ->
+                            if (type !is TypeInfo.CustomCommand && info != null) {
+                                ReadyWithInfo
+                            } else {
+                                Idle
+                            }
                         FetchInfo -> Idle
                     }
                 return true
@@ -863,7 +911,12 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
             is DownloadState.Restartable -> {
                 downloadState =
                     when (preState.action) {
-                        Download -> ReadyWithInfo
+                        Download ->
+                            if (type !is TypeInfo.CustomCommand && info != null) {
+                                ReadyWithInfo
+                            } else {
+                                Idle
+                            }
                         FetchInfo -> Idle
                     }
             }
@@ -886,8 +939,8 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
      * @see Task.TypeInfo.CustomCommand
      */
     private fun Task.execute() {
-        check(downloadState == Idle)
-        check(type is TypeInfo.CustomCommand)
+        if (downloadState != Idle && downloadState != ReadyWithInfo) return
+        if (type !is TypeInfo.CustomCommand) return
         val template = type.template
         scope
             .launch {
