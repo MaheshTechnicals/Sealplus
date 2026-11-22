@@ -1238,6 +1238,16 @@ fun NewHomePage(
                             .toSet()
 
                     localHiddenIds = localHiddenIds + recentSnapshot.map { it.id }
+                    val boundaryChars = setOf('.', '_', '-', ' ', '[', '(')
+                    fun overlapsRetainedBaseName(candidate: String): Boolean {
+                        val normalized = candidate.trim()
+                        if (normalized.isEmpty()) return false
+                        return retainedBaseNames.any { retained ->
+                            retained.startsWith(normalized, ignoreCase = true) &&
+                                (retained.length == normalized.length ||
+                                    retained[normalized.length] in boundaryChars)
+                        }
+                    }
                     scope.launch(Dispatchers.IO) {
                         claimedTerminalTasks.forEach { (task, state) ->
                             val videoId = state.videoInfo?.id?.trim().orEmpty()
@@ -1248,8 +1258,7 @@ fun NewHomePage(
                                 if (videoId.isNotEmpty()) {
                                     videoId in retainedVideoIds
                                 } else {
-                                    task.url in retainedUrls ||
-                                        baseName.trim().lowercase() in retainedBaseNames
+                                    task.url in retainedUrls || overlapsRetainedBaseName(baseName)
                                 }
                             if (!isSharedWithRetained) {
                                 FileUtil.deleteTempFilesForTask(baseName, videoId.ifEmpty { null })
@@ -1267,7 +1276,7 @@ fun NewHomePage(
                                         videoId in retainedVideoIds
                                     } else {
                                         info.videoUrl in retainedUrls ||
-                                            baseName.trim().lowercase() in retainedBaseNames
+                                            overlapsRetainedBaseName(baseName)
                                     }
                                 if (!isSharedWithRetained) {
                                     FileUtil.deleteTempFilesForTask(
