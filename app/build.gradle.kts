@@ -131,7 +131,11 @@ android {
 
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
-        jniLibs { useLegacyPackaging = true }
+        jniLibs {
+            useLegacyPackaging = true
+            keepDebugSymbols += "**/*.so"
+            pickFirsts += setOf("**/libpython.so", "**/libpython.zip.so")
+        }
     }
     androidResources { generateLocaleConfig = true }
 
@@ -172,6 +176,7 @@ dependencies {
 
     implementation(libs.okhttp)
 
+    implementation(libs.ytdlnis.packages.python)
     implementation(libs.bundles.youtubedlAndroid)
 
     implementation(libs.mmkv)
