@@ -283,6 +283,7 @@ object DownloadUtil {
                 // failing reasonably fast on genuinely dead hosts.
                 addOption("-R", "3")
                 addOption("--socket-timeout", "15")
+                enableQuickJsIfAvailable()
                 downloadPreferences.run {
                     if (extractAudio) {
                         addOption("-x")
@@ -316,6 +317,7 @@ object DownloadUtil {
         taskKey: String? = null,
     ): Result<VideoInfo> =
         request.runCatching {
+            enableQuickJsIfAvailable()
             val response: YoutubeDLResponse =
                 YoutubeDL.getInstance().execute(request, taskKey, null)
             jsonFormat.decodeFromString(response.out)
@@ -847,6 +849,13 @@ object DownloadUtil {
      * Intentionally NOT applied to info-probe requests, which use their own tolerant
      * but faster policy (see getPlaylistOrVideoInfo / fetchVideoInfoFromUrl).
      */
+    private fun YoutubeDLRequest.enableQuickJsIfAvailable(): YoutubeDLRequest = apply {
+        val qjsFile = File(context.applicationInfo.nativeLibraryDir, "libqjs.so")
+        if (qjsFile.exists() && !hasOption("--js-runtimes")) {
+            addOption("--js-runtimes", "quickjs:${qjsFile.absolutePath}")
+        }
+    }
+
     private fun YoutubeDLRequest.enableRetryOptions(): YoutubeDLRequest =
         this.addOption("--retries", "10")
             .addOption("--fragment-retries", "10")
@@ -1212,6 +1221,7 @@ object DownloadUtil {
                     addOption("--no-mtime")
                     addOption("--continue")
                     enableRetryOptions()
+                    enableQuickJsIfAvailable()
                     //                addOption("-v")
                     if (cookies) {
                         // runCatching inside apply (which is inline) lets us use return
@@ -1455,6 +1465,7 @@ object DownloadUtil {
                 YoutubeDLRequest(urlList).apply {
                     commandDirectory.takeIf { it.isNotEmpty() }?.let { addOption("-P", it) }
                     addOption("--newline")
+                    enableQuickJsIfAvailable()
                     if (aria2c) {
                         enableAria2c()
                     }
@@ -1502,6 +1513,7 @@ object DownloadUtil {
                 YoutubeDLRequest(urlList).apply {
                     commandDirectory.takeIf { it.isNotEmpty() }?.let { addOption("-P", it) }
                     addOption("--newline")
+                    enableQuickJsIfAvailable()
                     if (aria2c) {
                         enableAria2c()
                     }
