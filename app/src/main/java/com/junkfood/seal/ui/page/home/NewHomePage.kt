@@ -47,6 +47,7 @@ import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
@@ -523,6 +524,7 @@ fun NewHomePage(
     // when the sheet is closed. Kept as an index (not the item itself) so left/right swipes
     // inside the sheet can move to adjacent list entries.
     var detailsDialogIndex by remember { mutableStateOf<Int?>(null) }
+    var showClearAllRecentDialog by remember { mutableStateOf(false) }
     
     // Handle back press to show exit confirmation
     BackHandler {
@@ -854,6 +856,16 @@ fun NewHomePage(
                             }
                         }
                     }
+                    val hasClearableItems by remember(recentFiveDownloadsFiltered) {
+                        derivedStateOf {
+                            recentFiveDownloadsFiltered.isNotEmpty() ||
+                                taskStateMap.values.any {
+                                    it.downloadState is Task.DownloadState.Canceled ||
+                                        it.downloadState is Task.DownloadState.Error ||
+                                        it.downloadState is Task.DownloadState.Completed
+                                }
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -882,6 +894,20 @@ fun NewHomePage(
                                     imageVector = Icons.Outlined.Replay,
                                     contentDescription = stringResource(R.string.retry_all),
                                     tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                        if (hasClearableItems) {
+                            IconButton(
+                                onClick = {
+                                    view.slightHapticFeedback()
+                                    showClearAllRecentDialog = true
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.DeleteSweep,
+                                    contentDescription = stringResource(R.string.clear),
+                                    tint = MaterialTheme.colorScheme.tertiary,
                                 )
                             }
                         }
@@ -1147,6 +1173,66 @@ fun NewHomePage(
                 onDismiss = { detailsDialogIndex = null }
             )
         }
+    }
+
+    if (showClearAllRecentDialog) {
+        val clearableTasksSnapshot =
+            taskStateMap.entries
+                .filter { (_, state) ->
+                    state.downloadState is Task.DownloadState.Canceled ||
+                        state.downloadState is Task.DownloadState.Error ||
+                        state.downloadState is Task.DownloadState.Completed
+                }
+                .map { it.key to it.value }
+        val recentSnapshot = recentFiveDownloadsFiltered.toList()
+        val totalCount = clearableTasksSnapshot.size + recentSnapshot.size
+        SealDialog(
+            onDismissRequest = { showClearAllRecentDialog = false },
+            title = { Text(text = stringResource(R.string.delete_info)) },
+            icon = {
+                Icon(
+                    Icons.Outlined.DeleteSweep,
+                    null,
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
+            },
+            text = {
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    text = stringResource(R.string.delete_multiple_items_msg).format(totalCount),
+                )
+            },
+            confirmButton = {
+                ConfirmButton {
+                    showClearAllRecentDialog = false
+                    localHiddenIds = localHiddenIds + recentSnapshot.map { it.id }
+                    scope.launch(Dispatchers.IO) {
+                        clearableTasksSnapshot.forEach { (task, state) ->
+                            val videoId = state.videoInfo?.id
+                            val fallbackTitle = state.viewState.title.ifBlank { task.url }
+                            val baseName =
+                                state.videoInfo?.title?.ifBlank { fallbackTitle } ?: fallbackTitle
+                            FileUtil.deleteTempFilesForTask(baseName, videoId)
+                            downloader.remove(task)
+                        }
+                        if (recentSnapshot.isNotEmpty()) {
+                            recentSnapshot.forEach { info ->
+                                val baseName =
+                                    File(info.videoPath)
+                                        .nameWithoutExtension
+                                        .ifEmpty { info.videoTitle }
+                                FileUtil.deleteTempFilesForTask(baseName, info.videoId)
+                            }
+                            DatabaseUtil.deleteInfoList(
+                                infoList = recentSnapshot,
+                                deleteFile = false,
+                            )
+                        }
+                    }
+                }
+            },
+            dismissButton = { DismissButton { showClearAllRecentDialog = false } },
+        )
     }
     
     // Download Dialog
