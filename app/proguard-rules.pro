@@ -66,3 +66,18 @@
 #-keepnames class <1>$$serializer { # -keepnames suffices; class is kept when serializer() is kept.
 #    static <1>$$serializer INSTANCE;
 #}
+
+# Keep `Companion` and `serializer()` on @Serializable interfaces (e.g. sealed interfaces).
+-if @kotlinx.serialization.Serializable interface **
+-keepclassmembers interface <1> {
+    static <1>$Companion Companion;
+}
+
+-if @kotlinx.serialization.Serializable interface ** {
+    static **$* *;
+}
+-keepclassmembers class <2>$<3> {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+-keep class com.junkfood.seal.download.** { *; }
