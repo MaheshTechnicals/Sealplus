@@ -1228,6 +1228,7 @@ fun NewHomePage(
                         retainedTasks
                             .flatMap { (task, state) ->
                                 listOfNotNull(
+                                    state.videoInfo?.id,
                                     state.videoInfo?.title,
                                     state.viewState.title,
                                     task.url,
