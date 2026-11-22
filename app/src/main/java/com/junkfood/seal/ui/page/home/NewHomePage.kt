@@ -47,6 +47,7 @@ import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
@@ -523,6 +524,7 @@ fun NewHomePage(
     // when the sheet is closed. Kept as an index (not the item itself) so left/right swipes
     // inside the sheet can move to adjacent list entries.
     var detailsDialogIndex by remember { mutableStateOf<Int?>(null) }
+    var showClearAllRecentDialog by remember { mutableStateOf(false) }
     
     // Handle back press to show exit confirmation
     BackHandler {
@@ -854,6 +856,16 @@ fun NewHomePage(
                             }
                         }
                     }
+                    val hasClearableItems by remember(recentFiveDownloadsFiltered) {
+                        derivedStateOf {
+                            recentFiveDownloadsFiltered.isNotEmpty() ||
+                                taskStateMap.values.any {
+                                    it.downloadState is Task.DownloadState.Canceled ||
+                                        it.downloadState is Task.DownloadState.Error ||
+                                        it.downloadState is Task.DownloadState.Completed
+                                }
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -882,6 +894,20 @@ fun NewHomePage(
                                     imageVector = Icons.Outlined.Replay,
                                     contentDescription = stringResource(R.string.retry_all),
                                     tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                        if (hasClearableItems) {
+                            IconButton(
+                                onClick = {
+                                    view.slightHapticFeedback()
+                                    showClearAllRecentDialog = true
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.DeleteSweep,
+                                    contentDescription = stringResource(R.string.clear),
+                                    tint = MaterialTheme.colorScheme.tertiary,
                                 )
                             }
                         }
@@ -1147,6 +1173,129 @@ fun NewHomePage(
                 onDismiss = { detailsDialogIndex = null }
             )
         }
+    }
+
+    if (showClearAllRecentDialog) {
+        val clearableTasksSnapshot =
+            taskStateMap.entries
+                .filter { (_, state) ->
+                    state.downloadState is Task.DownloadState.Canceled ||
+                        state.downloadState is Task.DownloadState.Error ||
+                        state.downloadState is Task.DownloadState.Completed
+                }
+                .map { it.key to it.value }
+        val recentSnapshot = recentFiveDownloadsFiltered.toList()
+        val totalCount = clearableTasksSnapshot.size + recentSnapshot.size
+        SealDialog(
+            onDismissRequest = { showClearAllRecentDialog = false },
+            title = { Text(text = stringResource(R.string.delete_info)) },
+            icon = {
+                Icon(
+                    Icons.Outlined.DeleteSweep,
+                    null,
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
+            },
+            text = {
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    text = stringResource(R.string.delete_multiple_items_msg).format(totalCount),
+                )
+            },
+            confirmButton = {
+                ConfirmButton {
+                    showClearAllRecentDialog = false
+                    val claimedTerminalTasks =
+                        taskStateMap.entries
+                            .toList()
+                            .filter { (_, state) ->
+                                state.downloadState is Task.DownloadState.Canceled ||
+                                    state.downloadState is Task.DownloadState.Error ||
+                                    state.downloadState is Task.DownloadState.Completed
+                            }
+                            .mapNotNull { (task, state) ->
+                                if (downloader.remove(task)) task to state else null
+                            }
+                    val retainedTasks = taskStateMap.entries.toList()
+                    val retainedVideoIds =
+                        retainedTasks
+                            .mapNotNull { (_, state) ->
+                                state.videoInfo?.id?.trim()?.takeIf { it.isNotEmpty() }
+                            }
+                            .toSet()
+                    val retainedUrls = retainedTasks.map { (task, _) -> task.url }.toSet()
+                    val retainedBaseNames =
+                        retainedTasks
+                            .flatMap { (task, state) ->
+                                listOfNotNull(
+                                    state.videoInfo?.id,
+                                    state.videoInfo?.title,
+                                    state.viewState.title,
+                                    task.url,
+                                )
+                            }
+                            .map { it.trim().lowercase() }
+                            .filter { it.isNotEmpty() }
+                            .toSet()
+
+                    localHiddenIds = localHiddenIds + recentSnapshot.map { it.id }
+                    val boundaryChars = setOf('.', '_', '-', ' ', '[', '(')
+                    fun overlapsRetainedBaseName(candidate: String): Boolean {
+                        val normalized = candidate.trim()
+                        if (normalized.isEmpty()) return false
+                        return retainedBaseNames.any { retained ->
+                            retained.startsWith(normalized, ignoreCase = true) &&
+                                (retained.length == normalized.length ||
+                                    retained[normalized.length] in boundaryChars)
+                        }
+                    }
+                    scope.launch(Dispatchers.IO) {
+                        claimedTerminalTasks.forEach { (task, state) ->
+                            val videoId = state.videoInfo?.id?.trim().orEmpty()
+                            val fallbackTitle = state.viewState.title.ifBlank { task.url }
+                            val baseName =
+                                state.videoInfo?.title?.ifBlank { fallbackTitle } ?: fallbackTitle
+                            val isSharedWithRetained =
+                                if (videoId.isNotEmpty()) {
+                                    videoId in retainedVideoIds
+                                } else {
+                                    task.url in retainedUrls || overlapsRetainedBaseName(baseName)
+                                }
+                            if (!isSharedWithRetained) {
+                                FileUtil.deleteTempFilesForTask(baseName, videoId.ifEmpty { null })
+                            }
+                        }
+                        if (recentSnapshot.isNotEmpty()) {
+                            recentSnapshot.forEach { info ->
+                                val videoId = info.videoId.trim()
+                                val baseName =
+                                    File(info.videoPath)
+                                        .nameWithoutExtension
+                                        .ifEmpty { info.videoTitle }
+                                val isSharedWithRetained =
+                                    if (videoId.isNotEmpty()) {
+                                        videoId in retainedVideoIds
+                                    } else {
+                                        info.videoUrl in retainedUrls ||
+                                            overlapsRetainedBaseName(baseName)
+                                    }
+                                if (!isSharedWithRetained) {
+                                    FileUtil.deleteTempFilesForTask(
+                                        baseName,
+                                        videoId.ifEmpty { null },
+                                    )
+                                }
+                            }
+                            DatabaseUtil.deleteInfoList(
+                                infoList = recentSnapshot,
+                                deleteFile = false,
+                            )
+                        }
+                    }
+                }
+            },
+            dismissButton = { DismissButton { showClearAllRecentDialog = false } },
+        )
     }
     
     // Download Dialog
