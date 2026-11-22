@@ -132,6 +132,8 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     private val waitingForNetwork = java.util.concurrent.ConcurrentHashMap<String, Task.RestartableAction>()
     @Volatile private var networkPauseJob: Job? = null
     @Volatile private var networkDegradedAtMs: Long = 0L
+    private val backupLock = Any()
+    @Volatile private var isCleaningUp = false
 
     // Held only while at least one task is Running/FetchingInfo. Without this, Doze mode can
     // suspend the CPU mid-download even while the foreground service notification is showing —
@@ -276,7 +278,11 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 }
                 .collect { snapshot ->
                     snapshot.forEach { (_, state) -> Log.d(TAG, state.viewState.title) }
-                    PreferenceUtil.encodeTaskListBackup(snapshot)
+                    synchronized(backupLock) {
+                        if (!isCleaningUp) {
+                            PreferenceUtil.encodeTaskListBackup(snapshot)
+                        }
+                    }
                 }
         }
     }
@@ -400,9 +406,13 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     override fun cleanup() {
-        runCatching {
-            val unfinished = taskStateMap.toMap().filter { (_, state) -> state.downloadState !is Completed }
-            PreferenceUtil.encodeTaskListBackup(unfinished)
+        synchronized(backupLock) {
+            isCleaningUp = true
+            runCatching {
+                val unfinished =
+                    taskStateMap.toMap().filter { (_, state) -> state.downloadState !is Completed }
+                PreferenceUtil.encodeTaskListBackup(unfinished)
+            }
         }
         runCatching {
             App.connectivityManager.unregisterNetworkCallback(networkCallback)
