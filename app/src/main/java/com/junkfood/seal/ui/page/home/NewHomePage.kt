@@ -1205,23 +1205,76 @@ fun NewHomePage(
             confirmButton = {
                 ConfirmButton {
                     showClearAllRecentDialog = false
+                    val claimedTerminalTasks =
+                        taskStateMap.entries
+                            .toList()
+                            .filter { (_, state) ->
+                                state.downloadState is Task.DownloadState.Canceled ||
+                                    state.downloadState is Task.DownloadState.Error ||
+                                    state.downloadState is Task.DownloadState.Completed
+                            }
+                            .mapNotNull { (task, state) ->
+                                if (downloader.remove(task)) task to state else null
+                            }
+                    val retainedTasks = taskStateMap.entries.toList()
+                    val retainedVideoIds =
+                        retainedTasks
+                            .mapNotNull { (_, state) ->
+                                state.videoInfo?.id?.trim()?.takeIf { it.isNotEmpty() }
+                            }
+                            .toSet()
+                    val retainedUrls = retainedTasks.map { (task, _) -> task.url }.toSet()
+                    val retainedBaseNames =
+                        retainedTasks
+                            .flatMap { (task, state) ->
+                                listOfNotNull(
+                                    state.videoInfo?.title,
+                                    state.viewState.title,
+                                    task.url,
+                                )
+                            }
+                            .map { it.trim().lowercase() }
+                            .filter { it.isNotEmpty() }
+                            .toSet()
+
                     localHiddenIds = localHiddenIds + recentSnapshot.map { it.id }
                     scope.launch(Dispatchers.IO) {
-                        clearableTasksSnapshot.forEach { (task, state) ->
-                            val videoId = state.videoInfo?.id
+                        claimedTerminalTasks.forEach { (task, state) ->
+                            val videoId = state.videoInfo?.id?.trim().orEmpty()
                             val fallbackTitle = state.viewState.title.ifBlank { task.url }
                             val baseName =
                                 state.videoInfo?.title?.ifBlank { fallbackTitle } ?: fallbackTitle
-                            FileUtil.deleteTempFilesForTask(baseName, videoId)
-                            downloader.remove(task)
+                            val isSharedWithRetained =
+                                if (videoId.isNotEmpty()) {
+                                    videoId in retainedVideoIds
+                                } else {
+                                    task.url in retainedUrls ||
+                                        baseName.trim().lowercase() in retainedBaseNames
+                                }
+                            if (!isSharedWithRetained) {
+                                FileUtil.deleteTempFilesForTask(baseName, videoId.ifEmpty { null })
+                            }
                         }
                         if (recentSnapshot.isNotEmpty()) {
                             recentSnapshot.forEach { info ->
+                                val videoId = info.videoId.trim()
                                 val baseName =
                                     File(info.videoPath)
                                         .nameWithoutExtension
                                         .ifEmpty { info.videoTitle }
-                                FileUtil.deleteTempFilesForTask(baseName, info.videoId)
+                                val isSharedWithRetained =
+                                    if (videoId.isNotEmpty()) {
+                                        videoId in retainedVideoIds
+                                    } else {
+                                        info.videoUrl in retainedUrls ||
+                                            baseName.trim().lowercase() in retainedBaseNames
+                                    }
+                                if (!isSharedWithRetained) {
+                                    FileUtil.deleteTempFilesForTask(
+                                        baseName,
+                                        videoId.ifEmpty { null },
+                                    )
+                                }
                             }
                             DatabaseUtil.deleteInfoList(
                                 infoList = recentSnapshot,
