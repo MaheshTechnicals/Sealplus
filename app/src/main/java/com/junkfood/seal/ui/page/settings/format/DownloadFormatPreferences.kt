@@ -179,7 +179,7 @@ fun DownloadFormatPreferences(onNavigateBack: () -> Unit, navigateToSubtitlePage
                     PreferenceSwitch(
                         title = stringResource(id = R.string.embed_metadata),
                         description = stringResource(id = R.string.embed_metadata_desc),
-                        enabled = audioSwitch && !isCustomCommandEnabled,
+                        enabled = !isCustomCommandEnabled,
                         isChecked = embedMetadata,
                         icon = Icons.Outlined.ArtTrack,
                         onClick = {
@@ -193,7 +193,7 @@ fun DownloadFormatPreferences(onNavigateBack: () -> Unit, navigateToSubtitlePage
                         title = stringResource(R.string.crop_artwork),
                         description = stringResource(R.string.crop_artwork_desc),
                         icon = Icons.Outlined.Crop,
-                        enabled = embedMetadata && audioSwitch && !isCustomCommandEnabled,
+                        enabled = embedMetadata && !isCustomCommandEnabled,
                         isChecked = isArtworkCroppingEnabled,
                     ) {
                         isArtworkCroppingEnabled = !isArtworkCroppingEnabled

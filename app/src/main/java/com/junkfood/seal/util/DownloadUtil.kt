@@ -259,8 +259,8 @@ object DownloadUtil {
 
     private const val PLAYLIST_TITLE_SUBDIRECTORY_PREFIX = "%(playlist)s/"
 
-    private const val CROP_ARTWORK_COMMAND =
-        """--ppa "ffmpeg: -c:v mjpeg -vf crop=\"'if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'\"""""
+    private const val CROP_ARTWORK_PPA =
+        """ThumbnailsConvertor+ffmpeg_o:-vf "crop='if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'""""
 
     @CheckResult
     fun getPlaylistOrVideoInfo(
@@ -1045,9 +1045,7 @@ object DownloadUtil {
                     addOption("--convert-thumbnails", "jpg")
 
                     if (cropArtwork) {
-                        val configFile = context.getConfigFile(id)
-                        FileUtil.writeContentToFile(CROP_ARTWORK_COMMAND, configFile)
-                        addOption("--config", configFile.absolutePath)
+                        addOption("--ppa", CROP_ARTWORK_PPA)
                     }
                 }
                 addOption("--parse-metadata", "%(release_year,upload_date)s:%(meta_date)s")
