@@ -16,6 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE
 import com.junkfood.seal.App.Companion.context
+import com.junkfood.seal.MainActivity
 import com.junkfood.seal.NotificationActionReceiver
 import com.junkfood.seal.NotificationActionReceiver.Companion.ACTION_CANCEL_TASK
 import com.junkfood.seal.NotificationActionReceiver.Companion.ACTION_ERROR_REPORT
@@ -326,11 +327,40 @@ object NotificationUtil {
                     PendingIntent.FLAG_IMMUTABLE or
                     PendingIntent.FLAG_UPDATE_CURRENT,
             )
+        val openAppIntent =
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+        val contentIntent =
+            PendingIntent.getActivity(
+                context,
+                notificationId,
+                openAppIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+
+        val errorMsg = context.getString(textId)
+        val summary =
+            report
+                .lineSequence()
+                .map { it.trim() }
+                .firstOrNull { it.contains("ERROR:", ignoreCase = true) }
+                ?: report.lineSequence().map { it.trim() }.firstOrNull { it.isNotBlank() }
+                ?: ""
+        val trimmedSummary = summary.take(200)
+
         NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_seal)
             .setContentTitle(title)
-            .setContentText(context.getString(textId))
+            .setContentText(errorMsg)
+            .setContentIntent(contentIntent)
+            .setAutoCancel(true)
             .setOngoing(false)
+            .apply {
+                if (trimmedSummary.isNotBlank()) {
+                    setStyle(NotificationCompat.BigTextStyle().bigText("$errorMsg\n$trimmedSummary"))
+                }
+            }
             .addAction(
                 R.drawable.outline_content_copy_24,
                 context.getString(R.string.copy_error_report),

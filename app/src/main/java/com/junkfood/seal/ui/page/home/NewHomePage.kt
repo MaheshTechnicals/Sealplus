@@ -48,6 +48,7 @@ import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Folder
@@ -1855,6 +1856,24 @@ fun ActiveDownloadCard(
                                         imageVector = Icons.Outlined.PlayArrow,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            )
+                        }
+
+                        // Copy error report option for failed downloads
+                        if (downloadState is Task.DownloadState.Error) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.copy_error_report)) },
+                                onClick = {
+                                    onAction(UiAction.CopyErrorReport(downloadState.throwable))
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.ErrorOutline,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 }
                             )

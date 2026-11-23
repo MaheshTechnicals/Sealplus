@@ -122,10 +122,12 @@ class QuickDownloadActivity : ComponentActivity() {
                             showDialog = true
                         } else if (sheetValue == DownloadDialogViewModel.SheetValue.Hidden) {
                             launch { sheetState.hide() }
-                                .invokeOnCompletion {
-                                    showDialog = false
-                                    if (selectionState == SelectionState.Idle) {
-                                        this@QuickDownloadActivity.finish()
+                                .invokeOnCompletion { cause ->
+                                    if (cause == null) {
+                                        showDialog = false
+                                        if (selectionState == SelectionState.Idle) {
+                                            this@QuickDownloadActivity.finish()
+                                        }
                                     }
                                 }
                         }
@@ -168,6 +170,21 @@ class QuickDownloadActivity : ComponentActivity() {
                     ThemedToastHost()
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val url = intent.getSharedURL()?.takeIf { it.isNotEmpty() } ?: return
+        sharedUrlCached = url
+
+        val viewModel: DownloadDialogViewModel = getViewModel()
+        if (!CONFIGURE.getBoolean()) {
+            viewModel.startDownload(listOf(url))
+            finish()
+        } else {
+            viewModel.postAction(Action.ShowSheet(listOf(url)))
         }
     }
 }

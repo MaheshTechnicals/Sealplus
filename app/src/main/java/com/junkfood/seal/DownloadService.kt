@@ -19,6 +19,15 @@ class DownloadService : Service() {
     /** True once [startForeground] has actually succeeded — false if it was blocked. */
     @Volatile private var isForegroundActive = false
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        attemptPromoteToForeground()
+        if (!App.isServiceRunning) {
+            stopForegroundCompat()
+            stopSelf(startId)
+        }
+        return START_NOT_STICKY
+    }
+
     override fun onBind(intent: Intent): IBinder {
         attemptPromoteToForeground()
         return DownloadServiceBinder()
@@ -79,15 +88,26 @@ class DownloadService : Service() {
         attemptPromoteToForeground()
     }
 
-    override fun onUnbind(intent: Intent?): Boolean {
-        Log.d(TAG, "onUnbind: ")
+    private fun stopForegroundCompat() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
+            @Suppress("DEPRECATION")
             stopForeground(true)
         }
+        isForegroundActive = false
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        Log.d(TAG, "onUnbind: ")
+        stopForegroundCompat()
         stopSelf()
         return super.onUnbind(intent)
+    }
+
+    override fun onDestroy() {
+        isForegroundActive = false
+        super.onDestroy()
     }
 
     inner class DownloadServiceBinder : Binder() {
