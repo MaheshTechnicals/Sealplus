@@ -13,6 +13,8 @@ import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -53,6 +55,7 @@ import com.yausername.aria2c.Aria2c
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import java.io.File
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -143,6 +146,7 @@ class App : Application(), SingletonImageLoader.Factory {
                 YoutubeDL.init(this@App)
                 FFmpeg.init(this@App)
                 Aria2c.init(this@App)
+                librariesInitDeferred.complete(Unit)
                 // Pre-build the Netscape cookie file so it exists before the first
                 // download. Wrapped in runCatching so a disk-full IOException here
                 // does NOT propagate into the catch(Throwable) block above and
@@ -154,6 +158,7 @@ class App : Application(), SingletonImageLoader.Factory {
                 }
                 UpdateUtil.deleteOutdatedApk()
             } catch (th: Throwable) {
+                librariesInitDeferred.completeExceptionally(th)
                 withContext(Dispatchers.Main) { startCrashReportActivity(th) }
             }
         }
@@ -196,6 +201,7 @@ class App : Application(), SingletonImageLoader.Factory {
     }
 
     companion object {
+        private const val TAG = "App"
         lateinit var clipboard: ClipboardManager
         lateinit var videoDownloadDir: String
         lateinit var audioDownloadDir: String
@@ -203,6 +209,17 @@ class App : Application(), SingletonImageLoader.Factory {
         lateinit var connectivityManager: ConnectivityManager
         lateinit var packageInfo: PackageInfo
 
+        private val librariesInitDeferred = CompletableDeferred<Unit>()
+
+        suspend fun awaitLibrariesInitialized() {
+            librariesInitDeferred.await()
+        }
+
+        private val serviceLock = Any()
+        private var isServiceBound = false
+        private var isServiceStarted = false
+        private var isForegroundPromotionPending = false
+        private var pendingStopAfterPromotion = false
         @Volatile var isServiceRunning = false
         @Volatile private var boundDownloadService: DownloadService? = null
 
@@ -210,14 +227,28 @@ class App : Application(), SingletonImageLoader.Factory {
             object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, service: IBinder) {
                     val binder = service as DownloadService.DownloadServiceBinder
-                    boundDownloadService = binder.getService()
-                    isServiceRunning = true
+                    val serviceInstance = binder.getService()
+                    synchronized(serviceLock) {
+                        if (isServiceRunning) {
+                            boundDownloadService = serviceInstance
+                            serviceInstance.retryPromoteToForegroundIfNeeded()
+                        } else if (!isForegroundPromotionPending && isServiceBound) {
+                            isServiceBound = false
+                            runCatching { context.applicationContext.unbindService(this) }
+                        }
+                    }
                 }
 
                 override fun onServiceDisconnected(arg0: ComponentName) {
                     // OS killed the service unexpectedly — allow startService() to restart it.
-                    boundDownloadService = null
-                    isServiceRunning = false
+                    synchronized(serviceLock) {
+                        boundDownloadService = null
+                        isServiceBound = false
+                        isServiceStarted = false
+                        isForegroundPromotionPending = false
+                        pendingStopAfterPromotion = false
+                        isServiceRunning = false
+                    }
                 }
             }
 
@@ -233,32 +264,71 @@ class App : Application(), SingletonImageLoader.Factory {
         }
 
         fun startService() {
-            if (isServiceRunning) return
-            // bindService() itself is safe on all API levels — the foreground-service-start
-            // restriction (API 31+) is handled defensively inside DownloadService.onBind()
-            // instead, so a crash there can never propagate back to this call site. This
-            // try/catch is a last-resort safety net for any other unexpected binding failure
-            // (e.g. SecurityException on some OEM ROMs), so a download task is never able to
-            // take down the whole app process over a service-binding issue.
-            runCatching {
-                Intent(context.applicationContext, DownloadService::class.java).also { intent ->
-                    context.applicationContext.bindService(
-                        intent,
-                        connection,
-                        Context.BIND_AUTO_CREATE,
-                    )
+            synchronized(serviceLock) {
+                pendingStopAfterPromotion = false
+                if (isServiceBound) {
+                    isServiceRunning = true
+                    boundDownloadService?.retryPromoteToForegroundIfNeeded()
+                    return
+                }
+                isServiceRunning = true
+                val appCtx = context.applicationContext
+                val intent = Intent(appCtx, DownloadService::class.java)
+                runCatching {
+                    ContextCompat.startForegroundService(appCtx, intent)
+                    isServiceStarted = true
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        isForegroundPromotionPending = true
+                    }
+                }.onFailure { e ->
+                    Log.w(TAG, "startForegroundService() blocked or failed, falling back to bindService: ${e.message}")
+                }
+                runCatching {
+                    isServiceBound = appCtx.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+                }.onFailure { e ->
+                    isServiceBound = false
+                    isServiceRunning = isServiceStarted
+                    Log.w(TAG, "bindService() failed: ${e.message}")
                 }
             }
         }
 
         fun stopService() {
-            if (!isServiceRunning) return
-            try {
+            synchronized(serviceLock) {
                 isServiceRunning = false
-                boundDownloadService = null
-                context.applicationContext.run { unbindService(connection) }
-            } catch (e: Exception) {
-                e.printStackTrace()
+                if (isForegroundPromotionPending) {
+                    pendingStopAfterPromotion = true
+                    return
+                }
+                stopServiceLocked()
+            }
+        }
+
+        private fun stopServiceLocked() {
+            boundDownloadService = null
+            val appCtx = context.applicationContext
+            if (isServiceBound) {
+                isServiceBound = false
+                runCatching { appCtx.unbindService(connection) }
+                    .onFailure { it.printStackTrace() }
+            }
+            if (isServiceStarted) {
+                isServiceStarted = false
+                runCatching { appCtx.stopService(Intent(appCtx, DownloadService::class.java)) }
+                    .onFailure { it.printStackTrace() }
+            }
+        }
+
+        internal fun onDownloadServiceStartHandled(): Boolean {
+            synchronized(serviceLock) {
+                isForegroundPromotionPending = false
+                if (pendingStopAfterPromotion || !isServiceRunning) {
+                    pendingStopAfterPromotion = false
+                    isServiceRunning = false
+                    stopServiceLocked()
+                    return true
+                }
+                return false
             }
         }
 

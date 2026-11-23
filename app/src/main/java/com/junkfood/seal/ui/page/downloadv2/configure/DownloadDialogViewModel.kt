@@ -14,6 +14,7 @@ import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.VideoInfo
 import com.junkfood.seal.util.makeToast
 import com.yausername.youtubedl_android.YoutubeDL
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -163,10 +164,19 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
 
         val job =
             viewModelScope.launch(Dispatchers.IO) {
-                DownloadUtil.getPlaylistOrVideoInfo(
-                        playlistURL = url,
-                        downloadPreferences = preferences,
-                    )
+                val result =
+                    try {
+                        App.awaitLibrariesInitialized()
+                        DownloadUtil.getPlaylistOrVideoInfo(
+                            playlistURL = url,
+                            downloadPreferences = preferences,
+                        )
+                    } catch (ce: CancellationException) {
+                        throw ce
+                    } catch (th: Throwable) {
+                        Result.failure(th)
+                    }
+                result
                     .onSuccess { info ->
                         withContext(Dispatchers.Main) {
                             // Reset sheetState from Loading to InputUrl BEFORE calling
@@ -217,11 +227,20 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
 
         val job =
             viewModelScope.launch(Dispatchers.IO) {
-                DownloadUtil.fetchVideoInfoFromUrl(
-                        url = url,
-                        preferences = preferences.copy(extractAudio = audioOnly),
-                        taskKey = "FetchFormat_$url",
-                    )
+                val result =
+                    try {
+                        App.awaitLibrariesInitialized()
+                        DownloadUtil.fetchVideoInfoFromUrl(
+                            url = url,
+                            preferences = preferences.copy(extractAudio = audioOnly),
+                            taskKey = "FetchFormat_$url",
+                        )
+                    } catch (ce: CancellationException) {
+                        throw ce
+                    } catch (th: Throwable) {
+                        Result.failure(th)
+                    }
+                result
                     .onSuccess { info ->
                         withContext(Dispatchers.Main) {
                             mSelectionStateFlow.update {
@@ -289,6 +308,7 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
 
     private fun showDialog(action: Action.ShowSheet) {
         val urlList = action.urlList
+        cancel()
         if (!urlList.isNullOrEmpty()) {
             mSheetStateFlow.update { SheetState.Configure(urlList) }
         } else {

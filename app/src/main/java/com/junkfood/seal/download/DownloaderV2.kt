@@ -34,6 +34,7 @@ import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.VideoInfo
 import com.yausername.youtubedl_android.YoutubeDL
 import kotlin.collections.set
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -162,11 +163,20 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
 
     companion object {
         private const val MAX_AUTO_RETRIES = 3
+        private const val MAX_WAF_RETRIES = 2
         private const val RETRY_DELAY_MS = 5_000L
+        private const val WAF_RETRY_DELAY_MS = 2_000L
+        private const val RETRY_JITTER_MS = 1_000L
+        private const val WEBPAGE_FORBIDDEN_MARKER = "Unable to download webpage: HTTP Error 403"
         private val NETWORK_ERROR_KEYWORDS = listOf(
             "Unable to connect", "Connection reset", "timed out", "connect timed out",
-            "HTTP Error 5", "Network is unreachable", "nodename nor servname",
-            "Failed to establish", "RemoteDisconnected", "SSLError"
+            "Read timed out", "HTTP Error 5", "HTTP Error 429", "Network is unreachable",
+            "nodename nor servname", "Failed to establish", "RemoteDisconnected", "SSLError",
+            "Connection aborted", "Connection refused", "Connection broken", "Broken pipe",
+            "NameResolutionError", "Temporary failure in name resolution", "Failed to resolve",
+            "No address associated with hostname", "Could not resolve host", "getaddrinfo failed",
+            "IncompleteRead", "ChunkedEncodingError", "EOF occurred", "TLS connect error",
+            "curl: ("
         )
 
         // yt-dlp emits a progress line on essentially every stdout flush, which on a fast
@@ -227,13 +237,18 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 .map { map -> map.mapValues { (_, state) -> state.downloadState::class } }
                 .distinctUntilChanged()
                 .onEach { doYourWork() }
-                .map { it.values.count { cls -> cls == Running::class || cls == FetchingInfo::class } }
+                .map { stateClasses ->
+                    val values = stateClasses.values
+                    values.any { cls -> cls == Running::class || cls == FetchingInfo::class } ||
+                        (values.any { cls -> cls == ReadyWithInfo::class || cls == Idle::class } &&
+                            PreferenceUtil.isNetworkAvailableForDownload())
+                }
                 .distinctUntilChanged()
-                .collect { activeCount ->
-                    if (activeCount > 0) {
+                .collect { hasActiveWork ->
+                    if (hasActiveWork) {
                         App.startService()
                         acquireDownloadWakeLock()
-                    } else {
+                    } else if (!hasActiveOrPendingWork(taskStateMap.toMap())) {
                         App.stopService()
                         releaseDownloadWakeLock()
                     }
@@ -331,6 +346,15 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         taskList.forEach(::enqueue)
     }
 
+    private fun isPendingOrActive(downloadState: DownloadState): Boolean =
+        downloadState is Running ||
+            downloadState is FetchingInfo ||
+            ((downloadState is ReadyWithInfo || downloadState is Idle) &&
+                PreferenceUtil.isNetworkAvailableForDownload())
+
+    private fun hasActiveOrPendingWork(map: Map<Task, Task.State>): Boolean =
+        map.values.any { isPendingOrActive(it.downloadState) }
+
     private fun Map<Task, Task.State>.countRunning(): Int = count { (_, state) ->
         state.downloadState is Running || state.downloadState is FetchingInfo
     }
@@ -339,13 +363,26 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         return taskStateMap
     }
 
+    private fun syncServiceAfterEnqueue(task: Task) {
+        val currentState = taskStateMap[task]?.downloadState
+        if (currentState != null && isPendingOrActive(currentState)) {
+            App.startService()
+            acquireDownloadWakeLock()
+        } else if (!hasActiveOrPendingWork(taskStateMap.toMap())) {
+            App.stopService()
+            releaseDownloadWakeLock()
+        }
+    }
+
     override fun enqueue(task: Task) {
-        taskStateMap +=
-            task to Task.State(Idle, null, Task.ViewState(url = task.url, title = task.url))
+        val state = Task.State(Idle, null, Task.ViewState(url = task.url, title = task.url))
+        taskStateMap += task to state
+        syncServiceAfterEnqueue(task)
     }
 
     override fun enqueue(task: Task, state: Task.State) {
         taskStateMap += task to state
+        syncServiceAfterEnqueue(task)
     }
 
     /**
@@ -464,9 +501,32 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun isNetworkError(throwable: Throwable): Boolean {
+        // youtubedl-android surfaces yt-dlp failures strictly as YoutubeDLException(message)
+        // without typed HTTP status fields, so transient transport errors are matched on stderr.
         return throwable.message?.let { msg ->
             NETWORK_ERROR_KEYWORDS.any { msg.contains(it, ignoreCase = true) }
         } ?: false
+    }
+
+    private fun isTransientWafChallengeError(throwable: Throwable): Boolean {
+        // youtubedl-android does not expose typed HTTP status codes or challenge headers; limit
+        // HTTP 403 auto-retries strictly to TikTok webpage WAF challenge rejections.
+        val msg = throwable.message ?: return false
+        return msg.contains("[TikTok]", ignoreCase = true) &&
+            msg.contains(WEBPAGE_FORBIDDEN_MARKER, ignoreCase = true)
+    }
+
+    private fun maxRetriesFor(throwable: Throwable): Int =
+        when {
+            isNetworkError(throwable) -> MAX_AUTO_RETRIES
+            isTransientWafChallengeError(throwable) -> MAX_WAF_RETRIES
+            else -> 0
+        }
+
+    private fun retryDelayFor(throwable: Throwable): Long {
+        val baseDelayMs =
+            if (isTransientWafChallengeError(throwable)) WAF_RETRY_DELAY_MS else RETRY_DELAY_MS
+        return baseDelayMs + kotlin.random.Random.nextLong(0L, RETRY_JITTER_MS)
     }
 
     private fun scheduleNetworkPause() {
@@ -554,13 +614,23 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         val playlistIndex = if (taskInfo is TypeInfo.Playlist) taskInfo.index else null
         scope
             .launch(Dispatchers.Default) {
-                DownloadUtil.fetchVideoInfoFromUrl(
-                        url = url,
-                        playlistIndex = playlistIndex,
-                        preferences = preferences,
-                        taskKey = id,
-                    )
+                val result =
+                    try {
+                        App.awaitLibrariesInitialized()
+                        DownloadUtil.fetchVideoInfoFromUrl(
+                            url = url,
+                            playlistIndex = playlistIndex,
+                            preferences = preferences,
+                            taskKey = id,
+                        )
+                    } catch (ce: CancellationException) {
+                        throw ce
+                    } catch (th: Throwable) {
+                        Result.failure(th)
+                    }
+                result
                     .onSuccess {
+                        retryCountMap.remove(id)
                         info = it
                         downloadState = ReadyWithInfo
                         viewState = Task.ViewState.fromVideoInfo(it)
@@ -594,6 +664,20 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             }
                             return@onFailure
                         }
+                        val retries = retryCountMap.getOrDefault(id, 0)
+                        val maxRetries = maxRetriesFor(throwable)
+                        if (retries < maxRetries) {
+                            val attempt = retries + 1
+                            retryCountMap[id] = attempt
+                            val retryDelayMs = retryDelayFor(throwable)
+                            Log.d(TAG, "Fetch info error — retrying ($attempt/$maxRetries) in ${retryDelayMs}ms: ${throwable.message}")
+                            delay(retryDelayMs)
+                            if (downloadState is FetchingInfo) {
+                                downloadState = Idle
+                            }
+                            return@onFailure
+                        }
+                        retryCountMap.remove(id)
                         task.downloadState = Error(throwable = throwable, action = FetchInfo)
                         NotificationUtil.notifyError(
                             title = viewState.title,
@@ -620,56 +704,65 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 var lastUiUpdateAtMs = 0L
                 var lastNotifiedAtMs = 0L
                 var lastNotifiedProgress = -1
-                DownloadUtil.downloadVideo(
-                        videoInfo = info,
-                        taskId = id,
-                        downloadPreferences = preferences,
-                        progressCallback = { progressPercentage, _, text ->
-                            val progress = progressPercentage / 100f
-                            val progressInt = progressPercentage.toInt()
-                            // Strip yt-dlp's "[download] " prefix so progressText stored
-                            // in the Running state is clean for any UI that displays it.
-                            val cleanText = text
-                                .removePrefix("[download] ")
-                                .removePrefix("[download]")
-                                .trim()
-                            val now = System.currentTimeMillis()
-                            when (val preState = downloadState) {
-                                is Running -> {
-                                    // Throttle Compose state writes so the Home screen's
-                                    // active-download list (which lives behind the nav
-                                    // drawer) doesn't recompose/re-layout on every single
-                                    // yt-dlp progress line — see PROGRESS_UI_UPDATE_THROTTLE_MS
-                                    // comment above for why this matters. The final jump to
-                                    // 100%/Completed is handled separately in onSuccess below,
-                                    // so a throttled last tick here is harmless.
-                                    if (now - lastUiUpdateAtMs >= PROGRESS_UI_UPDATE_THROTTLE_MS) {
-                                        lastUiUpdateAtMs = now
-                                        downloadState =
-                                            preState.copy(progress = progress, progressText = cleanText)
+                val result =
+                    try {
+                        App.awaitLibrariesInitialized()
+                        DownloadUtil.downloadVideo(
+                            videoInfo = info,
+                            taskId = id,
+                            downloadPreferences = preferences,
+                            progressCallback = { progressPercentage, _, text ->
+                                val progress = progressPercentage / 100f
+                                val progressInt = progressPercentage.toInt()
+                                // Strip yt-dlp's "[download] " prefix so progressText stored
+                                // in the Running state is clean for any UI that displays it.
+                                val cleanText = text
+                                    .removePrefix("[download] ")
+                                    .removePrefix("[download]")
+                                    .trim()
+                                val now = System.currentTimeMillis()
+                                when (val preState = downloadState) {
+                                    is Running -> {
+                                        // Throttle Compose state writes so the Home screen's
+                                        // active-download list (which lives behind the nav
+                                        // drawer) doesn't recompose/re-layout on every single
+                                        // yt-dlp progress line — see PROGRESS_UI_UPDATE_THROTTLE_MS
+                                        // comment above for why this matters. The final jump to
+                                        // 100%/Completed is handled separately in onSuccess below,
+                                        // so a throttled last tick here is harmless.
+                                        if (now - lastUiUpdateAtMs >= PROGRESS_UI_UPDATE_THROTTLE_MS) {
+                                            lastUiUpdateAtMs = now
+                                            downloadState =
+                                                preState.copy(progress = progress, progressText = cleanText)
+                                        }
+                                        // Throttle notification updates independently (and more
+                                        // conservatively, since each is a Binder IPC into
+                                        // system_server) and skip redundant calls when the
+                                        // integer percentage hasn't actually changed.
+                                        if (progressInt != lastNotifiedProgress &&
+                                            now - lastNotifiedAtMs >= PROGRESS_NOTIFICATION_THROTTLE_MS
+                                        ) {
+                                            lastNotifiedAtMs = now
+                                            lastNotifiedProgress = progressInt
+                                            NotificationUtil.notifyProgress(
+                                                notificationId = notificationId,
+                                                progress = progressInt,
+                                                text = cleanText,
+                                                title = viewState.title,
+                                                taskId = id,
+                                            )
+                                        }
                                     }
-                                    // Throttle notification updates independently (and more
-                                    // conservatively, since each is a Binder IPC into
-                                    // system_server) and skip redundant calls when the
-                                    // integer percentage hasn't actually changed.
-                                    if (progressInt != lastNotifiedProgress &&
-                                        now - lastNotifiedAtMs >= PROGRESS_NOTIFICATION_THROTTLE_MS
-                                    ) {
-                                        lastNotifiedAtMs = now
-                                        lastNotifiedProgress = progressInt
-                                        NotificationUtil.notifyProgress(
-                                            notificationId = notificationId,
-                                            progress = progressInt,
-                                            text = cleanText,
-                                            title = viewState.title,
-                                            taskId = id,
-                                        )
-                                    }
+                                    else -> {}
                                 }
-                                else -> {}
-                            }
-                        },
-                    )
+                            },
+                        )
+                    } catch (ce: CancellationException) {
+                        throw ce
+                    } catch (th: Throwable) {
+                        Result.failure(th)
+                    }
+                result
                     .onSuccess { pathList ->
                         retryCountMap.remove(id)  // clear retry counter on success
                         downloadState = Completed(pathList.firstOrNull())
@@ -708,7 +801,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             return@onFailure
                         }
                         val retries = retryCountMap.getOrDefault(id, 0)
-                        val isNetworkError = isNetworkError(throwable)
+                        val maxRetries = maxRetriesFor(throwable)
                         val networkUnavailable = !PreferenceUtil.isNetworkAvailableForDownload()
                         if (networkUnavailable) {
                             ensureNetworkDegradedStart()
@@ -744,19 +837,20 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                                 }
                                 else -> {}
                             }
-                        } else if (isNetworkError && retries < MAX_AUTO_RETRIES) {
+                        } else if (retries < maxRetries) {
                             val attempt = retries + 1
                             retryCountMap[id] = attempt
-                            Log.d(TAG, "Network error — retrying ($attempt/$MAX_AUTO_RETRIES) in ${RETRY_DELAY_MS}ms: ${throwable.message}")
+                            val retryDelayMs = retryDelayFor(throwable)
+                            Log.d(TAG, "Network error — retrying ($attempt/$maxRetries) in ${retryDelayMs}ms: ${throwable.message}")
                             // Show retrying status in the running card
                             when (val preState = downloadState) {
                                 is Running -> downloadState = preState.copy(
                                     progress = preState.progress,
-                                    progressText = "Retrying ($attempt/$MAX_AUTO_RETRIES)..."
+                                    progressText = "Retrying ($attempt/$maxRetries)..."
                                 )
                                 else -> {}
                             }
-                            delay(RETRY_DELAY_MS)
+                            delay(retryDelayMs)
                             // Only retry if still in Running state (user didn't cancel)
                             if (downloadState is Running) {
                                 downloadState = ReadyWithInfo
@@ -829,6 +923,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.cancelImpl(): Boolean {
+        retryCountMap.remove(id)
         when (val preState = downloadState) {
             is DownloadState.Cancelable -> {
                 val res = YoutubeDL.destroyProcessById(preState.taskId)
@@ -859,6 +954,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.restartImpl() {
+        retryCountMap.remove(id)
         when (val preState = stateOrNull?.downloadState) {
             is DownloadState.Restartable -> {
                 downloadState =
@@ -900,38 +996,47 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                 var lastUiUpdateAtMs = 0L
                 var lastNotifiedAtMs = 0L
                 var lastNotifiedProgress = -1
-                DownloadUtil.executeCustomCommandTask(url, id, template, preferences) {
-                        progressPercentage,
-                        _,
-                        text ->
-                        val progress = progressPercentage / 100f
-                        val progressInt = progressPercentage.toInt()
-                        val now = System.currentTimeMillis()
-                        when (val preState = downloadState) {
-                            is Running -> {
-                                if (now - lastUiUpdateAtMs >= PROGRESS_UI_UPDATE_THROTTLE_MS) {
-                                    lastUiUpdateAtMs = now
-                                    downloadState =
-                                        preState.copy(progress = progress, progressText = text)
+                val result =
+                    try {
+                        App.awaitLibrariesInitialized()
+                        DownloadUtil.executeCustomCommandTask(url, id, template, preferences) {
+                            progressPercentage,
+                            _,
+                            text ->
+                            val progress = progressPercentage / 100f
+                            val progressInt = progressPercentage.toInt()
+                            val now = System.currentTimeMillis()
+                            when (val preState = downloadState) {
+                                is Running -> {
+                                    if (now - lastUiUpdateAtMs >= PROGRESS_UI_UPDATE_THROTTLE_MS) {
+                                        lastUiUpdateAtMs = now
+                                        downloadState =
+                                            preState.copy(progress = progress, progressText = text)
+                                    }
+                                    if (progressInt != lastNotifiedProgress &&
+                                        now - lastNotifiedAtMs >= PROGRESS_NOTIFICATION_THROTTLE_MS
+                                    ) {
+                                        lastNotifiedAtMs = now
+                                        lastNotifiedProgress = progressInt
+                                        NotificationUtil.makeNotificationForCustomCommand(
+                                            notificationId = notificationId,
+                                            taskId = id,
+                                            progress = progressInt,
+                                            templateName = template.name,
+                                            taskUrl = url,
+                                            text = text,
+                                        )
+                                    }
                                 }
-                                if (progressInt != lastNotifiedProgress &&
-                                    now - lastNotifiedAtMs >= PROGRESS_NOTIFICATION_THROTTLE_MS
-                                ) {
-                                    lastNotifiedAtMs = now
-                                    lastNotifiedProgress = progressInt
-                                    NotificationUtil.makeNotificationForCustomCommand(
-                                        notificationId = notificationId,
-                                        taskId = id,
-                                        progress = progressInt,
-                                        templateName = template.name,
-                                        taskUrl = url,
-                                        text = text,
-                                    )
-                                }
+                                else -> {}
                             }
-                            else -> {}
                         }
+                    } catch (ce: CancellationException) {
+                        throw ce
+                    } catch (th: Throwable) {
+                        Result.failure(th)
                     }
+                result
                     .onFailure { throwable ->
                         if (throwable is YoutubeDL.CanceledException) {
                             return@onFailure
