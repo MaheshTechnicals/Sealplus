@@ -164,12 +164,15 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     companion object {
         private const val MAX_AUTO_RETRIES = 3
         private const val RETRY_DELAY_MS = 5_000L
+        private const val WAF_RETRY_DELAY_MS = 2_000L
+        private const val WEBPAGE_FORBIDDEN_MARKER = "Unable to download webpage: HTTP Error 403"
         private val NETWORK_ERROR_KEYWORDS = listOf(
             "Unable to connect", "Connection reset", "timed out", "connect timed out",
-            "Read timed out", "HTTP Error 5", "HTTP Error 429", "Network is unreachable",
-            "nodename nor servname", "Failed to establish", "RemoteDisconnected", "SSLError",
-            "Connection aborted", "Connection refused", "Connection broken", "Broken pipe",
-            "NameResolutionError", "Temporary failure in name resolution", "Failed to resolve",
+            "Read timed out", "HTTP Error 5", "HTTP Error 429", WEBPAGE_FORBIDDEN_MARKER,
+            "Network is unreachable", "nodename nor servname", "Failed to establish",
+            "RemoteDisconnected", "SSLError", "Connection aborted", "Connection refused",
+            "Connection broken", "Broken pipe", "NameResolutionError",
+            "Temporary failure in name resolution", "Failed to resolve",
             "No address associated with hostname", "Could not resolve host", "getaddrinfo failed",
             "IncompleteRead", "ChunkedEncodingError", "EOF occurred", "TLS connect error",
             "curl: ("
@@ -359,21 +362,26 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         return taskStateMap
     }
 
+    private fun syncServiceAfterEnqueue(task: Task) {
+        val currentState = taskStateMap[task]?.downloadState
+        if (currentState != null && isPendingOrActive(currentState)) {
+            App.startService()
+            acquireDownloadWakeLock()
+        } else if (!hasActiveOrPendingWork(taskStateMap.toMap())) {
+            App.stopService()
+            releaseDownloadWakeLock()
+        }
+    }
+
     override fun enqueue(task: Task) {
         val state = Task.State(Idle, null, Task.ViewState(url = task.url, title = task.url))
         taskStateMap += task to state
-        if (isPendingOrActive(state.downloadState)) {
-            App.startService()
-            acquireDownloadWakeLock()
-        }
+        syncServiceAfterEnqueue(task)
     }
 
     override fun enqueue(task: Task, state: Task.State) {
         taskStateMap += task to state
-        if (isPendingOrActive(state.downloadState)) {
-            App.startService()
-            acquireDownloadWakeLock()
-        }
+        syncServiceAfterEnqueue(task)
     }
 
     /**
@@ -497,6 +505,13 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
         } ?: false
     }
 
+    private fun retryDelayFor(throwable: Throwable): Long =
+        if (throwable.message?.contains(WEBPAGE_FORBIDDEN_MARKER, ignoreCase = true) == true) {
+            WAF_RETRY_DELAY_MS
+        } else {
+            RETRY_DELAY_MS
+        }
+
     private fun scheduleNetworkPause() {
         networkPauseJob?.cancel()
         val startAt = networkDegradedAtMs
@@ -598,6 +613,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                     }
                 result
                     .onSuccess {
+                        retryCountMap.remove(id)
                         info = it
                         downloadState = ReadyWithInfo
                         viewState = Task.ViewState.fromVideoInfo(it)
@@ -631,6 +647,19 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             }
                             return@onFailure
                         }
+                        val retries = retryCountMap.getOrDefault(id, 0)
+                        if (isNetworkError(throwable) && retries < MAX_AUTO_RETRIES) {
+                            val attempt = retries + 1
+                            retryCountMap[id] = attempt
+                            val retryDelayMs = retryDelayFor(throwable)
+                            Log.d(TAG, "Fetch info error — retrying ($attempt/$MAX_AUTO_RETRIES) in ${retryDelayMs}ms: ${throwable.message}")
+                            delay(retryDelayMs)
+                            if (downloadState is FetchingInfo) {
+                                downloadState = Idle
+                            }
+                            return@onFailure
+                        }
+                        retryCountMap.remove(id)
                         task.downloadState = Error(throwable = throwable, action = FetchInfo)
                         NotificationUtil.notifyError(
                             title = viewState.title,
@@ -793,7 +822,8 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                         } else if (isNetworkError && retries < MAX_AUTO_RETRIES) {
                             val attempt = retries + 1
                             retryCountMap[id] = attempt
-                            Log.d(TAG, "Network error — retrying ($attempt/$MAX_AUTO_RETRIES) in ${RETRY_DELAY_MS}ms: ${throwable.message}")
+                            val retryDelayMs = retryDelayFor(throwable)
+                            Log.d(TAG, "Network error — retrying ($attempt/$MAX_AUTO_RETRIES) in ${retryDelayMs}ms: ${throwable.message}")
                             // Show retrying status in the running card
                             when (val preState = downloadState) {
                                 is Running -> downloadState = preState.copy(
@@ -802,7 +832,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                                 )
                                 else -> {}
                             }
-                            delay(RETRY_DELAY_MS)
+                            delay(retryDelayMs)
                             // Only retry if still in Running state (user didn't cancel)
                             if (downloadState is Running) {
                                 downloadState = ReadyWithInfo
@@ -875,6 +905,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.cancelImpl(): Boolean {
+        retryCountMap.remove(id)
         when (val preState = downloadState) {
             is DownloadState.Cancelable -> {
                 val res = YoutubeDL.destroyProcessById(preState.taskId)
@@ -905,6 +936,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun Task.restartImpl() {
+        retryCountMap.remove(id)
         when (val preState = stateOrNull?.downloadState) {
             is DownloadState.Restartable -> {
                 downloadState =

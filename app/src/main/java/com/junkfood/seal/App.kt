@@ -218,6 +218,8 @@ class App : Application(), SingletonImageLoader.Factory {
         private val serviceLock = Any()
         private var isServiceBound = false
         private var isServiceStarted = false
+        private var isForegroundPromotionPending = false
+        private var pendingStopAfterPromotion = false
         @Volatile var isServiceRunning = false
         @Volatile private var boundDownloadService: DownloadService? = null
 
@@ -230,7 +232,7 @@ class App : Application(), SingletonImageLoader.Factory {
                         if (isServiceRunning) {
                             boundDownloadService = serviceInstance
                             serviceInstance.retryPromoteToForegroundIfNeeded()
-                        } else if (isServiceBound) {
+                        } else if (!isForegroundPromotionPending && isServiceBound) {
                             isServiceBound = false
                             runCatching { context.applicationContext.unbindService(this) }
                         }
@@ -243,6 +245,8 @@ class App : Application(), SingletonImageLoader.Factory {
                         boundDownloadService = null
                         isServiceBound = false
                         isServiceStarted = false
+                        isForegroundPromotionPending = false
+                        pendingStopAfterPromotion = false
                         isServiceRunning = false
                     }
                 }
@@ -261,6 +265,7 @@ class App : Application(), SingletonImageLoader.Factory {
 
         fun startService() {
             synchronized(serviceLock) {
+                pendingStopAfterPromotion = false
                 if (isServiceBound) {
                     isServiceRunning = true
                     boundDownloadService?.retryPromoteToForegroundIfNeeded()
@@ -272,6 +277,9 @@ class App : Application(), SingletonImageLoader.Factory {
                 runCatching {
                     ContextCompat.startForegroundService(appCtx, intent)
                     isServiceStarted = true
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        isForegroundPromotionPending = true
+                    }
                 }.onFailure { e ->
                     Log.w(TAG, "startForegroundService() blocked or failed, falling back to bindService: ${e.message}")
                 }
@@ -288,18 +296,39 @@ class App : Application(), SingletonImageLoader.Factory {
         fun stopService() {
             synchronized(serviceLock) {
                 isServiceRunning = false
-                boundDownloadService = null
-                val appCtx = context.applicationContext
-                if (isServiceBound) {
-                    isServiceBound = false
-                    runCatching { appCtx.unbindService(connection) }
-                        .onFailure { it.printStackTrace() }
+                if (isForegroundPromotionPending) {
+                    pendingStopAfterPromotion = true
+                    return
                 }
-                if (isServiceStarted) {
-                    isServiceStarted = false
-                    runCatching { appCtx.stopService(Intent(appCtx, DownloadService::class.java)) }
-                        .onFailure { it.printStackTrace() }
+                stopServiceLocked()
+            }
+        }
+
+        private fun stopServiceLocked() {
+            boundDownloadService = null
+            val appCtx = context.applicationContext
+            if (isServiceBound) {
+                isServiceBound = false
+                runCatching { appCtx.unbindService(connection) }
+                    .onFailure { it.printStackTrace() }
+            }
+            if (isServiceStarted) {
+                isServiceStarted = false
+                runCatching { appCtx.stopService(Intent(appCtx, DownloadService::class.java)) }
+                    .onFailure { it.printStackTrace() }
+            }
+        }
+
+        internal fun onDownloadServiceStartHandled(): Boolean {
+            synchronized(serviceLock) {
+                isForegroundPromotionPending = false
+                if (pendingStopAfterPromotion || !isServiceRunning) {
+                    pendingStopAfterPromotion = false
+                    isServiceRunning = false
+                    stopServiceLocked()
+                    return true
                 }
+                return false
             }
         }
 

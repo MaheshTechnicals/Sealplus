@@ -180,6 +180,7 @@ class QuickDownloadActivity : ComponentActivity() {
         sharedUrlCached = url
 
         val viewModel: DownloadDialogViewModel = getViewModel()
+        viewModel.postAction(Action.Reset)
         if (!CONFIGURE.getBoolean()) {
             viewModel.startDownload(listOf(url))
             finish()
