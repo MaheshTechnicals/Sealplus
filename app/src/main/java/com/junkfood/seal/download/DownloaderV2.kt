@@ -163,16 +163,17 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
 
     companion object {
         private const val MAX_AUTO_RETRIES = 3
+        private const val MAX_WAF_RETRIES = 2
         private const val RETRY_DELAY_MS = 5_000L
         private const val WAF_RETRY_DELAY_MS = 2_000L
+        private const val RETRY_JITTER_MS = 1_000L
         private const val WEBPAGE_FORBIDDEN_MARKER = "Unable to download webpage: HTTP Error 403"
         private val NETWORK_ERROR_KEYWORDS = listOf(
             "Unable to connect", "Connection reset", "timed out", "connect timed out",
-            "Read timed out", "HTTP Error 5", "HTTP Error 429", WEBPAGE_FORBIDDEN_MARKER,
-            "Network is unreachable", "nodename nor servname", "Failed to establish",
-            "RemoteDisconnected", "SSLError", "Connection aborted", "Connection refused",
-            "Connection broken", "Broken pipe", "NameResolutionError",
-            "Temporary failure in name resolution", "Failed to resolve",
+            "Read timed out", "HTTP Error 5", "HTTP Error 429", "Network is unreachable",
+            "nodename nor servname", "Failed to establish", "RemoteDisconnected", "SSLError",
+            "Connection aborted", "Connection refused", "Connection broken", "Broken pipe",
+            "NameResolutionError", "Temporary failure in name resolution", "Failed to resolve",
             "No address associated with hostname", "Could not resolve host", "getaddrinfo failed",
             "IncompleteRead", "ChunkedEncodingError", "EOF occurred", "TLS connect error",
             "curl: ("
@@ -500,17 +501,33 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     }
 
     private fun isNetworkError(throwable: Throwable): Boolean {
+        // youtubedl-android surfaces yt-dlp failures strictly as YoutubeDLException(message)
+        // without typed HTTP status fields, so transient transport errors are matched on stderr.
         return throwable.message?.let { msg ->
             NETWORK_ERROR_KEYWORDS.any { msg.contains(it, ignoreCase = true) }
         } ?: false
     }
 
-    private fun retryDelayFor(throwable: Throwable): Long =
-        if (throwable.message?.contains(WEBPAGE_FORBIDDEN_MARKER, ignoreCase = true) == true) {
-            WAF_RETRY_DELAY_MS
-        } else {
-            RETRY_DELAY_MS
+    private fun isTransientWafChallengeError(throwable: Throwable): Boolean {
+        // youtubedl-android does not expose typed HTTP status codes or challenge headers; limit
+        // HTTP 403 auto-retries strictly to TikTok webpage WAF challenge rejections.
+        val msg = throwable.message ?: return false
+        return msg.contains("[TikTok]", ignoreCase = true) &&
+            msg.contains(WEBPAGE_FORBIDDEN_MARKER, ignoreCase = true)
+    }
+
+    private fun maxRetriesFor(throwable: Throwable): Int =
+        when {
+            isNetworkError(throwable) -> MAX_AUTO_RETRIES
+            isTransientWafChallengeError(throwable) -> MAX_WAF_RETRIES
+            else -> 0
         }
+
+    private fun retryDelayFor(throwable: Throwable): Long {
+        val baseDelayMs =
+            if (isTransientWafChallengeError(throwable)) WAF_RETRY_DELAY_MS else RETRY_DELAY_MS
+        return baseDelayMs + kotlin.random.Random.nextLong(0L, RETRY_JITTER_MS)
+    }
 
     private fun scheduleNetworkPause() {
         networkPauseJob?.cancel()
@@ -648,11 +665,12 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             return@onFailure
                         }
                         val retries = retryCountMap.getOrDefault(id, 0)
-                        if (isNetworkError(throwable) && retries < MAX_AUTO_RETRIES) {
+                        val maxRetries = maxRetriesFor(throwable)
+                        if (retries < maxRetries) {
                             val attempt = retries + 1
                             retryCountMap[id] = attempt
                             val retryDelayMs = retryDelayFor(throwable)
-                            Log.d(TAG, "Fetch info error — retrying ($attempt/$MAX_AUTO_RETRIES) in ${retryDelayMs}ms: ${throwable.message}")
+                            Log.d(TAG, "Fetch info error — retrying ($attempt/$maxRetries) in ${retryDelayMs}ms: ${throwable.message}")
                             delay(retryDelayMs)
                             if (downloadState is FetchingInfo) {
                                 downloadState = Idle
@@ -783,7 +801,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                             return@onFailure
                         }
                         val retries = retryCountMap.getOrDefault(id, 0)
-                        val isNetworkError = isNetworkError(throwable)
+                        val maxRetries = maxRetriesFor(throwable)
                         val networkUnavailable = !PreferenceUtil.isNetworkAvailableForDownload()
                         if (networkUnavailable) {
                             ensureNetworkDegradedStart()
@@ -819,16 +837,16 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                                 }
                                 else -> {}
                             }
-                        } else if (isNetworkError && retries < MAX_AUTO_RETRIES) {
+                        } else if (retries < maxRetries) {
                             val attempt = retries + 1
                             retryCountMap[id] = attempt
                             val retryDelayMs = retryDelayFor(throwable)
-                            Log.d(TAG, "Network error — retrying ($attempt/$MAX_AUTO_RETRIES) in ${retryDelayMs}ms: ${throwable.message}")
+                            Log.d(TAG, "Network error — retrying ($attempt/$maxRetries) in ${retryDelayMs}ms: ${throwable.message}")
                             // Show retrying status in the running card
                             when (val preState = downloadState) {
                                 is Running -> downloadState = preState.copy(
                                     progress = preState.progress,
-                                    progressText = "Retrying ($attempt/$MAX_AUTO_RETRIES)..."
+                                    progressText = "Retrying ($attempt/$maxRetries)..."
                                 )
                                 else -> {}
                             }
