@@ -260,7 +260,7 @@ object DownloadUtil {
     private const val PLAYLIST_TITLE_SUBDIRECTORY_PREFIX = "%(playlist)s/"
 
     private const val CROP_ARTWORK_PPA =
-        """ThumbnailsConvertor+ffmpeg_o:-c:v mjpeg -vf "crop='if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'""""
+        """ThumbnailsConvertor+ffmpeg_o:-vf "crop='if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'""""
 
     @CheckResult
     fun getPlaylistOrVideoInfo(
